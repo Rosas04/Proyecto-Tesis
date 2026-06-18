@@ -1,78 +1,73 @@
-import { NavLink } from "react-router-dom";
-import "./Sidebar.css";
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
-const steps = [
-  {
-    path: "/input",
-    number: "01",
-    title: "Entrada",
-    description: "URL, ZIP o código",
-  },
-  {
-    path: "/capture",
-    number: "02",
-    title: "Captura",
-    description: "Evidencia visual",
-  },
-  {
-    path: "/html",
-    number: "03",
-    title: "HTML",
-    description: "Réplica evaluable",
-  },
-  {
-    path: "/evaluation",
-    number: "04",
-    title: "Evaluación",
-    description: "ISO/IEC 25010",
-  },
-  {
-    path: "/report",
-    number: "05",
-    title: "Reporte",
-    description: "Informe técnico",
-  },
-];
+async function handleResponse(response, defaultMessage) {
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || defaultMessage);
+  }
 
-export default function Sidebar() {
-  return (
-    <aside className="sidebar">
-      <div className="sidebar-brand">
-        <div className="brand-icon">FM</div>
+  return response.json();
+}
 
-        <div>
-          <h1>FrontMind AI</h1>
-          <p>Framework agéntico</p>
-        </div>
-      </div>
+export async function captureInterfaceByUrl(url) {
+  const response = await fetch(`${API_URL}/capture/url`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ url }),
+  });
 
-      <div className="sidebar-section">
-        <span>Flujo de auditoría</span>
-      </div>
+  return handleResponse(response, "No se pudo capturar la interfaz desde la URL.");
+}
 
-      <nav className="sidebar-nav">
-        {steps.map((step) => (
-          <NavLink
-            key={step.path}
-            to={step.path}
-            className={({ isActive }) =>
-              isActive ? "sidebar-link active" : "sidebar-link"
-            }
-          >
-            <span className="step-number">{step.number}</span>
+export async function uploadZip(file) {
+  const formData = new FormData();
+  formData.append("file", file);
 
-            <span className="step-text">
-              <strong>{step.title}</strong>
-              <small>{step.description}</small>
-            </span>
-          </NavLink>
-        ))}
-      </nav>
+  const response = await fetch(`${API_URL}/upload/zip`, {
+    method: "POST",
+    body: formData,
+  });
 
-      <div className="sidebar-footer">
-        <span>ISO/IEC 25010</span>
-        <p>Evaluación técnica automatizada de interfaces frontend.</p>
-      </div>
-    </aside>
-  );
+  return handleResponse(response, "No se pudo procesar el archivo ZIP.");
+}
+
+export async function replicateHtmlFromContent(htmlContent, url) {
+  const response = await fetch(`${API_URL}/replicate/content`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      html_content: htmlContent,
+      url,
+    }),
+  });
+
+  return handleResponse(response, "No se pudo generar la réplica HTML.");
+}
+
+export async function evaluateHtml(html) {
+  const response = await fetch(`${API_URL}/evaluate/iso`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ html }),
+  });
+
+  return handleResponse(response, "No se pudo evaluar el HTML.");
+}
+
+export async function generateReport(evaluation) {
+  const response = await fetch(`${API_URL}/report/generate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ evaluation }),
+  });
+
+  return handleResponse(response, "No se pudo generar el reporte técnico.");
 }

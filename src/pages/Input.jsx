@@ -1,78 +1,286 @@
-import { NavLink } from "react-router-dom";
-import "./Sidebar.css";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Sidebar from "../components/Sidebar";
+import { captureInterfaceByUrl, uploadZip } from "../services/api";
+import "./Input.css";
 
-const steps = [
-  {
-    path: "/input",
-    number: "01",
-    title: "Entrada",
-    description: "URL, ZIP o código",
-  },
-  {
-    path: "/capture",
-    number: "02",
-    title: "Captura",
-    description: "Evidencia visual",
-  },
-  {
-    path: "/html",
-    number: "03",
-    title: "HTML",
-    description: "Réplica evaluable",
-  },
-  {
-    path: "/evaluation",
-    number: "04",
-    title: "Evaluación",
-    description: "ISO/IEC 25010",
-  },
-  {
-    path: "/report",
-    number: "05",
-    title: "Reporte",
-    description: "Informe técnico",
-  },
-];
+export default function Input() {
+  const navigate = useNavigate();
 
-export default function Sidebar() {
+  const [activeTab, setActiveTab] = useState("url");
+  const [url, setUrl] = useState("");
+  const [htmlCode, setHtmlCode] = useState("");
+  const [zipFile, setZipFile] = useState(null);
+  const [zipName, setZipName] = useState("");
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const cleanPreviousAnalysis = () => {
+    localStorage.removeItem("inputType");
+    localStorage.removeItem("inputUrl");
+    localStorage.removeItem("inputZip");
+    localStorage.removeItem("captureResult");
+    localStorage.removeItem("zipResult");
+    localStorage.removeItem("htmlReplicaResult");
+    localStorage.removeItem("isoEvaluation");
+    localStorage.removeItem("technicalReport");
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setError("");
+  };
+
+  const handleZipChange = (event) => {
+    const file = event.target.files[0];
+
+    if (!file) {
+      setZipFile(null);
+      setZipName("");
+      return;
+    }
+
+    if (!file.name.toLowerCase().endsWith(".zip")) {
+      setError("Debe seleccionar un archivo con extensión .zip.");
+      setZipFile(null);
+      setZipName("");
+      return;
+    }
+
+    setZipFile(file);
+    setZipName(file.name);
+    setError("");
+  };
+
+  const startAnalysis = async () => {
+    setError("");
+
+    if (activeTab === "url" && !url.trim()) {
+      setError("Ingrese una URL válida para iniciar la captura.");
+      return;
+    }
+
+    if (activeTab === "code" && !htmlCode.trim()) {
+      setError("Pegue el código HTML que desea evaluar.");
+      return;
+    }
+
+    if (activeTab === "zip" && !zipFile) {
+      setError("Seleccione un archivo ZIP del proyecto frontend.");
+      return;
+    }
+
+    cleanPreviousAnalysis();
+
+    localStorage.setItem("inputType", activeTab);
+    localStorage.setItem("inputUrl", url.trim());
+    localStorage.setItem("inputZip", zipName);
+
+    if (activeTab === "url") {
+      try {
+        setLoading(true);
+
+        const result = await captureInterfaceByUrl(url.trim());
+
+        localStorage.setItem("captureResult", JSON.stringify(result));
+        navigate("/capture");
+      } catch (err) {
+        setError(
+          "No se pudo capturar la URL. Verifique que el backend esté encendido y que la URL sea accesible."
+        );
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+
+      return;
+    }
+
+    if (activeTab === "code") {
+      const result = {
+        agent: "ManualInput",
+        status: "completed",
+        source_type: "html_code",
+        url: "Código HTML ingresado manualmente",
+        message: "Código HTML recibido correctamente.",
+        html_content: htmlCode,
+        captures: [],
+        total_captures: 0,
+      };
+
+      localStorage.setItem("captureResult", JSON.stringify(result));
+      navigate("/capture");
+      return;
+    }
+
+    if (activeTab === "zip") {
+      try {
+        setLoading(true);
+
+        const result = await uploadZip(zipFile);
+
+        const combinedCode =
+          result?.extraction?.combined_code ||
+          result?.combined_code ||
+          "";
+
+        const captureResult = {
+          agent: "ZipInput",
+          status: "completed",
+          source_type: "zip",
+          url: zipName,
+          message: "Proyecto ZIP procesado correctamente.",
+          html_content: combinedCode,
+          captures: [],
+          total_captures: 0,
+          zip_result: result,
+        };
+
+        localStorage.setItem("zipResult", JSON.stringify(result));
+        localStorage.setItem("captureResult", JSON.stringify(captureResult));
+
+        navigate("/capture");
+      } catch (err) {
+        setError(
+          "No se pudo procesar el ZIP. Verifique que el backend esté encendido y que el archivo sea válido."
+        );
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   return (
-    <aside className="sidebar">
-      <div className="sidebar-brand">
-        <div className="brand-icon">FM</div>
+    <div className="layout">
+      <Sidebar />
 
-        <div>
-          <h1>FrontMind AI</h1>
-          <p>Framework agéntico</p>
-        </div>
-      </div>
+      <main className="input-main">
+        <section className="page-header">
+          <p className="page-kicker">Inicio del análisis</p>
+          <h1 className="page-title">Evaluación técnica frontend</h1>
+          <p className="page-description">
+            Ingrese una URL, cargue un proyecto comprimido o pegue código HTML
+            para iniciar el flujo agéntico de captura, réplica, evaluación
+            ISO/IEC 25010 y generación de reporte técnico.
+          </p>
+        </section>
 
-      <div className="sidebar-section">
-        <span>Flujo de auditoría</span>
-      </div>
+        <section className="input-card card">
+          <div className="tabs">
+            <button
+              className={activeTab === "url" ? "tab active" : "tab"}
+              onClick={() => handleTabChange("url")}
+              type="button"
+            >
+              URL pública
+            </button>
 
-      <nav className="sidebar-nav">
-        {steps.map((step) => (
-          <NavLink
-            key={step.path}
-            to={step.path}
-            className={({ isActive }) =>
-              isActive ? "sidebar-link active" : "sidebar-link"
-            }
-          >
-            <span className="step-number">{step.number}</span>
+            <button
+              className={activeTab === "zip" ? "tab active" : "tab"}
+              onClick={() => handleTabChange("zip")}
+              type="button"
+            >
+              Proyecto ZIP
+            </button>
 
-            <span className="step-text">
-              <strong>{step.title}</strong>
-              <small>{step.description}</small>
-            </span>
-          </NavLink>
-        ))}
-      </nav>
+            <button
+              className={activeTab === "code" ? "tab active" : "tab"}
+              onClick={() => handleTabChange("code")}
+              type="button"
+            >
+              Código HTML
+            </button>
+          </div>
 
-      <div className="sidebar-footer">
-        <span>ISO/IEC 25010</span>
-        <p>Evaluación técnica automatizada de interfaces frontend.</p>
-      </div>
-    </aside>
+          {activeTab === "url" && (
+            <div className="input-panel">
+              <h2>Analizar interfaz por URL</h2>
+              <p>
+                El Agente de Captura abrirá la página, extraerá el DOM y
+                generará evidencias visuales en diferentes resoluciones.
+              </p>
+
+              <label className="field-label">URL de la interfaz</label>
+              <input
+                className="form-input"
+                type="url"
+                placeholder="https://ejemplo.com"
+                value={url}
+                onChange={(event) => setUrl(event.target.value)}
+              />
+            </div>
+          )}
+
+          {activeTab === "zip" && (
+            <div className="input-panel">
+              <h2>Analizar proyecto frontend comprimido</h2>
+              <p>
+                El sistema recibirá el archivo ZIP, extraerá los archivos HTML,
+                CSS, JS, JSX o TSX y preparará el artefacto para evaluación.
+              </p>
+
+              <label className="upload-box">
+                <input
+                  type="file"
+                  accept=".zip"
+                  onChange={handleZipChange}
+                  hidden
+                />
+
+                <span className="upload-icon">ZIP</span>
+
+                <strong>
+                  {zipName || "Seleccione un archivo .zip del proyecto"}
+                </strong>
+
+                <small>
+                  No incluya node_modules, venv, dist, uploads ni capturas.
+                </small>
+              </label>
+            </div>
+          )}
+
+          {activeTab === "code" && (
+            <div className="input-panel">
+              <h2>Analizar código HTML</h2>
+              <p>
+                Pegue aquí una estructura HTML completa o parcial para que el
+                framework genere una réplica evaluable y aplique reglas ISO/IEC
+                25010.
+              </p>
+
+              <label className="field-label">Código HTML</label>
+              <textarea
+                className="form-textarea"
+                placeholder="Pegue aquí el código HTML..."
+                value={htmlCode}
+                onChange={(event) => setHtmlCode(event.target.value)}
+              />
+            </div>
+          )}
+
+          {error && <div className="error-box">{error}</div>}
+
+          {loading && (
+            <div className="loading-box">
+              Procesando análisis inicial. Espere unos segundos...
+            </div>
+          )}
+
+          <div className="page-actions">
+            <button
+              className="primary-btn"
+              type="button"
+              onClick={startAnalysis}
+              disabled={loading}
+            >
+              {loading ? "Procesando..." : "Iniciar análisis"}
+            </button>
+          </div>
+        </section>
+      </main>
+    </div>
   );
 }
