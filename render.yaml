@@ -1,0 +1,29 @@
+services:
+  # 1. Backend (FastAPI con Playwright usando Docker)
+  - type: web
+    name: frontmind-backend
+    runtime: docker
+    dockerfilePath: frontmind-agents/Dockerfile
+    dockerContext: frontmind-agents
+    plan: free
+
+  # 2. Frontend (Vite + React como Sitio Estático)
+  - type: web
+    name: frontmind-frontend
+    runtime: static
+    rootDir: Front
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    plan: free
+    # Vinculamos automáticamente la URL del backend al frontend
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: frontmind-backend
+          property: host
+    # Configuración de React Router para evitar rutas 404
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
