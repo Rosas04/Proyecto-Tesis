@@ -4,7 +4,7 @@ import Input from "./pages/Input";
 import Capture from "./pages/Capture";
 import HtmlReplica from "./pages/HtmlReplica";
 import Evaluation from "./pages/Evaluation";
-import Report from "./pages/Report";
+//import Report from "./pages/Report";
 
 export default function App() {
   return (
@@ -15,8 +15,12 @@ export default function App() {
         <Route path="/capture" element={<Capture />} />
         <Route path="/html" element={<HtmlReplica />} />
         <Route path="/evaluation" element={<Evaluation />} />
-        <Route path="/report" element={<Report />} />
+        
       </Routes>
     </BrowserRouter>
   );
 }
+
+/**
+ * <Route path="/report" element={<Report />} />
+ */
