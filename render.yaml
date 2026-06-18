@@ -6,7 +6,6 @@ services:
     rootDir: Front
     buildCommand: npm install && npm run build
     staticPublishPath: dist
-    plan: free
     # Variables de entorno
     envVars:
       - key: VITE_API_URL
