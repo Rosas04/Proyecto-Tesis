@@ -1,20 +1,27 @@
-# Usamos la imagen oficial de Playwright para Python que ya viene con todos los navegadores y dependencias instaladas
+# Usamos la imagen oficial de Playwright para Python
 FROM mcr.microsoft.com/playwright/python:v1.40.0-jammy
 
 # Directorio de trabajo en el contenedor
 WORKDIR /app
 
-# Copiamos primero el requirements.txt para aprovechar la caché de Docker
+# Copiamos primero el requirements.txt
 COPY requirements.txt .
 
-# Instalamos las dependencias de Python
+# Instalamos las dependencias de Python como root
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiamos todo el contenido del backend
 COPY . .
 
-# Exponemos el puerto en el que corre FastAPI por defecto
-EXPOSE 8000
+# Cambiamos los permisos de la carpeta al usuario pwuser (UID 1000) que usa Hugging Face
+RUN chown -R pwuser:pwuser /app
 
-# Iniciamos el servidor con Uvicorn escuchando en todas las interfaces de red (0.0.0.0)
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Cambiamos al usuario sin privilegios
+USER pwuser
+
+# Exponemos el puerto
+EXPOSE 7860
+
+# Iniciamos el servidor leyendo el puerto de la variable de entorno $PORT (por defecto 8000)
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+
