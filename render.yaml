@@ -1,0 +1,18 @@
+services:
+  # Despliegue del Frontend (Vite + React como Sitio Estático)
+  - type: web
+    name: frontmind-frontend
+    runtime: static
+    rootDir: Front
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    plan: free
+    # Variables de entorno
+    envVars:
+      - key: VITE_API_URL
+        value: "https://TU-USUARIO-DE-HUGGINGFACE-frontmind-backend.hf.space" # <-- Reemplaza con tu URL real del backend
+    # Configuración de React Router para evitar rutas 404
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
