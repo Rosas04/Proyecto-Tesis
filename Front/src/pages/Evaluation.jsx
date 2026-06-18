@@ -288,7 +288,7 @@ export default function Evaluation() {
                   <table className="findings-table">
                     <thead>
                       <tr>
-                        <th>N.°</th>
+                        <th>N°</th>
                         <th>Dimensión</th>
                         <th>Subdimensión</th>
                         <th>Severidad</th>

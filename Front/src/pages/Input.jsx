@@ -61,11 +61,6 @@ export default function Input() {
       return;
     }
 
-    if (activeTab === "code" && !htmlCode.trim()) {
-      setError("Pegue el código HTML que desea evaluar.");
-      return;
-    }
-
     if (activeTab === "zip" && !zipFile) {
       setError("Seleccione un archivo ZIP del proyecto frontend.");
       return;
@@ -97,22 +92,6 @@ export default function Input() {
       return;
     }
 
-    if (activeTab === "code") {
-      const result = {
-        agent: "ManualInput",
-        status: "completed",
-        source_type: "html_code",
-        url: "Código HTML ingresado manualmente",
-        message: "Código HTML recibido correctamente.",
-        html_content: htmlCode,
-        captures: [],
-        total_captures: 0,
-      };
-
-      localStorage.setItem("captureResult", JSON.stringify(result));
-      navigate("/capture");
-      return;
-    }
 
     if (activeTab === "zip") {
       try {
@@ -185,13 +164,6 @@ export default function Input() {
               Proyecto ZIP
             </button>
 
-            <button
-              className={activeTab === "code" ? "tab active" : "tab"}
-              onClick={() => handleTabChange("code")}
-              type="button"
-            >
-              Código HTML
-            </button>
           </div>
 
           {activeTab === "url" && (
@@ -239,25 +211,6 @@ export default function Input() {
                   No incluya node_modules, venv, dist, uploads ni capturas.
                 </small>
               </label>
-            </div>
-          )}
-
-          {activeTab === "code" && (
-            <div className="input-panel">
-              <h2>Analizar código HTML</h2>
-              <p>
-                Pegue aquí una estructura HTML completa o parcial para que el
-                framework genere una réplica evaluable y aplique reglas ISO/IEC
-                25010.
-              </p>
-
-              <label className="field-label">Código HTML</label>
-              <textarea
-                className="form-textarea"
-                placeholder="Pegue aquí el código HTML..."
-                value={htmlCode}
-                onChange={(event) => setHtmlCode(event.target.value)}
-              />
             </div>
           )}
 
