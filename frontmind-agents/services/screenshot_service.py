@@ -1,9 +1,11 @@
+import os
 from pathlib import Path
 from datetime import datetime
 from playwright.sync_api import sync_playwright
 
 
 def take_screenshots(url: str):
+    api_base_url = os.getenv("API_BASE_URL", "http://127.0.0.1:8000")
     output_dir = Path("captures")
     output_dir.mkdir(exist_ok=True)
 
@@ -80,7 +82,7 @@ def take_screenshots(url: str):
                         "height": item["height"],
                         "file_name": file_name,
                         "file_path": str(file_path),
-                        "public_url": f"http://127.0.0.1:8000/captures/{file_name}",
+                        "public_url": f"{api_base_url.rstrip('/')}/captures/{file_name}",
                     }
                 )
 

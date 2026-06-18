@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
+import { API_URL } from "../services/api";
 import "./Capture.css";
 
 export default function Capture() {
@@ -51,10 +52,15 @@ export default function Capture() {
   };
 
   const getImageSource = (item) => {
-    if (item.public_url) return item.public_url;
+    if (item.public_url) {
+      if (item.public_url.includes("http://127.0.0.1:8000")) {
+        return item.public_url.replace("http://127.0.0.1:8000", API_URL);
+      }
+      return item.public_url;
+    }
 
     if (item.file_name) {
-      return `http://127.0.0.1:8000/captures/${item.file_name}`;
+      return `${API_URL}/captures/${item.file_name}`;
     }
 
     return "";
