@@ -1,5 +1,5 @@
 # Usamos la imagen oficial de Playwright para Python
-FROM mcr.microsoft.com/playwright/python:v1.40.0-jammy
+FROM mcr.microsoft.com/playwright/python:v1.60.0-jammy
 
 # Directorio de trabajo en el contenedor
 WORKDIR /app
@@ -22,6 +22,6 @@ USER pwuser
 # Exponemos el puerto
 EXPOSE 7860
 
-# Iniciamos el servidor leyendo el puerto de la variable de entorno $PORT (por defecto 8000)
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Iniciamos el servidor leyendo el puerto de la variable de entorno $PORT (por defecto 7860)
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-7860}"]
 

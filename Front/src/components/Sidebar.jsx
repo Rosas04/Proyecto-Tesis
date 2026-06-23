@@ -1,12 +1,13 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import "./Sidebar.css";
+import { useAuth } from "../context/AuthContext";
 
 const steps = [
   {
     path: "/input",
     number: "01",
     title: "Entrada",
-    description: "URL, ZIP o código",
+    description: "URL o ZIP",
   },
   {
     path: "/capture",
@@ -35,6 +36,14 @@ const steps = [
 ];
 
 export default function Sidebar() {
+  const { logout, user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login", { replace: true });
+  };
+
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
@@ -68,7 +77,14 @@ export default function Sidebar() {
           </NavLink>
         ))}
       </nav>
+      <div className="sidebar-user">
+        <small>Sesión activa</small>
+        <strong>{user?.email}</strong>
 
+        <button type="button" onClick={handleLogout}>
+          Cerrar sesión
+        </button>
+      </div>
       <div className="sidebar-footer">
         <span>ISO/IEC 25010</span>
         <p>Evaluación técnica automatizada de interfaces frontend.</p>

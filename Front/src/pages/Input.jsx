@@ -13,6 +13,10 @@ export default function Input() {
   const [zipFile, setZipFile] = useState(null);
   const [zipName, setZipName] = useState("");
 
+  const [detectedInterfaces, setDetectedInterfaces] = useState([]);
+  const [zipUploadResult, setZipUploadResult] = useState(null);
+  const [selectedInterfaceIndex, setSelectedInterfaceIndex] = useState(null);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -34,6 +38,10 @@ export default function Input() {
 
   const handleZipChange = (event) => {
     const file = event.target.files[0];
+
+    setDetectedInterfaces([]);
+    setZipUploadResult(null);
+    setSelectedInterfaceIndex(null);
 
     if (!file) {
       setZipFile(null);
@@ -82,7 +90,8 @@ export default function Input() {
         navigate("/capture");
       } catch (err) {
         setError(
-          "No se pudo capturar la URL. Verifique que el backend esté encendido y que la URL sea accesible."
+          err?.message ||
+            "No se pudo capturar la URL. Verifique que el backend esté encendido y que la URL sea accesible."
         );
         console.error(err);
       } finally {
@@ -99,36 +108,85 @@ export default function Input() {
 
         const result = await uploadZip(zipFile);
 
-        const combinedCode =
-          result?.extraction?.combined_code ||
-          result?.combined_code ||
-          "";
+        if (result?.status === "error" || result?.extraction?.status === "error") {
+          setError(
+            result?.extraction?.message ||
+              result?.message ||
+              "No se pudo procesar el archivo ZIP."
+          );
+          return;
+        }
 
-        const captureResult = {
-          agent: "ZipInput",
-          status: "completed",
-          source_type: "zip",
-          url: zipName,
-          message: "Proyecto ZIP procesado correctamente.",
-          html_content: combinedCode,
-          captures: [],
-          total_captures: 0,
-          zip_result: result,
-        };
+        const interfaces = result?.extraction?.interfaces || [];
 
-        localStorage.setItem("zipResult", JSON.stringify(result));
-        localStorage.setItem("captureResult", JSON.stringify(captureResult));
+        if (interfaces.length > 1) {
+          // El ZIP contiene más de una interfaz (más de un archivo HTML).
+          // Se le pide al usuario elegir cuál evaluar antes de continuar,
+          // en vez de mezclar el código de todas las páginas.
+          setZipUploadResult(result);
+          setDetectedInterfaces(interfaces);
+          setSelectedInterfaceIndex(0);
+          return;
+        }
 
-        navigate("/capture");
+        const singleInterfaceHtml = interfaces.length === 1 ? interfaces[0].html_content : "";
+        const combinedCode = result?.extraction?.combined_code || "";
+
+        proceedWithZipResult(result, singleInterfaceHtml || combinedCode);
       } catch (err) {
         setError(
-          "No se pudo procesar el ZIP. Verifique que el backend esté encendido y que el archivo sea válido."
+          err?.message ||
+            "No se pudo procesar el ZIP. Verifique que el backend esté encendido y que el archivo sea válido."
         );
         console.error(err);
       } finally {
         setLoading(false);
       }
     }
+  };
+
+  const proceedWithZipResult = (result, htmlContent, interfaceIndex = null) => {
+    const interfaces = result?.extraction?.interfaces || [];
+    const selectedName =
+      interfaceIndex !== null && interfaces[interfaceIndex]
+        ? interfaces[interfaceIndex].file_name
+        : zipName;
+
+    const captureResult = {
+      agent: "ZipInput",
+      status: "completed",
+      source_type: "zip",
+      url: selectedName || zipName,
+      message:
+        interfaces.length > 1
+          ? `Proyecto ZIP procesado correctamente. Interfaz seleccionada: ${selectedName}.`
+          : "Proyecto ZIP procesado correctamente.",
+      html_content: htmlContent,
+      captures: [],
+      total_captures: 0,
+      zip_result: result,
+    };
+
+    localStorage.setItem("zipResult", JSON.stringify(result));
+    localStorage.setItem("captureResult", JSON.stringify(captureResult));
+
+    navigate("/capture");
+  };
+
+  const confirmInterfaceSelection = () => {
+    if (selectedInterfaceIndex === null || !detectedInterfaces[selectedInterfaceIndex]) {
+      setError("Seleccione una interfaz del proyecto ZIP para continuar.");
+      return;
+    }
+
+    const selectedHtml = detectedInterfaces[selectedInterfaceIndex].html_content || "";
+
+    cleanPreviousAnalysis();
+    localStorage.setItem("inputType", "zip");
+    localStorage.setItem("inputUrl", "");
+    localStorage.setItem("inputZip", zipName);
+
+    proceedWithZipResult(zipUploadResult, selectedHtml, selectedInterfaceIndex);
   };
 
   return (
@@ -190,7 +248,9 @@ export default function Input() {
               <h2>Analizar proyecto frontend comprimido</h2>
               <p>
                 El sistema recibirá el archivo ZIP, extraerá los archivos HTML,
-                CSS, JS, JSX o TSX y preparará el artefacto para evaluación.
+                CSS, JS, JSX o TSX y preparará el artefacto para evaluación. Si
+                el proyecto contiene varias páginas HTML, podrá elegir cuál
+                interfaz evaluar.
               </p>
 
               <label className="upload-box">
@@ -211,6 +271,55 @@ export default function Input() {
                   No incluya node_modules, venv, dist, uploads ni capturas.
                 </small>
               </label>
+
+              {detectedInterfaces.length > 1 && (
+                <div className="interfaces-panel">
+                  <h3>
+                    Se detectaron {detectedInterfaces.length} interfaces en el
+                    proyecto
+                  </h3>
+                  <p>
+                    Seleccione la página HTML que desea evaluar en este
+                    análisis. Cada interfaz incluye únicamente su propio CSS
+                    y JavaScript asociado.
+                  </p>
+
+                  <div className="interfaces-list">
+                    {detectedInterfaces.map((iface, index) => (
+                      <label
+                        className={
+                          selectedInterfaceIndex === index
+                            ? "interface-option selected"
+                            : "interface-option"
+                        }
+                        key={iface.relative_path || index}
+                      >
+                        <input
+                          type="radio"
+                          name="selectedInterface"
+                          checked={selectedInterfaceIndex === index}
+                          onChange={() => setSelectedInterfaceIndex(index)}
+                        />
+
+                        <span className="interface-option-text">
+                          <strong>{iface.name || iface.file_name}</strong>
+                          <small>{iface.relative_path}</small>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+
+                  <div className="page-actions">
+                    <button
+                      className="primary-btn"
+                      type="button"
+                      onClick={confirmInterfaceSelection}
+                    >
+                      Continuar con interfaz seleccionada
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -227,7 +336,7 @@ export default function Input() {
               className="primary-btn"
               type="button"
               onClick={startAnalysis}
-              disabled={loading}
+              disabled={loading || detectedInterfaces.length > 1}
             >
               {loading ? "Procesando..." : "Iniciar análisis"}
             </button>
