@@ -263,10 +263,8 @@ export default function Evaluation() {
 
                     <div className="score-bar">
                       <div
-                        className={`score-bar-fill ${getScoreClass(
-                          item.value
-                        )}`}
-                        style={{ width: `${item.value}%` }}
+                        className="score-bar-fill"
+                        style={{ width: `${item.value}%`, background: "#000000" }}
                       />
                     </div>
                   </div>

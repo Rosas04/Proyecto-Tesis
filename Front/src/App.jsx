@@ -11,60 +11,25 @@ import Report from "./pages/Report";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 
+import History from "./pages/History.jsx";
+import InterfaceTabs from "./components/InterfaceTabs.jsx";
+
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Navigate to="/register" replace />} />
-
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-
-        <Route
-          path="/input"
-          element={
-            <ProtectedRoute>
-              <Input />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/capture"
-          element={
-            <ProtectedRoute>
-              <Capture />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/html"
-          element={
-            <ProtectedRoute>
-              <HtmlReplica />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/evaluation"
-          element={
-            <ProtectedRoute>
-              <Evaluation />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/report"
-          element={
-            <ProtectedRoute>
-              <Report />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/input" element={<ProtectedRoute><Input /></ProtectedRoute>} />
+        <Route path="/capture" element={<ProtectedRoute><Capture /></ProtectedRoute>} />
+        <Route path="/html" element={<ProtectedRoute><HtmlReplica /></ProtectedRoute>} />
+        <Route path="/evaluation" element={<ProtectedRoute><Evaluation /></ProtectedRoute>} />
+        <Route path="/report" element={<ProtectedRoute><Report /></ProtectedRoute>} />
+        <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
+        <Route path="/interfaces" element={<ProtectedRoute><InterfaceTabs /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   );
 }
+

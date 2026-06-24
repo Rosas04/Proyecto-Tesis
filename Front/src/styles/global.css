@@ -244,4 +244,19 @@ a {
   .page-actions {
     flex-direction: column;
   }
+
+  .badge {
+    display: inline-block;
+    padding: 0.25em 0.6em;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, #ff7e5f, #feb47b);
+    border-radius: 9999px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+  }
+  .badge:hover {
+    transform: scale(1.05);
+  }
 }

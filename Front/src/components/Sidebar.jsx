@@ -85,10 +85,6 @@ export default function Sidebar() {
           Cerrar sesión
         </button>
       </div>
-      <div className="sidebar-footer">
-        <span>ISO/IEC 25010</span>
-        <p>Evaluación técnica automatizada de interfaces frontend.</p>
-      </div>
     </aside>
   );
 }

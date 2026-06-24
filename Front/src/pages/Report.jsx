@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { jsPDF } from "jspdf";
-import { autoTable } from "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import Sidebar from "../components/Sidebar";
 import { generateReport } from "../services/api";
 import "./Report.css";
@@ -469,7 +469,7 @@ export default function Report() {
                           <td>{index + 1}</td>
                           <td>{item.dimension || "No especificada"}</td>
                           <td>{item.severity || "Media"}</td>
-                          <td>{item.finding || "Hallazgo no especificado."}</td>
+                          <td>{item.finding?.includes('[VIOLACIÓN]') ? (<span className="badge">{item.finding.replace('[VIOLACIÓN]','VIOLACIÓN')}</span>) : (item.finding || "Hallazgo no especificado.")}</td>
                           <td>
                             {item.recommendation ||
                               "No se registró recomendación."}
