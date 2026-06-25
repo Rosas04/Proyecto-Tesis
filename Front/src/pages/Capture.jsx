@@ -141,31 +141,7 @@ export default function Capture() {
 
         {!error && captureResult && (
           <>
-            {/* ── Interface Tabs ───────────────── */}
-            {interfaces.length > 0 && (
-              <nav className="tabs-navigation">
-                <button
-                  type="button"
-                  className={`tab-btn ${!selectedIface ? "tab-btn--active" : ""}`}
-                  onClick={() => setSelectedIface(null)}
-                >
-                  <TypeBadge type="combined" />
-                  <span>Paquete completo</span>
-                </button>
 
-                {interfaces.map((iface, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    className={`tab-btn ${selectedIface === iface ? "tab-btn--active" : ""}`}
-                    onClick={() => setSelectedIface(iface)}
-                  >
-                    <TypeBadge type={iface.type} />
-                    <span>{iface.file_name}</span>
-                  </button>
-                ))}
-              </nav>
-            )}
 
             {/* ── Summary ─────────────────────────────────── */}
             <section className="capture-summary card">

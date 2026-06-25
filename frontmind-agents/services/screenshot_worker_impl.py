@@ -54,12 +54,61 @@ def take_screenshots(url: str, credentials: dict = None):
         page = context.new_page()
         page.on("response", handle_response)
 
+        urls_to_visit = []
+        visited = set()
+        max_pages = 8
+
         # 1. Automate login sequence if credentials are provided
         if credentials and credentials.get("username_value") and credentials.get("password_value"):
             login_url = credentials.get("login_url") or url
             try:
                 page.goto(login_url, wait_until="domcontentloaded", timeout=60000)
                 page.wait_for_timeout(2000)
+                
+                # Capture the login page HTML and state before logging in!
+                try:
+                    login_html = page.content()
+                    login_title = page.title() or login_url
+                    parsed_login = urlparse(login_url)
+                    login_norm = f"{parsed_login.scheme}://{parsed_login.netloc}{parsed_login.path.rstrip('/')}"
+                    
+                    path_str = parsed_login.path or "/"
+                    if not path_str or path_str == "/":
+                        file_name = "login.html"
+                    else:
+                        file_name = path_str.strip("/").replace("/", "_") + ".html"
+                        
+                    crawled_pages[login_norm] = {
+                        "html": login_html,
+                        "title": login_title,
+                        "url": login_url,
+                        "cssom_styles": [],
+                        "relative_path": path_str,
+                        "file_name": file_name,
+                    }
+                    visited.add(login_norm)
+                    
+                    # Extract links from the login page
+                    login_links = page.evaluate("""() => {
+                        return Array.from(document.querySelectorAll('a'))
+                            .map(a => a.href)
+                            .filter(href => href && !href.startsWith('javascript:') && !href.startsWith('#'));
+                    }""")
+                    for link in login_links:
+                        abs_link = urljoin(login_url, link)
+                        parsed_link = urlparse(abs_link)
+                        link_origin = f"{parsed_link.scheme}://{parsed_link.netloc}"
+                        link_path = parsed_link.path.lower()
+
+                        is_internal = (link_origin == target_origin)
+                        is_logout = any(x in link_path or x in parsed_link.query.lower() for x in ["logout", "signout", "exit", "cerrar-sesion"])
+
+                        if is_internal and not is_logout:
+                            norm_link = f"{parsed_link.scheme}://{parsed_link.netloc}{parsed_link.path.rstrip('/')}"
+                            if norm_link not in visited:
+                                urls_to_visit.append(abs_link)
+                except Exception as capture_err:
+                    print(f"Failed to pre-capture login page: {capture_err}")
                 
                 # Fill username
                 user_sel = credentials.get("username_selector")
@@ -107,9 +156,15 @@ def take_screenshots(url: str, credentials: dict = None):
                 print(f"Login failed: {e}")
 
         # 2. Crawl discovery loop
-        urls_to_visit = [url]
-        visited = set()
-        max_pages = 8
+        post_login_url = page.url
+        parsed_post = urlparse(post_login_url)
+        post_norm = f"{parsed_post.scheme}://{parsed_post.netloc}{parsed_post.path.rstrip('/')}"
+        
+        if post_norm in visited:
+            visited.remove(post_norm)
+            
+        if post_login_url not in urls_to_visit:
+            urls_to_visit.insert(0, post_login_url)
 
         while urls_to_visit and len(visited) < max_pages:
             curr_url = urls_to_visit.pop(0)
