@@ -917,6 +917,7 @@ def _wrap_in_html(body_content: str, title: str, css: str) -> str:
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{title}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     * {{ box-sizing: border-box; }}
     body {{ margin: 0; font-family: Arial, Helvetica, sans-serif; }}
