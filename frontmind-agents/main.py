@@ -19,8 +19,17 @@ from services.zip_service import extract_zip_project
 from services.history_service import add_entry, load_history
 
 
+class CredentialsModel(BaseModel):
+    login_url: str | None = None
+    username_selector: str | None = None
+    username_value: str | None = None
+    password_selector: str | None = None
+    password_value: str | None = None
+    submit_selector: str | None = None
+
 class UrlRequest(BaseModel):
     url: str
+    credentials: CredentialsModel | None = None
 
 class HtmlRequest(BaseModel):
     html: str
@@ -74,13 +83,13 @@ def home():
 @app.post("/capture/url")
 def capture_url(request: UrlRequest):
     agent = CaptureAgent()
-    return agent.run(request.url)
+    return agent.run(request.url, request.credentials)
 
 
 @app.post("/replicate/html")
 def replicate_html(request: UrlRequest):
     capture_agent = CaptureAgent()
-    capture_result = capture_agent.run(request.url)
+    capture_result = capture_agent.run(request.url, request.credentials)
 
     html_agent = HtmlReplicationAgent()
     html_result = html_agent.run(

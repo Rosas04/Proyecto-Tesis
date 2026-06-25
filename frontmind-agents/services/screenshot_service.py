@@ -28,10 +28,11 @@ def _run_worker(request: dict) -> dict:
         raise RuntimeError(error_msg)
 
 
-def take_screenshots(url: str) -> dict:
+def take_screenshots(url: str, credentials: dict = None) -> dict:
     return _run_worker({
         "action": "url",
-        "url": url
+        "url": url,
+        "credentials": credentials
     })
 
 

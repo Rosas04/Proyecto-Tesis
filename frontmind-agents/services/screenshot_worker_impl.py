@@ -4,7 +4,7 @@ from pathlib import Path
 from datetime import datetime
 from playwright.sync_api import sync_playwright
 
-def take_screenshots(url: str):
+def take_screenshots(url: str, credentials: dict = None):
     api_base_url = os.getenv("API_BASE_URL", "http://127.0.0.1:8001")
     output_dir = Path("captures")
     output_dir.mkdir(exist_ok=True)
@@ -53,6 +53,65 @@ def take_screenshots(url: str):
             page.on("response", handle_response)
 
             try:
+                # Automate login sequence if credentials are provided
+                if credentials and credentials.get("username_value") and credentials.get("password_value"):
+                    login_url = credentials.get("login_url") or url
+                    page.goto(login_url, wait_until="domcontentloaded", timeout=60000)
+                    page.wait_for_timeout(2000)  # Wait for login page to load forms
+                    
+                    # Fill username
+                    user_sel = credentials.get("username_selector")
+                    if not user_sel:
+                        for selector in ["input[type=email]", "input[type=text]", "input[name=username]", "input[name=email]", "#email", "#username", "#user"]:
+                            try:
+                                if page.locator(selector).first.is_visible(timeout=1000):
+                                    user_sel = selector
+                                    break
+                            except Exception:
+                                pass
+                    
+                    # Fill password
+                    pass_sel = credentials.get("password_selector")
+                    if not pass_sel:
+                        for selector in ["input[type=password]", "input[name=password]", "#password", "#pass"]:
+                            try:
+                                if page.locator(selector).first.is_visible(timeout=1000):
+                                    pass_sel = selector
+                                    break
+                            except Exception:
+                                pass
+                                
+                    if user_sel and pass_sel:
+                        page.fill(user_sel, credentials["username_value"])
+                        page.fill(pass_sel, credentials["password_value"])
+                        
+                        # Click submit
+                        submit_sel = credentials.get("submit_selector")
+                        if submit_sel:
+                            try:
+                                page.click(submit_sel)
+                            except Exception:
+                                page.press(pass_sel, "Enter")
+                        else:
+                            submitted = False
+                            for selector in ["button[type=submit]", "input[type=submit]", "button:has-text('Iniciar')", "button:has-text('Login')", "button:has-text('Ingresar')"]:
+                                try:
+                                    if page.locator(selector).first.is_visible(timeout=1000):
+                                        page.click(selector)
+                                        submitted = True
+                                        break
+                                except Exception:
+                                    pass
+                            if not submitted:
+                                page.press(pass_sel, "Enter")
+                                
+                        # Wait for transition/cookies
+                        try:
+                            page.wait_for_navigation(timeout=5000)
+                        except Exception:
+                            page.wait_for_timeout(3500)
+                            
+                # Navigate to the target page URL
                 page.goto(url, wait_until="domcontentloaded", timeout=60000)
                 
                 # Scroll down and back up to trigger lazy loading

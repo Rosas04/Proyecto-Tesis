@@ -9,13 +9,13 @@ async function handleResponse(response, defaultMessage) {
   return response.json();
 }
 
-export async function captureInterfaceByUrl(url) {
+export async function captureInterfaceByUrl(url, credentials = null) {
   const response = await fetch(`${API_URL}/capture/url`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ url }),
+    body: JSON.stringify({ url, credentials }),
   });
 
   return handleResponse(response, "No se pudo capturar la interfaz desde la URL.");

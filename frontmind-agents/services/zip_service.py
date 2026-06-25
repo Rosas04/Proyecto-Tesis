@@ -835,8 +835,156 @@ def _extract_single_jsx(code: str, start: int) -> str:
     return code[start:start + 5000]
 
 
+def _extract_classes_from_expr(expr: str) -> list:
+    classes = []
+    
+    # 1. Process backtick strings
+    backtick_matches = re.findall(r'`([^`]*)`', expr)
+    for bt in backtick_matches:
+        # Literal parts outside of ${}
+        literal_parts = re.split(r'\$\{[^}]*\}', bt)
+        for lp in literal_parts:
+            if lp.strip():
+                classes.append(lp.strip())
+            
+        # Dynamic expressions inside ${}
+        expr_parts = re.findall(r'\$\{([^}]*)\}', bt)
+        for ep in expr_parts:
+            classes.extend(_extract_classes_from_expr(ep))
+            
+    # 2. Process standard single/double quoted strings outside backticks
+    expr_without_backticks = re.sub(r'`[^`]*`', '', expr)
+    standard_matches = re.findall(r'"([^"]*)"|\'([^\']*)\'', expr_without_backticks)
+    for m in standard_matches:
+        for val in m:
+            if val:
+                classes.append(val.strip())
+                
+    return classes
+
+
+def _clean_classname_expressions(html: str) -> str:
+    result = []
+    i = 0
+    n = len(html)
+    while i < n:
+        if html.startswith('className={', i):
+            depth = 1
+            j = i + 11 # length of 'className={'
+            in_string = False
+            string_char = None
+            braces_content = []
+            while j < n and depth > 0:
+                char = html[j]
+                if in_string:
+                    if char == string_char and html[j-1] != '\\':
+                        in_string = False
+                elif char in ('"', "'", '`'):
+                    in_string = True
+                    string_char = char
+                elif char == '{':
+                    depth += 1
+                elif char == '}':
+                    depth -= 1
+                braces_content.append(char)
+                j += 1
+            
+            if depth == 0:
+                expr = "".join(braces_content[:-1])
+                classes = _extract_classes_from_expr(expr)
+                combined = " ".join(classes)
+                words = []
+                for w in combined.split():
+                    if w not in words:
+                        words.append(w)
+                result.append(f'className="{" ".join(words)}"')
+                i = j
+            else:
+                result.append(html[i])
+                i += 1
+        else:
+            result.append(html[i])
+            i += 1
+    return "".join(result)
+
+
+def _clean_jsx_expressions(text: str) -> str:
+    # First, parse className={...} specifically
+    text_with_clean_classes = _clean_classname_expressions(text)
+    
+    result = []
+    i = 0
+    n = len(text_with_clean_classes)
+    while i < n:
+        if text_with_clean_classes[i] == '{':
+            depth = 1
+            j = i + 1
+            in_string = False
+            string_char = None
+            while j < n and depth > 0:
+                char = text_with_clean_classes[j]
+                if in_string:
+                    if char == string_char and text_with_clean_classes[j-1] != '\\':
+                        in_string = False
+                elif char in ('"', "'", '`'):
+                    in_string = True
+                    string_char = char
+                elif char == '{':
+                    depth += 1
+                elif char == '}':
+                    depth -= 1
+                j += 1
+            
+            if depth == 0:
+                block_content = text_with_clean_classes[i+1:j-1].strip()
+                if '<' in block_content and '>' in block_content:
+                    cleaned_block = _clean_js_wrap(block_content)
+                    result.append(_clean_jsx_expressions(cleaned_block))
+                else:
+                    result.append('[dynamic]')
+                i = j
+            else:
+                result.append(text_with_clean_classes[i])
+                i += 1
+        else:
+            result.append(text_with_clean_classes[i])
+            i += 1
+    return "".join(result)
+
+
+def _clean_js_wrap(js_code: str) -> str:
+    cleaned = js_code
+    cleaned = re.sub(r'/\*.*?\*/', '', cleaned, flags=re.DOTALL)
+    cleaned = re.sub(r'//.*', '', cleaned)
+    cleaned = re.sub(r'^[\s\S]*?=>\s*\(?', '', cleaned)
+    cleaned = re.sub(r'^[\s\S]*?(&&|\|\||\?\?)\s*\(?', '', cleaned)
+    
+    q_index = cleaned.find('?')
+    tag_index = cleaned.find('<')
+    if q_index != -1 and tag_index != -1 and q_index < tag_index:
+        cleaned = cleaned[q_index + 1:].strip()
+        while cleaned.startswith('('):
+            cleaned = cleaned[1:].strip()
+            
+    cleaned = re.sub(r'\s*:\s*(?:null|undefined|false)\s*$', '', cleaned)
+    colon_match = re.search(r'>\s*:\s*<', cleaned)
+    if colon_match:
+        cleaned = cleaned[:colon_match.start() + 1]
+            
+    cleaned = cleaned.strip()
+    while cleaned.endswith(')'):
+        cleaned = cleaned[:-1].strip()
+    while cleaned.startswith('('):
+        cleaned = cleaned[1:].strip()
+        
+    return cleaned
+
+
 def _jsx_to_html(jsx: str) -> str:
-    html = jsx
+    # 1. Clean JSX nested curly brace logic recursively
+    html = _clean_jsx_expressions(jsx)
+    
+    # 2. Apply standard regex replacements
     html = re.sub(r'\{/\*.*?\*/\}', '', html, flags=re.DOTALL)
     html = html.replace('className=', 'class=')
     html = html.replace('htmlFor=', 'for=')

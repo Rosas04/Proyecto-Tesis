@@ -14,6 +14,15 @@ export default function Input() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Credentials state
+  const [useCredentials, setUseCredentials] = useState(false);
+  const [loginUrl, setLoginUrl] = useState("");
+  const [usernameSelector, setUsernameSelector] = useState("");
+  const [usernameValue, setUsernameValue] = useState("");
+  const [passwordSelector, setPasswordSelector] = useState("");
+  const [passwordValue, setPasswordValue] = useState("");
+  const [submitSelector, setSubmitSelector] = useState("");
+
   const cleanPreviousAnalysis = () => {
     localStorage.removeItem("inputType");
     localStorage.removeItem("inputUrl");
@@ -74,7 +83,17 @@ export default function Input() {
     if (activeTab === "url") {
       try {
         setLoading(true);
-        const result = await captureInterfaceByUrl(url.trim());
+        
+        const credentials = useCredentials ? {
+          login_url: loginUrl.trim() || url.trim(),
+          username_selector: usernameSelector.trim() || null,
+          username_value: usernameValue,
+          password_selector: passwordSelector.trim() || null,
+          password_value: passwordValue,
+          submit_selector: submitSelector.trim() || null,
+        } : null;
+
+        const result = await captureInterfaceByUrl(url.trim(), credentials);
         localStorage.setItem("captureResult", JSON.stringify(result));
         navigate("/capture");
       } catch (err) {
@@ -169,7 +188,7 @@ export default function Input() {
               onClick={() => handleTabChange("url")}
               type="button"
             >
-              URL pública
+              Análisis por URL
             </button>
 
             <button
@@ -198,6 +217,81 @@ export default function Input() {
                 value={url}
                 onChange={(event) => setUrl(event.target.value)}
               />
+
+              <label style={{ display: "flex", alignItems: "center", gap: "8px", margin: "18px 0 12px", cursor: "pointer", fontWeight: "bold", fontSize: "14px", color: "#374151" }}>
+                <input
+                  type="checkbox"
+                  checked={useCredentials}
+                  onChange={(e) => setUseCredentials(e.target.checked)}
+                  style={{ width: "16px", height: "16px", accentColor: "#2563eb" }}
+                />
+                <span>¿Requiere inicio de sesión (Credenciales)?</span>
+              </label>
+
+              {useCredentials && (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", padding: "18px", background: "#f8fafc", borderRadius: "14px", border: "1px solid #e2e8f0", margin: "12px 0 18px" }}>
+                  <div style={{ gridColumn: "span 2" }}>
+                    <label className="field-label">URL del Login</label>
+                    <input
+                      className="form-input"
+                      type="url"
+                      placeholder="https://ejemplo.com/login (Si es distinta a la URL de análisis)"
+                      value={loginUrl}
+                      onChange={(e) => setLoginUrl(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="field-label">Usuario / Correo</label>
+                    <input
+                      className="form-input"
+                      type="text"
+                      placeholder="admin@ejemplo.com"
+                      value={usernameValue}
+                      onChange={(e) => setUsernameValue(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="field-label">Contraseña</label>
+                    <input
+                      className="form-input"
+                      type="password"
+                      placeholder="Contraseña de acceso"
+                      value={passwordValue}
+                      onChange={(e) => setPasswordValue(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="field-label">Selector de Usuario (Opcional)</label>
+                    <input
+                      className="form-input"
+                      type="text"
+                      placeholder="input[type=email] o #email"
+                      value={usernameSelector}
+                      onChange={(e) => setUsernameSelector(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="field-label">Selector de Contraseña (Opcional)</label>
+                    <input
+                      className="form-input"
+                      type="text"
+                      placeholder="input[type=password] o #password"
+                      value={passwordSelector}
+                      onChange={(e) => setPasswordSelector(e.target.value)}
+                    />
+                  </div>
+                  <div style={{ gridColumn: "span 2" }}>
+                    <label className="field-label">Selector de Botón Enviar (Opcional)</label>
+                    <input
+                      className="form-input"
+                      type="text"
+                      placeholder="button[type=submit] o #login-btn"
+                      value={submitSelector}
+                      onChange={(e) => setSubmitSelector(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

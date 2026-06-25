@@ -22,7 +22,7 @@ def main():
         action = request.get("action")
         
         if action == "url":
-            results = take_screenshots(request.get("url"))
+            results = take_screenshots(request.get("url"), request.get("credentials"))
         elif action == "html":
             results = take_screenshots_from_html(
                 request.get("html"),
