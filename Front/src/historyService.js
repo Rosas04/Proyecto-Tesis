@@ -14,6 +14,9 @@ export async function addAnalysisRun({
   inputHash = null,
   projectName = null
 }) {
+  if (!supabase) {
+    throw new Error("Base de datos (Supabase) no configurada.");
+  }
   if (!userId) {
     throw new Error("El ID del usuario es requerido para guardar en el historial.");
   }
@@ -111,6 +114,7 @@ export async function addAnalysisRun({
 }
 
 export async function fetchUserRuns(userId) {
+  if (!supabase) return [];
   if (!userId) return [];
 
   const { data, error } = await supabase
@@ -131,6 +135,7 @@ export async function fetchUserRuns(userId) {
  * Obtiene todos los hallazgos asociados a una ejecución específica.
  */
 export async function fetchRunFindings(runId) {
+  if (!supabase) return [];
   if (!runId) return [];
 
   const { data, error } = await supabase

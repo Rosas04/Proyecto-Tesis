@@ -9,6 +9,11 @@ export function AuthProvider({ children }) {
   const [loadingAuth, setLoadingAuth] = useState(true);
 
   useEffect(() => {
+    if (!supabase) {
+      setLoadingAuth(false);
+      return;
+    }
+
     const loadSession = async () => {
       const { data, error } = await supabase.auth.getSession();
 
@@ -30,11 +35,14 @@ export function AuthProvider({ children }) {
     );
 
     return () => {
-      listener.subscription.unsubscribe();
+      if (listener?.subscription) {
+        listener.subscription.unsubscribe();
+      }
     };
   }, []);
 
   const register = async (email, password) => {
+    if (!supabase) throw new Error("Base de datos (Supabase) no configurada.");
     return await supabase.auth.signUp({
       email,
       password,
@@ -42,6 +50,7 @@ export function AuthProvider({ children }) {
   };
 
   const login = async (email, password) => {
+    if (!supabase) throw new Error("Base de datos (Supabase) no configurada.");
     return await supabase.auth.signInWithPassword({
       email,
       password,
@@ -49,6 +58,7 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
+    if (!supabase) return;
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
