@@ -264,13 +264,14 @@ a {
 /* Tabs Navigation Styling */
 .tabs-navigation {
   display: flex;
-  gap: 8px;
+  gap: 4px;
   border-bottom: 2px solid #e5e7eb;
   padding-bottom: 0px;
   margin-bottom: 24px;
   overflow-x: auto;
   scrollbar-width: none; /* Hide scrollbar for Firefox */
   background: transparent;
+  align-items: flex-end;
 }
 
 .tabs-navigation::-webkit-scrollbar {
@@ -281,28 +282,33 @@ a {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 20px;
-  background: none;
-  border: none;
-  border-bottom: 3px solid transparent;
+  padding: 10px 18px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-bottom: none;
   font-size: 14px;
   font-weight: 600;
   color: #6b7280;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.2s ease-in-out;
+  transition: all 0.15s ease-in-out;
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
+  margin-bottom: -2px; /* Overlap parent border-bottom */
+  z-index: 1;
 }
 
 .tab-btn:hover {
   color: #2563eb;
   background-color: #f3f4f6;
+  border-color: #d1d5db;
 }
 
 .tab-btn--active {
   color: #2563eb;
-  border-bottom-color: #2563eb;
-  background-color: #eff6ff;
+  background-color: #ffffff;
+  border: 2px solid #2563eb;
+  border-bottom: 2px solid #ffffff; /* Cover and cut the parent border-bottom */
   font-weight: 700;
+  z-index: 2;
 }
