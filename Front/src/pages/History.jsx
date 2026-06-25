@@ -1,59 +1,377 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { fetchHistory } from '../historyService';
+import React, { useEffect, useMemo, useState } from "react";
+import Sidebar from "../components/Sidebar";
+import { useAuth } from "../context/AuthContext";
+import { fetchUserRuns, fetchRunFindings } from "../historyService";
+import "./History.css";
 
 export default function History() {
-  const [entries, setEntries] = useState([]);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [filter, setFilter] = useState('');
-  const loader = useRef(null);
+  const { user, loadingAuth } = useAuth();
+  
+  const [runs, setRuns] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [error, setError] = useState("");
+  
+  // Detalle del análisis seleccionado
+  const [selectedRun, setSelectedRun] = useState(null);
+  const [findings, setFindings] = useState([]);
+  const [loadingFindings, setLoadingFindings] = useState(false);
 
-  useEffect(() => {
-    const load = async () => {
-      const data = await fetchHistory({ page, pageSize: 20, analysisType: filter || null });
-      setEntries(prev => [...prev, ...data]);
-      if (data.length < 20) setHasMore(false);
-    };
-    load();
-  }, [page, filter]);
+  // Filtros y paginación
+  const [filterScore, setFilterScore] = useState("");
+  const [filterQuality, setFilterQuality] = useState("");
+  const [filterDate, setFilterDate] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      entries => {
-        if (entries[0].isIntersecting && hasMore) {
-          setPage(prev => prev + 1);
+  const filteredRuns = useMemo(() => {
+    return runs.filter((run) => {
+      // 1. Filtrar por nivel de calidad
+      if (filterQuality && run.quality_level !== filterQuality) {
+        return false;
+      }
+
+      // 2. Filtrar por porcentaje mínimo
+      if (filterScore) {
+        const scoreLimit = parseInt(filterScore, 10);
+        if (!isNaN(scoreLimit) && run.global_score < scoreLimit) {
+          return false;
         }
-      },
-      { rootMargin: '200px' }
-    );
-    if (loader.current) observer.observe(loader.current);
-    return () => observer.disconnect();
-  }, [loader.current, hasMore]);
+      }
 
-  const handleFilterChange = e => {
-    setFilter(e.target.value);
-    setEntries([]);
-    setPage(1);
-    setHasMore(true);
+      // 3. Filtrar por fecha
+      if (filterDate) {
+        const runDateStr = new Date(run.created_at).toISOString().split("T")[0];
+        if (runDateStr !== filterDate) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [runs, filterQuality, filterScore, filterDate]);
+
+  const paginatedRuns = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredRuns.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredRuns, currentPage, itemsPerPage]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredRuns.length / itemsPerPage));
+
+  // Resetear página a 1 cuando cambian los filtros
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterQuality, filterScore, filterDate]);
+
+  useEffect(() => {
+    if (loadingAuth) return;
+    if (!user) {
+      setError("Inicie sesión para visualizar su historial de análisis.");
+      return;
+    }
+    loadHistory();
+  }, [user, loadingAuth]);
+
+  // Cerrar modal con la tecla Escape
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setSelectedRun(null);
+      }
+    };
+    if (selectedRun) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedRun]);
+
+  const loadHistory = async () => {
+    try {
+      setLoadingHistory(true);
+      setError("");
+      const data = await fetchUserRuns(user.id);
+      setRuns(data);
+    } catch (err) {
+      console.error(err);
+      setError("No se pudo cargar el historial de análisis.");
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const handleSelectRun = async (run) => {
+    setSelectedRun(run);
+    setFindings([]);
+    try {
+      setLoadingFindings(true);
+      const data = await fetchRunFindings(run.id);
+      setFindings(data);
+    } catch (err) {
+      console.error(err);
+      setError("No se pudieron cargar los hallazgos de este análisis.");
+    } finally {
+      setLoadingFindings(false);
+    }
+  };
+
+  const getScoreClass = (score) => {
+    if (score >= 90) return "excellent";
+    if (score >= 80) return "high";
+    if (score >= 60) return "medium";
+    if (score >= 40) return "low";
+    return "critical";
+  };
+
+  const getSeverityClass = (severity) => {
+    if (severity === "Crítica") return "critical";
+    if (severity === "Alta") return "high";
+    if (severity === "Media") return "medium";
+    return "low";
   };
 
   return (
-    <div className="section">
-      <h2 className="page-title">Historial de Análisis</h2>
-      <select className="filter-dropdown" value={filter} onChange={handleFilterChange}>
-        <option value="">Todas</option>
-        <option value="typeA">Tipo A</option>
-        <option value="typeB">Tipo B</option>
-        {/* Add more types as needed */}
-      </select>
-      <ul className="history-list">
-        {entries.map(entry => (
-          <li key={entry.id} className="history-item">
-            <strong>{new Date(entry.created_at).toLocaleString()}</strong> – {entry.analysis_type}
-          </li>
-        ))}
-      </ul>
-      {hasMore && <div ref={loader} className="infinite-scroll-loader">Cargando...</div>}
+    <div className="layout">
+      <Sidebar />
+
+      <main className="history-main">
+        <section className="page-header">
+          <p className="page-kicker">Historial de Auditoría</p>
+          <h1 className="page-title">Historial de análisis y calidad</h1>
+          <p className="page-description">
+            Revise los diagnósticos técnicos frontend realizados en esta cuenta bajo la norma ISO/IEC 25010. 
+            Haga clic en cualquier auditoría para ver el desglose de hallazgos detectados.
+          </p>
+        </section>
+
+        {error && <div className="error-box">{error}</div>}
+
+        {loadingAuth || loadingHistory ? (
+          <div className="loading-box">Cargando historial de análisis...</div>
+        ) : !user ? (
+          <div className="error-box">Inicie sesión para acceder a esta sección.</div>
+        ) : (
+          <div className="history-content">
+            {/* Listado de Ejecuciones */}
+            <section className="runs-section card">
+              <h2>Análisis Realizados</h2>
+
+              {/* Filtros de Búsqueda */}
+              {runs.length > 0 && (
+                <div className="filters-bar">
+                  <div className="filter-group">
+                    <label htmlFor="filterScore">Puntaje Mínimo</label>
+                    <input
+                      id="filterScore"
+                      type="number"
+                      min="0"
+                      max="100"
+                      placeholder="Ej. 80"
+                      value={filterScore}
+                      onChange={(e) => setFilterScore(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="filter-group">
+                    <label htmlFor="filterQuality">Nivel de Calidad</label>
+                    <select
+                      id="filterQuality"
+                      value={filterQuality}
+                      onChange={(e) => setFilterQuality(e.target.value)}
+                    >
+                      <option value="">Todos</option>
+                      <option value="Excelente">Excelente</option>
+                      <option value="Alto">Alto</option>
+                      <option value="Medio">Medio</option>
+                      <option value="Bajo">Bajo</option>
+                      <option value="Crítico">Crítico</option>
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label htmlFor="filterDate">Fecha de Análisis</label>
+                    <input
+                      id="filterDate"
+                      type="date"
+                      value={filterDate}
+                      onChange={(e) => setFilterDate(e.target.value)}
+                    />
+                  </div>
+
+                  {(filterScore || filterQuality || filterDate) && (
+                    <button
+                      className="clear-filters-btn"
+                      onClick={() => {
+                        setFilterScore("");
+                        setFilterQuality("");
+                        setFilterDate("");
+                      }}
+                    >
+                      Limpiar filtros
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {runs.length === 0 ? (
+                <div className="empty-box">
+                  No se han registrado análisis en esta cuenta todavía.
+                </div>
+              ) : filteredRuns.length === 0 ? (
+                <div className="empty-box">
+                  No se encontraron análisis que coincidan con los filtros aplicados.
+                </div>
+              ) : (
+                <>
+                  <div className="table-wrapper">
+                    <table className="runs-table">
+                      <thead>
+                        <tr>
+                          <th>Proyecto</th>
+                          <th>Fecha y Hora</th>
+                          <th>Puntaje Global</th>
+                          <th>Nivel de Calidad</th>
+                          <th>Hallazgos</th>
+                          <th>Acción</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paginatedRuns.map((run) => (
+                          <tr 
+                            key={run.id} 
+                            className={selectedRun?.id === run.id ? "active-row" : ""}
+                            onClick={() => handleSelectRun(run)}
+                          >
+                            <td>
+                              <strong>{run.projects?.project_name || "Proyecto Principal"}</strong>
+                            </td>
+                            <td>{new Date(run.created_at).toLocaleString("es-ES")}</td>
+                            <td>
+                              <span className={`score-badge ${getScoreClass(run.global_score)}`}>
+                                {run.global_score}/100
+                              </span>
+                            </td>
+                            <td>
+                              <strong>{run.quality_level}</strong>
+                            </td>
+                            <td>{run.total_findings} hallazgos</td>
+                            <td>
+                              <button className="view-details-btn">
+                                {selectedRun?.id === run.id ? "Visualizando" : "Ver detalles"}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Controles de Paginación */}
+                  {filteredRuns.length > itemsPerPage && (
+                    <div className="pagination-controls">
+                      <button
+                        className="pagination-btn"
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      >
+                        Anterior
+                      </button>
+                      <span className="pagination-info">
+                        Página {currentPage} de {totalPages}
+                      </span>
+                      <button
+                        className="pagination-btn"
+                        disabled={currentPage === totalPages}
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      >
+                        Siguiente
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </section>
+
+            {/* Detalle del Análisis Seleccionado */}
+            {selectedRun && (
+              <div className="modal-overlay" onClick={() => setSelectedRun(null)}>
+                <section className="modal-container details-section card fade-in" onClick={(e) => e.stopPropagation()}>
+                  <div className="details-header">
+                    <div>
+                      <h2>Detalles del Análisis</h2>
+                      <p className="details-subtitle">
+                        Ejecutado el {new Date(selectedRun.created_at).toLocaleString("es-ES")}
+                      </p>
+                    </div>
+                    <button className="close-details-btn" onClick={() => setSelectedRun(null)}>
+                      Cerrar detalles
+                    </button>
+                  </div>
+
+                  <div className="summary-cards">
+                    <div className="summary-card">
+                      <span>Puntaje Global</span>
+                      <strong className={getScoreClass(selectedRun.global_score)}>
+                        {selectedRun.global_score}
+                      </strong>
+                    </div>
+                    <div className="summary-card">
+                      <span>Nivel de Calidad</span>
+                      <strong>{selectedRun.quality_level}</strong>
+                    </div>
+                    <div className="summary-card">
+                      <span>Hallazgos Totales</span>
+                      <strong>{selectedRun.total_findings}</strong>
+                    </div>
+                  </div>
+
+                  <h3>Hallazgos Técnicos Registrados</h3>
+
+                  {loadingFindings ? (
+                    <div className="loading-box-small">Cargando hallazgos...</div>
+                  ) : findings.length === 0 ? (
+                    <div className="success-box">
+                      No se detectaron hallazgos técnicos en este análisis.
+                    </div>
+                  ) : (
+                    <div className="findings-table-wrapper">
+                      <table className="findings-table">
+                        <thead>
+                          <tr>
+                            <th>N°</th>
+                            <th>Dimensión</th>
+                            <th>Subdimensión</th>
+                            <th>Severidad</th>
+                            <th>Hallazgo</th>
+                            <th>Recomendación</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {findings.map((item, index) => (
+                            <tr key={item.id || index}>
+                              <td>{index + 1}</td>
+                              <td>{item.dimension}</td>
+                              <td>{item.subdimension}</td>
+                              <td>
+                                <span className={`severity-pill ${getSeverityClass(item.severity)}`}>
+                                  {item.severity}
+                                </span>
+                              </td>
+                              <td>{item.finding}</td>
+                              <td>{item.recommendation}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </section>
+              </div>
+            )}
+          </div>
+        )}
+      </main>
     </div>
   );
 }
+

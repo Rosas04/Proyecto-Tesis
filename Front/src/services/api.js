@@ -60,13 +60,16 @@ export async function evaluateHtml(html) {
   return handleResponse(response, "No se pudo evaluar el HTML.");
 }
 
-export async function generateReport(evaluation) {
+export async function generateReport(evaluation, userId = null) {
   const response = await fetch(`${API_URL}/report/generate`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ evaluation }),
+    body: JSON.stringify({ 
+      evaluation,
+      user_id: userId
+    }),
   });
 
   return handleResponse(response, "No se pudo generar el reporte técnico.");

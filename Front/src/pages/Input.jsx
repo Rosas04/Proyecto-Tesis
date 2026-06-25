@@ -21,6 +21,7 @@ export default function Input() {
     localStorage.removeItem("captureResult");
     localStorage.removeItem("zipResult");
     localStorage.removeItem("htmlReplicaResult");
+    localStorage.removeItem("htmlToEvaluate");
     localStorage.removeItem("isoEvaluation");
     localStorage.removeItem("technicalReport");
   };

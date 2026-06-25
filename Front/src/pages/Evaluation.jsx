@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { evaluateHtml } from "../services/api";
@@ -11,6 +11,8 @@ export default function Evaluation() {
   const [htmlToEvaluate, setHtmlToEvaluate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  
+  const hasCalled = useRef(false);
 
   useEffect(() => {
     const savedEvaluation = localStorage.getItem("isoEvaluation");
@@ -31,6 +33,9 @@ export default function Evaluation() {
         console.error(err);
       }
     }
+
+    if (hasCalled.current) return;
+    hasCalled.current = true;
 
     runEvaluation(savedHtml);
   }, []);

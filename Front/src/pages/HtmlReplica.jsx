@@ -4,6 +4,43 @@ import Sidebar from "../components/Sidebar";
 import { replicateHtmlFromContent } from "../services/api";
 import "./HtmlReplica.css";
 
+const TYPE_COLORS = {
+  html:     { bg: "#ecfdf5", color: "#047857", label: "HTML"     },
+  jsx:      { bg: "#eff6ff", color: "#1d4ed8", label: "JSX"      },
+  tsx:      { bg: "#f5f3ff", color: "#6d28d9", label: "TSX"      },
+  ts:       { bg: "#fdf4ff", color: "#7e22ce", label: "TS"       },
+  js:       { bg: "#fefce8", color: "#92400e", label: "JS"       },
+  vue:      { bg: "#f0fdf4", color: "#15803d", label: "VUE"      },
+  svelte:   { bg: "#fff7ed", color: "#c2410c", label: "SVELTE"   },
+  astro:    { bg: "#faf5ff", color: "#7c3aed", label: "ASTRO"    },
+  cshtml:   { bg: "#f0f9ff", color: "#0369a1", label: "CSHTML"   },
+  razor:    { bg: "#f0f9ff", color: "#0369a1", label: "RAZOR"    },
+  php:      { bg: "#f5f3ff", color: "#5b21b6", label: "PHP"      },
+  blade:    { bg: "#fdf2f8", color: "#9d174d", label: "BLADE"    },
+  erb:      { bg: "#fef2f2", color: "#991b1b", label: "ERB"      },
+  hbs:      { bg: "#fff8f0", color: "#c2410c", label: "HBS"      },
+  mustache: { bg: "#fff8f0", color: "#c2410c", label: "MUSTACHE" },
+  ejs:      { bg: "#f0fdf4", color: "#166534", label: "EJS"      },
+  pug:      { bg: "#f9fafb", color: "#374151", label: "PUG"      },
+  jinja:    { bg: "#fefce8", color: "#854d0e", label: "JINJA"    },
+  njk:      { bg: "#fefce8", color: "#854d0e", label: "NJK"      },
+  twig:     { bg: "#f0fdf4", color: "#065f46", label: "TWIG"     },
+  liquid:   { bg: "#eff6ff", color: "#1e40af", label: "LIQUID"   },
+  combined: { bg: "#f1f5f9", color: "#334155", label: "FULL"     },
+};
+
+function TypeBadge({ type }) {
+  const t = TYPE_COLORS[type] || TYPE_COLORS.combined;
+  return (
+    <span
+      className="type-badge"
+      style={{ background: t.bg, color: t.color }}
+    >
+      {t.label}
+    </span>
+  );
+}
+
 export default function HtmlReplica() {
   const navigate = useNavigate();
 
@@ -13,8 +50,17 @@ export default function HtmlReplica() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [selectedIface, setSelectedIface] = useState(null);
+  const [replicatedCache, setReplicatedCache] = useState({});
+
   const inputType = localStorage.getItem("inputType") || "url";
   const inputUrl = localStorage.getItem("inputUrl") || "";
+
+  const isZip = captureResult?.source_type === "zip";
+  const interfaces = useMemo(() => {
+    if (!captureResult?.interfaces || !Array.isArray(captureResult.interfaces)) return [];
+    return captureResult.interfaces;
+  }, [captureResult]);
 
   useEffect(() => {
     const savedCapture = localStorage.getItem("captureResult");
@@ -29,6 +75,16 @@ export default function HtmlReplica() {
       const parsedCapture = JSON.parse(savedCapture);
       setCaptureResult(parsedCapture);
 
+      let initialIface = null;
+      if (parsedCapture.interfaces && parsedCapture.interfaces.length > 0) {
+        initialIface = parsedCapture.interfaces.find(
+          (iface) => iface.html_content === parsedCapture.html_content
+        ) || null;
+      }
+      setSelectedIface(initialIface);
+
+      const cacheKey = initialIface ? initialIface.file_name : "combined";
+
       if (savedReplica) {
         const parsedReplica = JSON.parse(savedReplica);
         setReplicaResult(parsedReplica);
@@ -39,32 +95,33 @@ export default function HtmlReplica() {
           "";
 
         setHtmlPreview(html);
+        setReplicatedCache({
+          [cacheKey]: { result: parsedReplica, html }
+        });
         return;
       }
 
-      generateReplica(parsedCapture);
+      const targetHtmlContent = initialIface
+        ? initialIface.html_content
+        : parsedCapture.html_content || "";
+
+      if (targetHtmlContent.trim()) {
+        initialGenerate(targetHtmlContent, initialIface, parsedCapture);
+      }
     } catch (err) {
       setError("No se pudo leer la información almacenada.");
       console.error(err);
     }
   }, []);
 
-  const generateReplica = async (captureData) => {
+  const initialGenerate = async (htmlContent, iface, captureData) => {
     try {
       setLoading(true);
       setError("");
 
-      const htmlContent = captureData?.html_content || "";
-
-      if (!htmlContent.trim()) {
-        setError("No existe contenido HTML para generar la réplica.");
-        return;
-      }
-
-      const sourceUrl =
-        captureData?.url ||
-        inputUrl ||
-        "Interfaz evaluada por FrontMind AI";
+      const sourceUrl = iface
+        ? iface.file_name
+        : captureData?.url || inputUrl || "Interfaz evaluada por FrontMind AI";
 
       const result = await replicateHtmlFromContent(htmlContent, sourceUrl);
 
@@ -76,19 +133,75 @@ export default function HtmlReplica() {
       setReplicaResult(result);
       setHtmlPreview(replicatedHtml);
 
+      const cacheKey = iface ? iface.file_name : "combined";
+      setReplicatedCache({
+        [cacheKey]: { result, html: replicatedHtml }
+      });
       localStorage.setItem("htmlReplicaResult", JSON.stringify(result));
     } catch (err) {
-      setError(
-        "No se pudo generar la réplica HTML. Verifique que el backend esté encendido."
-      );
+      setError("No se pudo generar la réplica HTML. Verifique que el backend esté encendido.");
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const htmlStats = useMemo(() => {
-    const html = htmlPreview || "";
+  const handleTabChange = async (iface) => {
+    setSelectedIface(iface);
+    setError("");
+
+    const targetHtmlContent = iface
+      ? iface.html_content
+      : captureResult?.html_content || "";
+
+    if (!targetHtmlContent.trim()) {
+      setHtmlPreview("");
+      setError("No existe contenido HTML para esta interfaz.");
+      return;
+    }
+
+    const cacheKey = iface ? iface.file_name : "combined";
+    if (replicatedCache[cacheKey]) {
+      const cached = replicatedCache[cacheKey];
+      setReplicaResult(cached.result);
+      setHtmlPreview(cached.html);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const sourceUrl = iface
+        ? iface.file_name
+        : captureResult?.url || inputUrl || "Interfaz evaluada por FrontMind AI";
+
+      const result = await replicateHtmlFromContent(targetHtmlContent, sourceUrl);
+
+      const replicatedHtml =
+        result?.html_replication?.html_replicated ||
+        result?.html_replicated ||
+        "";
+
+      setReplicaResult(result);
+      setHtmlPreview(replicatedHtml);
+
+      setReplicatedCache(prev => ({
+        ...prev,
+        [cacheKey]: { result, html: replicatedHtml }
+      }));
+    } catch (err) {
+      setError("No se pudo generar la réplica HTML para esta interfaz.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const combinedHtml = useMemo(() => {
+    return captureResult?.extraction?.combined_html || captureResult?.html_content || "";
+  }, [captureResult]);
+
+  const combinedHtmlStats = useMemo(() => {
+    const html = combinedHtml || "";
 
     return {
       characters: html.length,
@@ -98,7 +211,7 @@ export default function HtmlReplica() {
       links: html ? (html.match(/<a\s/gi) || []).length : 0,
       buttons: html ? (html.match(/<button/gi) || []).length : 0,
     };
-  }, [htmlPreview]);
+  }, [combinedHtml]);
 
   const continueToEvaluation = () => {
     if (!htmlPreview.trim()) {
@@ -106,8 +219,23 @@ export default function HtmlReplica() {
       return;
     }
 
-    localStorage.setItem("htmlToEvaluate", htmlPreview);
-    navigate("/evaluation");
+    try {
+      localStorage.setItem("htmlToEvaluate", htmlPreview);
+      navigate("/evaluation");
+    } catch (e) {
+      console.warn("localStorage quota exceeded, cleaning up older items...", e);
+      // Clean up massive temporary items that are no longer strictly needed in evaluation
+      localStorage.removeItem("zipResult");
+      localStorage.removeItem("captureResult");
+      localStorage.removeItem("htmlReplicaResult");
+      try {
+        localStorage.setItem("htmlToEvaluate", htmlPreview);
+        navigate("/evaluation");
+      } catch (retryError) {
+        setError("El archivo HTML es demasiado grande para guardarse en el almacenamiento de su navegador. Pruebe reduciendo el tamaño del archivo o limpiando la caché.");
+        console.error("Fallo definitivo al guardar en localStorage:", retryError);
+      }
+    }
   };
 
   const goBack = () => {
@@ -152,36 +280,62 @@ export default function HtmlReplica() {
 
               <div>
                 <span>Caracteres</span>
-                <strong>{htmlStats.characters}</strong>
+                <strong>{combinedHtmlStats.characters}</strong>
               </div>
 
               <div>
                 <span>Etiquetas</span>
-                <strong>{htmlStats.tags}</strong>
+                <strong>{combinedHtmlStats.tags}</strong>
               </div>
             </section>
 
             <section className="html-stats-grid">
               <article className="html-stat card">
                 <span>Líneas</span>
-                <strong>{htmlStats.lines}</strong>
+                <strong>{combinedHtmlStats.lines}</strong>
               </article>
 
               <article className="html-stat card">
                 <span>Imágenes</span>
-                <strong>{htmlStats.images}</strong>
+                <strong>{combinedHtmlStats.images}</strong>
               </article>
 
               <article className="html-stat card">
                 <span>Enlaces</span>
-                <strong>{htmlStats.links}</strong>
+                <strong>{combinedHtmlStats.links}</strong>
               </article>
 
               <article className="html-stat card">
                 <span>Botones</span>
-                <strong>{htmlStats.buttons}</strong>
+                <strong>{combinedHtmlStats.buttons}</strong>
               </article>
             </section>
+
+            {/* ── Interface Tabs (ZIP only) ───────────────── */}
+            {isZip && interfaces.length > 0 && (
+              <nav className="tabs-navigation">
+                <button
+                  type="button"
+                  className={`tab-btn ${!selectedIface ? "tab-btn--active" : ""}`}
+                  onClick={() => handleTabChange(null)}
+                >
+                  <TypeBadge type="combined" />
+                  <span>Paquete completo</span>
+                </button>
+
+                {interfaces.map((iface, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className={`tab-btn ${selectedIface?.file_name === iface.file_name ? "tab-btn--active" : ""}`}
+                    onClick={() => handleTabChange(iface)}
+                  >
+                    <TypeBadge type={iface.type} />
+                    <span>{iface.file_name}</span>
+                  </button>
+                ))}
+              </nav>
+            )}
 
             <section className="html-workspace">
               <article className="html-code-panel card">
@@ -220,7 +374,7 @@ export default function HtmlReplica() {
                       title="Vista previa HTML"
                       className="preview-frame"
                       srcDoc={htmlPreview}
-                      sandbox="allow-same-origin"
+                      sandbox="allow-same-origin allow-scripts"
                     />
                   ) : (
                     <div className="empty-preview">

@@ -2,12 +2,15 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 import requests
 import re
+import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class HtmlReplicationAgent:
-    def run(self, html_content: str = "", url: str = ""):
+    def run(self, html_content: str = "", url: str = "", css_cache: dict = None, cssom_styles: list = None):
         if html_content and len(html_content.strip()) > 50:
-            replicated = self.build_full_html(html_content, url)
+            replicated = self.build_full_html(html_content, url, css_cache, cssom_styles)
             source = "HTML real enriquecido con estilos"
         else:
             replicated = self.generate_base_html(url)
@@ -21,7 +24,9 @@ class HtmlReplicationAgent:
             "html_length": len(replicated),
         }
 
-    def build_full_html(self, html_content: str, url: str):
+    def build_full_html(self, html_content: str, url: str, css_cache: dict = None, cssom_styles: list = None):
+        css_cache = css_cache or {}
+        cssom_styles = cssom_styles or []
         soup = BeautifulSoup(html_content, "html.parser")
 
         title = soup.title.get_text(strip=True) if soup.title else "Interfaz evaluada"
@@ -32,17 +37,40 @@ class HtmlReplicationAgent:
         for style in soup.find_all("style"):
             css_blocks.append(style.get_text())
 
+        injected_urls = set()
+
         for link in soup.find_all("link"):
             rel = link.get("rel") or []
+            if isinstance(rel, str):
+                rel = [rel]
             href = link.get("href")
 
-            if href and "stylesheet" in rel:
+            if href and any(r in ["stylesheet", "preload"] for r in rel):
                 css_url = urljoin(url, href)
-                css_content = self.fetch_css(css_url)
+                
+                # Check cache first
+                css_content = css_cache.get(css_url)
+                
+                # Fallback to requests if not cached
+                if not css_content:
+                    css_content = self.fetch_css(css_url)
 
                 if css_content:
                     css_content = self.fix_css_urls(css_content, css_url)
                     external_css.append(f"\n/* CSS externo: {css_url} */\n{css_content}")
+                    injected_urls.add(css_url)
+
+        # Inject any remaining CSS from cache that was loaded dynamically
+        for css_url, css_content in css_cache.items():
+            if css_url not in injected_urls and css_content:
+                fixed_content = self.fix_css_urls(css_content, css_url)
+                external_css.append(f"\n/* CSS dinamico de red: {css_url} */\n{fixed_content}")
+                injected_urls.add(css_url)
+
+        # Inject dynamic styles from CSSOM (CSS-in-JS)
+        for i, style_text in enumerate(cssom_styles):
+            if style_text and style_text.strip():
+                external_css.append(f"\n/* Estilos dinamicos CSSOM #{i+1} */\n{style_text}")
 
         for tag in soup.find_all(["script", "noscript"]):
             tag.decompose()
@@ -92,6 +120,7 @@ class HtmlReplicationAgent:
             response = requests.get(
                 css_url,
                 timeout=10,
+                verify=False,  # Bypass SSL certificate errors
                 headers={
                     "User-Agent": (
                         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
