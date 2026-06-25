@@ -33,7 +33,7 @@ export async function uploadZip(file) {
   return handleResponse(response, "No se pudo procesar el archivo ZIP.");
 }
 
-export async function replicateHtmlFromContent(htmlContent, url) {
+export async function replicateHtmlFromContent(htmlContent, url, cssCache = null, cssomStyles = null) {
   const response = await fetch(`${API_URL}/replicate/content`, {
     method: "POST",
     headers: {
@@ -42,6 +42,8 @@ export async function replicateHtmlFromContent(htmlContent, url) {
     body: JSON.stringify({
       html_content: htmlContent,
       url,
+      css_cache: cssCache,
+      cssom_styles: cssomStyles,
     }),
   });
 

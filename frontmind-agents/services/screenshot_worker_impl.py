@@ -179,6 +179,11 @@ def take_screenshots(url: str, credentials: dict = None):
             try:
                 page.goto(curr_url, wait_until="domcontentloaded", timeout=30000)
                 page.wait_for_timeout(1500)
+                try:
+                    # Wait for any session loading screen to disappear
+                    page.wait_for_selector("text=Cargando", state="detached", timeout=5000)
+                except Exception:
+                    pass
 
                 # Check for redirection
                 final_url = page.url
@@ -199,8 +204,8 @@ def take_screenshots(url: str, credentials: dict = None):
                         const styles = [];
                         for (const sheet of document.styleSheets) {
                             try {
-                                if (!sheet.href) {
-                                    const rules = sheet.cssRules || sheet.rules;
+                                const rules = sheet.cssRules || sheet.rules;
+                                if (rules) {
                                     let content = "";
                                     for (const rule of rules) {
                                         content += rule.cssText + "\\n";
@@ -279,6 +284,12 @@ def take_screenshots(url: str, credentials: dict = None):
                 
                 try:
                     vp_page.goto(p_info["url"], wait_until="domcontentloaded", timeout=30000)
+                    vp_page.wait_for_timeout(1500)
+                    try:
+                        # Wait for any session loading screen to disappear
+                        vp_page.wait_for_selector("text=Cargando", state="detached", timeout=5000)
+                    except Exception:
+                        pass
                     
                     try:
                         vp_page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
@@ -286,8 +297,6 @@ def take_screenshots(url: str, credentials: dict = None):
                         vp_page.evaluate("window.scrollTo(0, 0)")
                         vp_page.wait_for_timeout(500)
                     except: pass
-                    
-                    vp_page.wait_for_timeout(1500)
 
                     file_name = f"{item['device']}_{timestamp}_{p_info['file_name'].replace('.html', '')}.png"
                     file_path = output_dir / file_name

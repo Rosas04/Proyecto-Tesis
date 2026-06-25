@@ -123,7 +123,12 @@ export default function HtmlReplica() {
         ? iface.file_name
         : captureData?.url || inputUrl || "Interfaz evaluada por FrontMind AI";
 
-      const result = await replicateHtmlFromContent(htmlContent, sourceUrl);
+      const cssCache = captureData?.css_cache || null;
+      const cssomStyles = iface
+        ? iface.cssom_styles
+        : (captureData?.cssom_styles || null);
+
+      const result = await replicateHtmlFromContent(htmlContent, sourceUrl, cssCache, cssomStyles);
 
       const replicatedHtml =
         result?.html_replication?.html_replicated ||
@@ -174,7 +179,12 @@ export default function HtmlReplica() {
         ? iface.file_name
         : captureResult?.url || inputUrl || "Interfaz evaluada por FrontMind AI";
 
-      const result = await replicateHtmlFromContent(targetHtmlContent, sourceUrl);
+      const cssCache = captureResult?.css_cache || null;
+      const cssomStyles = iface
+        ? iface.cssom_styles
+        : (captureResult?.cssom_styles || null);
+
+      const result = await replicateHtmlFromContent(targetHtmlContent, sourceUrl, cssCache, cssomStyles);
 
       const replicatedHtml =
         result?.html_replication?.html_replicated ||

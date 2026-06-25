@@ -48,6 +48,8 @@ class ReportRequest(BaseModel):
 class HtmlContentRequest(BaseModel):
     html_content: str
     url: str
+    css_cache: dict | None = None
+    cssom_styles: list | None = None
 
 
 app = FastAPI(
@@ -112,6 +114,8 @@ def replicate_content(request: HtmlContentRequest):
     html_result = html_agent.run(
         html_content=request.html_content,
         url=request.url,
+        css_cache=request.css_cache,
+        cssom_styles=request.cssom_styles,
     )
 
     return {
