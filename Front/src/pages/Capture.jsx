@@ -141,8 +141,8 @@ export default function Capture() {
 
         {!error && captureResult && (
           <>
-            {/* ── Interface Tabs (ZIP only) ───────────────── */}
-            {isZip && interfaces.length > 0 && (
+            {/* ── Interface Tabs ───────────────── */}
+            {interfaces.length > 0 && (
               <nav className="tabs-navigation">
                 <button
                   type="button"
@@ -187,7 +187,7 @@ export default function Capture() {
                 <span className="summary-label">Capturas</span>
                 <strong>{captures.length}</strong>
               </div>
-              {isZip && (
+              {interfaces.length > 0 && (
                 <div>
                   <span className="summary-label">Interfaces</span>
                   <strong>{interfaces.length}</strong>

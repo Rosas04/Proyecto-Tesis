@@ -66,13 +66,11 @@ export default function Evaluation() {
     const savedHtml = localStorage.getItem("htmlToEvaluate");
     const savedCapture = localStorage.getItem("captureResult");
 
-    let localIsZip = false;
     let parsedCapture = null;
     if (savedCapture) {
       try {
         parsedCapture = JSON.parse(savedCapture);
         setCaptureResult(parsedCapture);
-        localIsZip = parsedCapture.source_type === "zip";
       } catch (err) {
         console.error(err);
       }
@@ -86,7 +84,7 @@ export default function Evaluation() {
     setHtmlToEvaluate(savedHtml);
 
     let initialIface = null;
-    if (localIsZip && parsedCapture && parsedCapture.interfaces) {
+    if (parsedCapture && parsedCapture.interfaces) {
       initialIface = parsedCapture.interfaces.find(
         (iface) => iface.html_content === savedHtml
       ) || null;
@@ -295,8 +293,8 @@ export default function Evaluation() {
           </p>
         </section>
 
-        {/* ── Interface Tabs (ZIP only) ───────────────── */}
-        {isZip && interfaces.length > 0 && (
+        {/* ── Interface Tabs ───────────────── */}
+        {interfaces.length > 0 && (
           <nav className="tabs-navigation" style={{ marginBottom: "22px" }}>
             <button
               type="button"

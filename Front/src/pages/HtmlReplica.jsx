@@ -311,8 +311,8 @@ export default function HtmlReplica() {
               </article>
             </section>
 
-            {/* ── Interface Tabs (ZIP only) ───────────────── */}
-            {isZip && interfaces.length > 0 && (
+            {/* ── Interface Tabs ───────────────── */}
+            {interfaces.length > 0 && (
               <nav className="tabs-navigation">
                 <button
                   type="button"
