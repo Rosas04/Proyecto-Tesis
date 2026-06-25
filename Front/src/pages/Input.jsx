@@ -22,6 +22,7 @@ export default function Input() {
   const [passwordSelector, setPasswordSelector] = useState("");
   const [passwordValue, setPasswordValue] = useState("");
   const [submitSelector, setSubmitSelector] = useState("");
+  const [showAdvancedLogin, setShowAdvancedLogin] = useState(false);
 
   const cleanPreviousAnalysis = () => {
     localStorage.removeItem("inputType");
@@ -230,16 +231,6 @@ export default function Input() {
 
               {useCredentials && (
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", padding: "18px", background: "#f8fafc", borderRadius: "14px", border: "1px solid #e2e8f0", margin: "12px 0 18px" }}>
-                  <div style={{ gridColumn: "span 2" }}>
-                    <label className="field-label">URL del Login</label>
-                    <input
-                      className="form-input"
-                      type="url"
-                      placeholder="https://ejemplo.com/login (Si es distinta a la URL de análisis)"
-                      value={loginUrl}
-                      onChange={(e) => setLoginUrl(e.target.value)}
-                    />
-                  </div>
                   <div>
                     <label className="field-label">Usuario / Correo</label>
                     <input
@@ -260,36 +251,70 @@ export default function Input() {
                       onChange={(e) => setPasswordValue(e.target.value)}
                     />
                   </div>
-                  <div>
-                    <label className="field-label">Selector de Usuario (Opcional)</label>
-                    <input
-                      className="form-input"
-                      type="text"
-                      placeholder="input[type=email] o #email"
-                      value={usernameSelector}
-                      onChange={(e) => setUsernameSelector(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="field-label">Selector de Contraseña (Opcional)</label>
-                    <input
-                      className="form-input"
-                      type="text"
-                      placeholder="input[type=password] o #password"
-                      value={passwordSelector}
-                      onChange={(e) => setPasswordSelector(e.target.value)}
-                    />
-                  </div>
-                  <div style={{ gridColumn: "span 2" }}>
-                    <label className="field-label">Selector de Botón Enviar (Opcional)</label>
-                    <input
-                      className="form-input"
-                      type="text"
-                      placeholder="button[type=submit] o #login-btn"
-                      value={submitSelector}
-                      onChange={(e) => setSubmitSelector(e.target.value)}
-                    />
-                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowAdvancedLogin(!showAdvancedLogin)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "#2563eb",
+                      cursor: "pointer",
+                      fontSize: "13px",
+                      fontWeight: "700",
+                      padding: "0",
+                      gridColumn: "span 2",
+                      textAlign: "left",
+                      marginTop: "6px"
+                    }}
+                  >
+                    {showAdvancedLogin ? "▲ Ocultar opciones avanzadas" : "▼ Opciones avanzadas (Selectores personalizados / URL de login)"}
+                  </button>
+
+                  {showAdvancedLogin && (
+                    <>
+                      <div style={{ gridColumn: "span 2" }}>
+                        <label className="field-label">URL del Login (Opcional)</label>
+                        <input
+                          className="form-input"
+                          type="url"
+                          placeholder="https://ejemplo.com/login (Si es distinta a la URL de análisis)"
+                          value={loginUrl}
+                          onChange={(e) => setLoginUrl(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="field-label">Selector de Usuario (Opcional)</label>
+                        <input
+                          className="form-input"
+                          type="text"
+                          placeholder="input[type=email] o #email"
+                          value={usernameSelector}
+                          onChange={(e) => setUsernameSelector(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="field-label">Selector de Contraseña (Opcional)</label>
+                        <input
+                          className="form-input"
+                          type="text"
+                          placeholder="input[type=password] o #password"
+                          value={passwordSelector}
+                          onChange={(e) => setPasswordSelector(e.target.value)}
+                        />
+                      </div>
+                      <div style={{ gridColumn: "span 2" }}>
+                        <label className="field-label">Selector de Botón Enviar (Opcional)</label>
+                        <input
+                          className="form-input"
+                          type="text"
+                          placeholder="button[type=submit] o #login-btn"
+                          value={submitSelector}
+                          onChange={(e) => setSubmitSelector(e.target.value)}
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>
