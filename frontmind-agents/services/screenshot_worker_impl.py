@@ -216,9 +216,11 @@ def take_screenshots(url: str, credentials: dict = None):
             page_captures = []
             
             for item in viewports:
-                vp_page = context.new_page(
-                    viewport={"width": item["width"], "height": item["height"]},
-                )
+                vp_page = context.new_page()
+                try:
+                    vp_page.set_viewport_size({"width": item["width"], "height": item["height"]})
+                except Exception:
+                    pass
                 
                 try:
                     vp_page.goto(p_info["url"], wait_until="domcontentloaded", timeout=30000)
