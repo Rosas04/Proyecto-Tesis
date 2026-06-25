@@ -20,7 +20,7 @@ services:
         fromService:
           type: web
           name: frontmind-backend
-          property: host
+          property: url
       - key: VITE_SUPABASE_URL
         sync: false
       - key: VITE_SUPABASE_ANON_KEY
