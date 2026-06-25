@@ -4,6 +4,43 @@ import Sidebar from "../components/Sidebar";
 import { evaluateHtml } from "../services/api";
 import "./Evaluation.css";
 
+const TYPE_COLORS = {
+  html:     { bg: "#ecfdf5", color: "#047857", label: "HTML"     },
+  jsx:      { bg: "#eff6ff", color: "#1d4ed8", label: "JSX"      },
+  tsx:      { bg: "#f5f3ff", color: "#6d28d9", label: "TSX"      },
+  ts:       { bg: "#fdf4ff", color: "#7e22ce", label: "TS"       },
+  js:       { bg: "#fefce8", color: "#92400e", label: "JS"       },
+  vue:      { bg: "#f0fdf4", color: "#15803d", label: "VUE"      },
+  svelte:   { bg: "#fff7ed", color: "#c2410c", label: "SVELTE"   },
+  astro:    { bg: "#faf5ff", color: "#7c3aed", label: "ASTRO"    },
+  cshtml:   { bg: "#f0f9ff", color: "#0369a1", label: "CSHTML"   },
+  razor:    { bg: "#f0f9ff", color: "#0369a1", label: "RAZOR"    },
+  php:      { bg: "#f5f3ff", color: "#5b21b6", label: "PHP"      },
+  blade:    { bg: "#fdf2f8", color: "#9d174d", label: "BLADE"    },
+  erb:      { bg: "#fef2f2", color: "#991b1b", label: "ERB"      },
+  hbs:      { bg: "#fff8f0", color: "#c2410c", label: "HBS"      },
+  mustache: { bg: "#fff8f0", color: "#c2410c", label: "MUSTACHE" },
+  ejs:      { bg: "#f0fdf4", color: "#166534", label: "EJS"      },
+  pug:      { bg: "#f9fafb", color: "#374151", label: "PUG"      },
+  jinja:    { bg: "#fefce8", color: "#854d0e", label: "JINJA"    },
+  njk:      { bg: "#fefce8", color: "#854d0e", label: "NJK"      },
+  twig:     { bg: "#f0fdf4", color: "#065f46", label: "TWIG"     },
+  liquid:   { bg: "#eff6ff", color: "#1e40af", label: "LIQUID"   },
+  combined: { bg: "#f1f5f9", color: "#334155", label: "FULL"     },
+};
+
+function TypeBadge({ type }) {
+  const t = TYPE_COLORS[type] || TYPE_COLORS.combined;
+  return (
+    <span
+      className="type-badge"
+      style={{ background: t.bg, color: t.color }}
+    >
+      {t.label}
+    </span>
+  );
+}
+
 export default function Evaluation() {
   const navigate = useNavigate();
 
@@ -12,11 +49,34 @@ export default function Evaluation() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   
+  const [captureResult, setCaptureResult] = useState(null);
+  const [selectedIface, setSelectedIface] = useState(null);
+  const [evaluationCache, setEvaluationCache] = useState({});
+
   const hasCalled = useRef(false);
+
+  const isZip = captureResult?.source_type === "zip";
+  const interfaces = useMemo(() => {
+    if (!captureResult?.interfaces || !Array.isArray(captureResult.interfaces)) return [];
+    return captureResult.interfaces;
+  }, [captureResult]);
 
   useEffect(() => {
     const savedEvaluation = localStorage.getItem("isoEvaluation");
     const savedHtml = localStorage.getItem("htmlToEvaluate");
+    const savedCapture = localStorage.getItem("captureResult");
+
+    let localIsZip = false;
+    let parsedCapture = null;
+    if (savedCapture) {
+      try {
+        parsedCapture = JSON.parse(savedCapture);
+        setCaptureResult(parsedCapture);
+        localIsZip = parsedCapture.source_type === "zip";
+      } catch (err) {
+        console.error(err);
+      }
+    }
 
     if (!savedHtml) {
       setError("No se encontró HTML para evaluar. Regrese a la réplica HTML.");
@@ -25,9 +85,23 @@ export default function Evaluation() {
 
     setHtmlToEvaluate(savedHtml);
 
+    let initialIface = null;
+    if (localIsZip && parsedCapture && parsedCapture.interfaces) {
+      initialIface = parsedCapture.interfaces.find(
+        (iface) => iface.html_content === savedHtml
+      ) || null;
+    }
+    setSelectedIface(initialIface);
+
+    const cacheKey = initialIface ? initialIface.file_name : "combined";
+
     if (savedEvaluation) {
       try {
-        setEvaluationResult(JSON.parse(savedEvaluation));
+        const parsedEval = JSON.parse(savedEvaluation);
+        setEvaluationResult(parsedEval);
+        setEvaluationCache({
+          [cacheKey]: parsedEval
+        });
         return;
       } catch (err) {
         console.error(err);
@@ -37,10 +111,10 @@ export default function Evaluation() {
     if (hasCalled.current) return;
     hasCalled.current = true;
 
-    runEvaluation(savedHtml);
+    runEvaluation(savedHtml, cacheKey);
   }, []);
 
-  const runEvaluation = async (html) => {
+  const runEvaluation = async (html, cacheKey) => {
     try {
       setLoading(true);
       setError("");
@@ -48,6 +122,10 @@ export default function Evaluation() {
       const result = await evaluateHtml(html);
 
       setEvaluationResult(result);
+      setEvaluationCache(prev => ({
+        ...prev,
+        [cacheKey]: result
+      }));
       localStorage.setItem("isoEvaluation", JSON.stringify(result));
     } catch (err) {
       setError(
@@ -57,6 +135,32 @@ export default function Evaluation() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleTabChange = async (iface) => {
+    setSelectedIface(iface);
+    setError("");
+    setEvaluationResult(null);
+    localStorage.removeItem("technicalReport"); // Clear cached report for old tab
+
+    const targetHtmlContent = iface
+      ? iface.html_content
+      : captureResult?.html_content || "";
+
+    if (!targetHtmlContent.trim()) {
+      setError("No existe contenido HTML para evaluar en esta interfaz.");
+      return;
+    }
+
+    const cacheKey = iface ? iface.file_name : "combined";
+    if (evaluationCache[cacheKey]) {
+      const cached = evaluationCache[cacheKey];
+      setEvaluationResult(cached);
+      localStorage.setItem("isoEvaluation", JSON.stringify(cached));
+      return;
+    }
+
+    await runEvaluation(targetHtmlContent, cacheKey);
   };
 
   const evaluation = useMemo(() => {
@@ -190,6 +294,32 @@ export default function Evaluation() {
             recomendaciones según criterios de ISO/IEC 25010 y accesibilidad web.
           </p>
         </section>
+
+        {/* ── Interface Tabs (ZIP only) ───────────────── */}
+        {isZip && interfaces.length > 0 && (
+          <nav className="tabs-navigation" style={{ marginBottom: "22px" }}>
+            <button
+              type="button"
+              className={`tab-btn ${!selectedIface ? "tab-btn--active" : ""}`}
+              onClick={() => handleTabChange(null)}
+            >
+              <TypeBadge type="combined" />
+              <span>Paquete completo</span>
+            </button>
+
+            {interfaces.map((iface, i) => (
+              <button
+                key={i}
+                type="button"
+                className={`tab-btn ${selectedIface?.file_name === iface.file_name ? "tab-btn--active" : ""}`}
+                onClick={() => handleTabChange(iface)}
+              >
+                <TypeBadge type={iface.type} />
+                <span>{iface.file_name}</span>
+              </button>
+            ))}
+          </nav>
+        )}
 
         {error && <div className="error-box">{error}</div>}
 
