@@ -141,6 +141,32 @@ export default function Capture() {
 
         {!error && captureResult && (
           <>
+            {/* ── Interface Tabs (ZIP only) ───────────────── */}
+            {isZip && interfaces.length > 0 && (
+              <nav className="tabs-navigation">
+                <button
+                  type="button"
+                  className={`tab-btn ${!selectedIface ? "tab-btn--active" : ""}`}
+                  onClick={() => setSelectedIface(null)}
+                >
+                  <TypeBadge type="combined" />
+                  <span>Paquete completo</span>
+                </button>
+
+                {interfaces.map((iface, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className={`tab-btn ${selectedIface === iface ? "tab-btn--active" : ""}`}
+                    onClick={() => setSelectedIface(iface)}
+                  >
+                    <TypeBadge type={iface.type} />
+                    <span>{iface.file_name}</span>
+                  </button>
+                ))}
+              </nav>
+            )}
+
             {/* ── Summary ─────────────────────────────────── */}
             <section className="capture-summary card">
               <div>
@@ -242,46 +268,6 @@ export default function Capture() {
                   interfaz. El sistema continuará usando el contenido HTML
                   extraído como artefacto evaluable.
                 </p>
-              </section>
-            )}
-
-            {/* ── Interface selector (ZIP only) ──────────── */}
-            {isZip && interfaces.length > 0 && (
-              <section className="iface-selector-section">
-                <div className="section-title">
-                  <h2>Interfaces detectadas ({interfaces.length})</h2>
-                  <p>
-                    Selecciona qué interfaz continúa hacia la réplica y
-                    evaluación. Por defecto se usa el paquete completo
-                    (todos los componentes combinados).
-                  </p>
-                </div>
-
-                <div className="iface-grid">
-                  {/* Combined / full-package option */}
-                  <button
-                    type="button"
-                    className={`iface-card ${!selectedIface ? "iface-card--active" : ""}`}
-                    onClick={() => setSelectedIface(null)}
-                  >
-                    <TypeBadge type="combined" />
-                    <strong>Paquete completo</strong>
-                    <small>Todos los componentes combinados</small>
-                  </button>
-
-                  {interfaces.map((iface, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      className={`iface-card ${selectedIface === iface ? "iface-card--active" : ""}`}
-                      onClick={() => setSelectedIface(iface)}
-                    >
-                      <TypeBadge type={iface.type} />
-                      <strong>{iface.file_name}</strong>
-                      <small>{iface.relative_path}</small>
-                    </button>
-                  ))}
-                </div>
               </section>
             )}
 

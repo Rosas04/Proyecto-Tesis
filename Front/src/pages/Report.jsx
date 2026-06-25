@@ -1,18 +1,23 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import Sidebar from "../components/Sidebar";
 import { generateReport } from "../services/api";
+import { useAuth } from "../context/AuthContext";
+import { addAnalysisRun } from "../historyService";
 import "./Report.css";
 
 export default function Report() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [reportResult, setReportResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [generatingPdf, setGeneratingPdf] = useState(false);
+  
+  const hasCalled = useRef(false);
 
   const inputUrl = localStorage.getItem("inputUrl") || "";
   const inputZip = localStorage.getItem("inputZip") || "";
@@ -38,6 +43,9 @@ export default function Report() {
       return;
     }
 
+    if (hasCalled.current) return;
+    hasCalled.current = true;
+
     try {
       const parsedEvaluation = JSON.parse(savedEvaluation);
       const evaluation = parsedEvaluation?.evaluation || parsedEvaluation;
@@ -53,10 +61,73 @@ export default function Report() {
       setLoading(true);
       setError("");
 
-      const result = await generateReport(evaluation);
+      const userId = user?.id || null;
+      const result = await generateReport(evaluation, userId);
 
       setReportResult(result);
       localStorage.setItem("technicalReport", JSON.stringify(result));
+
+      // Guardar el análisis en la base de datos si el usuario está autenticado
+      if (user && user.id) {
+        try {
+          const evalData = evaluation || {};
+          const findings = evalData.findings || [];
+          const localSourceType = localStorage.getItem("inputType") || "url";
+          
+          // Generar hash simple del HTML evaluado para identificar esta ejecución
+          const generateSimpleHash = (str) => {
+            let hash = 0;
+            if (!str) return hash.toString();
+            for (let i = 0; i < str.length; i++) {
+              hash = (hash << 5) - hash + str.charCodeAt(i);
+              hash |= 0;
+            }
+            return Math.abs(hash).toString(16);
+          };
+          
+          const savedHtml = localStorage.getItem("htmlToEvaluate") || "";
+          const localInputHash = savedHtml ? generateSimpleHash(savedHtml) : `hash_${Date.now()}`;
+
+          // Calcular el nombre del proyecto real basado en la URL o archivo ZIP
+          const localInputUrl = localStorage.getItem("inputUrl") || "";
+          const localInputZip = localStorage.getItem("inputZip") || "";
+          let localProjectName = "Proyecto URL";
+
+          if (localSourceType === "zip") {
+            localProjectName = localInputZip || "Proyecto ZIP";
+          } else if (localInputUrl) {
+            try {
+              let formattedUrl = localInputUrl.trim();
+              if (!/^https?:\/\//i.test(formattedUrl)) {
+                formattedUrl = "http://" + formattedUrl;
+              }
+              const urlObj = new URL(formattedUrl);
+              let hostname = urlObj.hostname;
+              if (hostname.startsWith("www.")) {
+                hostname = hostname.substring(4);
+              }
+              localProjectName = hostname || localInputUrl;
+            } catch (e) {
+              console.error("Error al extraer el dominio de la URL:", e);
+              localProjectName = localInputUrl;
+            }
+          }
+
+          await addAnalysisRun({
+            userId: user.id,
+            globalScore: evalData.global_score ?? 0,
+            qualityLevel: evalData.quality_level || "No calculado",
+            totalFindings: evalData.total_findings ?? findings.length,
+            findings: findings,
+            sourceType: localSourceType,
+            inputHash: localInputHash,
+            projectName: localProjectName,
+          });
+          console.log("Análisis guardado en historial de Supabase exitosamente.");
+        } catch (dbErr) {
+          console.error("Error al persistir el análisis en Supabase:", dbErr);
+        }
+      }
     } catch (err) {
       setError(
         "No se pudo generar el reporte técnico. Verifique que el backend esté encendido."

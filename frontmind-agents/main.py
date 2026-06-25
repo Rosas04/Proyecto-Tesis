@@ -1,3 +1,7 @@
+import json
+import os
+import sys
+from datetime import datetime
 from pathlib import Path
 import shutil
 
@@ -10,24 +14,31 @@ from agents.capture_agent import CaptureAgent
 from agents.html_replication_agent import HtmlReplicationAgent
 from agents.iso_evaluation_agent import ISOEvaluationAgent
 from agents.report_agent import ReportAgent
+from services.screenshot_service import take_screenshots, take_screenshots_from_html, take_screenshots_for_multiple_htmls
 from services.zip_service import extract_zip_project
+from services.history_service import add_entry, load_history
 
 
 class UrlRequest(BaseModel):
     url: str
 
-
 class HtmlRequest(BaseModel):
     html: str
 
 
-class HtmlContentRequest(BaseModel):
-    html_content: str
-    url: str
+class IsoRequest(BaseModel):
+    html: str
+    user_id: str | None = None
+
 
 
 class ReportRequest(BaseModel):
     evaluation: dict
+    user_id: str | None = None
+
+class HtmlContentRequest(BaseModel):
+    html_content: str
+    url: str
 
 
 app = FastAPI(
@@ -46,7 +57,7 @@ app.add_middleware(
 
 Path("captures").mkdir(exist_ok=True)
 Path("uploads").mkdir(exist_ok=True)
-Path("extracted_projects").mkdir(exist_ok=True)
+Path("../extracted_projects_temp").resolve().mkdir(exist_ok=True)
 
 app.mount("/captures", StaticFiles(directory="captures"), name="captures")
 
@@ -75,6 +86,8 @@ def replicate_html(request: UrlRequest):
     html_result = html_agent.run(
         html_content=capture_result.get("html_content", ""),
         url=capture_result.get("url", request.url),
+        css_cache=capture_result.get("css_cache", {}),
+        cssom_styles=capture_result.get("cssom_styles", []),
     )
 
     return {
@@ -98,19 +111,35 @@ def replicate_content(request: HtmlContentRequest):
 
 
 @app.post("/evaluate/iso")
-def evaluate_iso(request: HtmlRequest):
+def evaluate_iso(request: IsoRequest):
     agent = ISOEvaluationAgent()
     return agent.run(request.html)
+
+@app.get("/history")
+def get_history(user_id: str | None = None):
+    history = load_history()
+    if user_id:
+        history = [h for h in history if h.get("user_id") == user_id]
+    return history
 
 
 @app.post("/report/generate")
 def generate_report(request: ReportRequest):
     agent = ReportAgent()
-    return agent.run({"evaluation": request.evaluation})
+    result = agent.run({"evaluation": request.evaluation})
+    # Record the evaluation in history at the moment of generating the report
+    entry = {
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "user_id": request.user_id,
+        "evaluation": request.evaluation,
+        "report": result,
+    }
+    add_entry(entry)
+    return result
 
 
 @app.post("/upload/zip")
-async def upload_zip(file: UploadFile = File(...)):
+def upload_zip(file: UploadFile = File(...)):
     upload_dir = Path("uploads")
     upload_dir.mkdir(exist_ok=True)
 
@@ -121,9 +150,44 @@ async def upload_zip(file: UploadFile = File(...)):
 
     result = extract_zip_project(str(zip_path))
 
+    # Build dict of HTML contents to capture screenshots for
+    htmls_to_capture = {}
+    combined_html = result.get("combined_html", "")
+    if combined_html and result.get("status") != "error":
+        htmls_to_capture["combined"] = combined_html
+
+    interfaces = result.get("interfaces", [])
+    for iface in interfaces:
+        fname = iface.get("file_name", "")
+        hcontent = iface.get("html_content", "")
+        if fname and hcontent:
+            htmls_to_capture[fname] = hcontent
+
+    captures = []
+    if htmls_to_capture:
+        try:
+            label_prefix = file.filename.replace(".zip", "").replace(" ", "_")[:20]
+            screenshot_results = take_screenshots_for_multiple_htmls(
+                htmls_to_capture,
+                label_prefix=label_prefix
+            )
+            # 1. Assign combined captures
+            captures = screenshot_results.get("combined", [])
+            # 2. Assign captures to each interface
+            for iface in interfaces:
+                fname = iface.get("file_name", "")
+                iface["captures"] = screenshot_results.get(fname, [])
+        except Exception as e:
+            # Screenshots are best-effort — don't fail the whole request
+            import traceback
+            tb_str = traceback.format_exc()
+            captures = [{"error": f"Exception in main.py:\n{tb_str}", "device": "all"}]
+
     return {
         "source_type": "zip",
         "file_name": file.filename,
         "status": "processed",
         "extraction": result,
+        "captures": captures,
+        "html_content": combined_html,
     }

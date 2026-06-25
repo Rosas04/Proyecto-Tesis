@@ -77,6 +77,26 @@ export default function Sidebar() {
           </NavLink>
         ))}
       </nav>
+
+      <div className="sidebar-section">
+        <span>Consultas</span>
+      </div>
+
+      <nav className="sidebar-nav">
+        <NavLink
+          to="/history"
+          className={({ isActive }) =>
+            isActive ? "sidebar-link active" : "sidebar-link"
+          }
+        >
+          <span className="step-number">HS</span>
+
+          <span className="step-text">
+            <strong>Historial</strong>
+            <small>Análisis anteriores</small>
+          </span>
+        </NavLink>
+      </nav>
       <div className="sidebar-user">
         <small>Sesión activa</small>
         <strong>{user?.email}</strong>
