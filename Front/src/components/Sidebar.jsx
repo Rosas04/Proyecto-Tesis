@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import "./Sidebar.css";
 import { useAuth } from "../context/AuthContext";
 
@@ -38,11 +38,14 @@ const steps = [
 export default function Sidebar() {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = async () => {
     await logout();
     navigate("/login", { replace: true });
   };
+
+  const currentStepIndex = steps.findIndex((s) => s.path === location.pathname);
 
   return (
     <aside className="sidebar">
@@ -59,24 +62,33 @@ export default function Sidebar() {
         <span>Flujo de auditoría</span>
       </div>
 
-      <nav className="sidebar-nav">
-        {steps.map((step) => (
-          <NavLink
-            key={step.path}
-            to={step.path}
-            className={({ isActive }) =>
-              isActive ? "sidebar-link active" : "sidebar-link"
-            }
-          >
-            <span className="step-number">{step.number}</span>
+      <div className="sidebar-flow">
+        {steps.map((step, index) => {
+          let status = "pending";
+          if (currentStepIndex !== -1) {
+            if (index < currentStepIndex) status = "completed";
+            else if (index === currentStepIndex) status = "active";
+          }
 
-            <span className="step-text">
-              <strong>{step.title}</strong>
-              <small>{step.description}</small>
-            </span>
-          </NavLink>
-        ))}
-      </nav>
+          return (
+            <div key={step.path} className={`flow-item ${status}`}>
+              <span className="flow-step-icon">
+                {status === "completed" ? (
+                  "✓"
+                ) : status === "active" ? (
+                  <span className="spinner-icon">⏳</span>
+                ) : (
+                  step.number
+                )}
+              </span>
+              <span className="flow-text">
+                <strong>{step.title}</strong>
+                <small>{step.description}</small>
+              </span>
+            </div>
+          );
+        })}
+      </div>
 
       <div className="sidebar-section">
         <span>Consultas</span>
