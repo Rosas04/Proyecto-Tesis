@@ -76,8 +76,14 @@ class HtmlReplicationAgent:
             tag.decompose()
 
         body = soup.body
+        body_attrs_str = ""
 
         if body:
+            for k, v in body.attrs.items():
+                if isinstance(v, list):
+                    v = " ".join(v)
+                body_attrs_str += f' {k}="{v}"'
+            
             self.convert_relative_paths(body, url)
             body_content = body.decode_contents()
         else:
@@ -111,7 +117,7 @@ class HtmlReplicationAgent:
     {final_css}
   </style>
 </head>
-<body>
+<body{body_attrs_str}>
 {body_content}
 </body>
 </html>"""

@@ -296,6 +296,13 @@ a {
   border-top-right-radius: 8px;
   margin-bottom: -2px; /* Overlap parent border-bottom */
   z-index: 1;
+  max-width: 280px;
+}
+
+.tab-btn span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tab-btn:hover {

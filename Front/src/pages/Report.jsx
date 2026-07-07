@@ -540,7 +540,9 @@ export default function Report() {
                           <td>{index + 1}</td>
                           <td>{item.dimension || "No especificada"}</td>
                           <td>{item.severity || "Media"}</td>
-                          <td>{item.finding?.includes('[VIOLACIÓN]') ? (<span className="badge">{item.finding.replace('[VIOLACIÓN]','VIOLACIÓN')}</span>) : (item.finding || "Hallazgo no especificado.")}</td>
+                          <td>
+                            {item.finding?.replace(/\[.*?\]\s*/g, '') || "Hallazgo no especificado."}
+                          </td>
                           <td>
                             {item.recommendation ||
                               "No se registró recomendación."}

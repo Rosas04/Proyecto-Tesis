@@ -92,10 +92,15 @@
 }
 
 .report-summary strong {
+  display: -webkit-box;
   color: #111827;
   font-size: 15px;
   font-weight: 800;
-  word-break: break-word;
+  word-break: break-all;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .severity-grid {

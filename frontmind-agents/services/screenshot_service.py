@@ -17,7 +17,7 @@ def _run_worker(request: dict) -> dict:
         input=json.dumps(request),
         text=True,
         capture_output=True,
-        timeout=180
+        timeout=600
     )
     
     if proc.returncode == 0:

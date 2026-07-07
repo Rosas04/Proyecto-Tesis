@@ -20,6 +20,7 @@ def take_screenshots(url: str, credentials: dict = None):
     from urllib.parse import urlparse, urljoin
     parsed_target = urlparse(url)
     target_origin = f"{parsed_target.scheme}://{parsed_target.netloc}"
+    allowed_origins = {target_origin}
 
     crawled_pages = {}
     global_css_cache = {}
@@ -56,7 +57,7 @@ def take_screenshots(url: str, credentials: dict = None):
 
         urls_to_visit = []
         visited = set()
-        max_pages = 8
+        max_pages = 15
 
         # 1. Automate login sequence if credentials are provided
         if credentials and credentials.get("username_value") and credentials.get("password_value"):
@@ -100,7 +101,7 @@ def take_screenshots(url: str, credentials: dict = None):
                         link_origin = f"{parsed_link.scheme}://{parsed_link.netloc}"
                         link_path = parsed_link.path.lower()
 
-                        is_internal = (link_origin == target_origin)
+                        is_internal = (link_origin in allowed_origins)
                         is_logout = any(x in link_path or x in parsed_link.query.lower() for x in ["logout", "signout", "exit", "cerrar-sesion"])
 
                         if is_internal and not is_logout:
@@ -111,9 +112,27 @@ def take_screenshots(url: str, credentials: dict = None):
                     print(f"Failed to pre-capture login page: {capture_err}")
                 
                 # Fill username
+                if not credentials.get("username_selector"):
+                    try:
+                        has_input = page.locator("input[type='email'], input[type='text'], input[name*='user' i]").first.is_visible(timeout=2000)
+                        if not has_input:
+                            login_btn = page.locator("button:has-text('Log in'), button:has-text('Login'), a:has-text('Log in'), a:has-text('Login'), a[href*='login' i]").first
+                            if login_btn.is_visible(timeout=1000):
+                                try:
+                                    href = login_btn.get_attribute("href")
+                                    if href:
+                                        from urllib.parse import urljoin
+                                        page.goto(urljoin(page.url, href))
+                                        page.wait_for_timeout(3000)
+                                    else:
+                                        login_btn.click(force=True)
+                                        page.wait_for_timeout(3000)
+                                except Exception: pass
+                    except Exception: pass
+
                 user_sel = credentials.get("username_selector")
                 if not user_sel:
-                    for selector in ["input[type=email]", "input[type=text]", "input[name=username]", "input[name=email]", "#email", "#username", "#user"]:
+                    for selector in ["input[type='email']", "input[type='text']", "input[name='username']", "input[name='email']", "input[name='login']", "input[id*='user' i]", "input[id*='email' i]", "input[name*='user' i]"]:
                         try:
                             if page.locator(selector).first.is_visible(timeout=1000):
                                 user_sel = selector
@@ -123,35 +142,55 @@ def take_screenshots(url: str, credentials: dict = None):
                 # Fill password
                 pass_sel = credentials.get("password_selector")
                 if not pass_sel:
-                    for selector in ["input[type=password]", "input[name=password]", "#password", "#pass"]:
+                    for selector in ["input[type='password']", "input[name='password']", "input[name*='pass' i]", "input[id*='pass' i]"]:
                         try:
                             if page.locator(selector).first.is_visible(timeout=1000):
                                 pass_sel = selector
                                 break
                         except Exception: pass
                             
-                if user_sel and pass_sel:
+                if user_sel:
                     page.fill(user_sel, credentials["username_value"])
-                    page.fill(pass_sel, credentials["password_value"])
                     
-                    submit_sel = credentials.get("submit_selector")
-                    if submit_sel:
-                        try: page.click(submit_sel)
-                        except Exception: page.press(pass_sel, "Enter")
-                    else:
-                        submitted = False
-                        for selector in ["button[type=submit]", "input[type=submit]", "button:has-text('Iniciar')", "button:has-text('Login')", "button:has-text('Ingresar')"]:
+                    if not pass_sel:
+                        page.press(user_sel, "Enter")
+                        page.wait_for_timeout(2000)
+                        for selector in ["input[type='password']", "input[name='password']", "input[name*='pass' i]", "input[id*='pass' i]"]:
                             try:
                                 if page.locator(selector).first.is_visible(timeout=1000):
-                                    page.click(selector)
-                                    submitted = True
+                                    pass_sel = selector
                                     break
                             except Exception: pass
-                        if not submitted:
-                            page.press(pass_sel, "Enter")
+                    
+                    if pass_sel:
+                        page.fill(pass_sel, credentials["password_value"])
+                        
+                        submit_sel = credentials.get("submit_selector")
+                        if submit_sel:
+                            try: page.click(submit_sel)
+                            except Exception: page.press(pass_sel, "Enter")
+                        else:
+                            submitted = False
+                            for selector in ["button[type=submit]", "input[type=submit]", "button:has-text('Iniciar')", "button:has-text('Login')", "button:has-text('Ingresar')"]:
+                                try:
+                                    if page.locator(selector).first.is_visible(timeout=1000):
+                                        page.click(selector)
+                                        submitted = True
+                                        break
+                                except Exception: pass
+                            if not submitted:
+                                page.press(pass_sel, "Enter")
                             
-                    try: page.wait_for_navigation(timeout=5000)
-                    except Exception: page.wait_for_timeout(3500)
+                    try: 
+                        page.wait_for_navigation(timeout=8000)
+                    except Exception: 
+                        page.wait_for_timeout(5000)
+                        
+                    # Also wait for a generic 'loading' overlay to disappear if present
+                    try:
+                        page.wait_for_selector("text=Cargando", state="detached", timeout=3000)
+                    except Exception:
+                        pass
             except Exception as e:
                 print(f"Login failed: {e}")
 
@@ -159,6 +198,8 @@ def take_screenshots(url: str, credentials: dict = None):
         post_login_url = page.url
         parsed_post = urlparse(post_login_url)
         post_norm = f"{parsed_post.scheme}://{parsed_post.netloc}{parsed_post.path.rstrip('/')}"
+        post_origin = f"{parsed_post.scheme}://{parsed_post.netloc}"
+        allowed_origins.add(post_origin)
         
         if post_norm in visited:
             visited.remove(post_norm)
@@ -178,7 +219,7 @@ def take_screenshots(url: str, credentials: dict = None):
 
             try:
                 page.goto(curr_url, wait_until="domcontentloaded", timeout=30000)
-                page.wait_for_timeout(1500)
+                page.wait_for_timeout(3500)
                 try:
                     # Wait for any session loading screen to disappear
                     page.wait_for_selector("text=Cargando", state="detached", timeout=5000)
@@ -191,7 +232,7 @@ def take_screenshots(url: str, credentials: dict = None):
                 final_origin = f"{parsed_final.scheme}://{parsed_final.netloc}"
 
                 # Only extract links if we are still on the same origin (not logged out or external redirected)
-                if final_origin != target_origin:
+                if final_origin not in allowed_origins:
                     continue
 
                 html = page.content()
@@ -225,12 +266,18 @@ def take_screenshots(url: str, credentials: dict = None):
 
                 # Derive file_name and relative_path
                 path = parsed_final.path
-                if not path or path == "/":
-                    relative_path = "/"
-                    file_name = "index.html"
-                else:
-                    relative_path = path
-                    file_name = path.strip("/").replace("/", "_") + ".html"
+                frag = parsed_final.fragment
+                query = parsed_final.query
+                
+                full_path = path
+                if query: full_path += f"_{query}"
+                if frag: full_path += f"_{frag}"
+                
+                import re
+                safe_name = re.sub(r'[^a-zA-Z0-9_\-]', '_', full_path).strip('_')
+                if not safe_name: safe_name = "index"
+                file_name = safe_name + ".html"
+                relative_path = full_path
 
                 crawled_pages[normalized_url] = {
                     "html": html,
@@ -241,11 +288,28 @@ def take_screenshots(url: str, credentials: dict = None):
                     "file_name": file_name,
                 }
 
+                # Expand SPA dropdowns to ensure hidden links are in the DOM
+                try:
+                    page.evaluate("""() => {
+                        const toggles = document.querySelectorAll('button, [role="button"], [aria-expanded], [aria-haspopup], .menu-item, [class*="dropdown"], [class*="nav"], [class*="menu"]');
+                        toggles.forEach(t => {
+                            try {
+                                const text = (t.innerText || '').toLowerCase();
+                                if(text.includes('logout') || text.includes('sign out') || text.includes('cerrar sesion') || text.includes('exit')) return;
+                                if(text.includes('delete') || text.includes('remove') || text.includes('eliminar')) return;
+                                t.click();
+                            } catch(e) {}
+                        });
+                    }""")
+                    page.wait_for_timeout(1500)
+                except:
+                    pass
+
                 # Extract links on page
                 links = page.evaluate("""() => {
                     return Array.from(document.querySelectorAll('a'))
                         .map(a => a.href)
-                        .filter(href => href && !href.startsWith('javascript:') && !href.startsWith('#'));
+                        .filter(href => href && !href.startsWith('javascript:'));
                 }""")
 
                 for link in links:
@@ -254,13 +318,16 @@ def take_screenshots(url: str, credentials: dict = None):
                     link_origin = f"{parsed_link.scheme}://{parsed_link.netloc}"
                     link_path = parsed_link.path.lower()
 
-                    is_internal = (link_origin == target_origin)
+                    is_internal = (link_origin in allowed_origins)
                     is_logout = any(x in link_path or x in parsed_link.query.lower() for x in ["logout", "signout", "exit", "cerrar-sesion"])
 
                     if is_internal and not is_logout:
-                        norm_link = f"{parsed_link.scheme}://{parsed_link.netloc}{parsed_link.path.rstrip('/')}"
-                        if norm_link not in visited and norm_link not in [urlparse(u).scheme + "://" + urlparse(u).netloc + urlparse(u).path.rstrip('/') for u in urls_to_visit]:
-                            urls_to_visit.append(abs_link)
+                        query_part = f"?{parsed_link.query}" if parsed_link.query else ""
+                        frag_part = f"#{parsed_link.fragment}" if parsed_link.fragment else ""
+                        norm_link = f"{parsed_link.scheme}://{parsed_link.netloc}{parsed_link.path}{query_part}{frag_part}"
+                        
+                        if norm_link not in visited and norm_link not in urls_to_visit:
+                            urls_to_visit.append(norm_link)
             except Exception as e:
                 print(f"Error crawling {curr_url}: {e}")
 
@@ -284,7 +351,7 @@ def take_screenshots(url: str, credentials: dict = None):
                 
                 try:
                     vp_page.goto(p_info["url"], wait_until="domcontentloaded", timeout=30000)
-                    vp_page.wait_for_timeout(1500)
+                    vp_page.wait_for_timeout(2000)
                     try:
                         # Wait for any session loading screen to disappear
                         vp_page.wait_for_selector("text=Cargando", state="detached", timeout=5000)

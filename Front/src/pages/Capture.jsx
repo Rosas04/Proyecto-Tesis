@@ -60,6 +60,10 @@ export default function Capture() {
     const savedCapture = localStorage.getItem("captureResult");
 
     if (!savedCapture) {
+      if (window.globalCaptureResult) {
+        setCaptureResult(window.globalCaptureResult);
+        return;
+      }
       setError("No se encontró una captura previa. Inicie un nuevo análisis.");
       return;
     }
@@ -97,7 +101,11 @@ export default function Capture() {
     if (activeHtml) {
       // Update captureResult with whichever html the user selected
       const updated = { ...captureResult, html_content: activeHtml };
-      localStorage.setItem("captureResult", JSON.stringify(updated));
+      try {
+        localStorage.setItem("captureResult", JSON.stringify(updated));
+      } catch (e) {
+        window.globalCaptureResult = updated;
+      }
       localStorage.removeItem("htmlReplicaResult");
       localStorage.removeItem("isoEvaluation");
       localStorage.removeItem("technicalReport");
@@ -259,7 +267,7 @@ export default function Capture() {
                 onClick={continueToHtml}
                 disabled={!activeHtml}
               >
-                Continuar a réplica HTML
+                Continuar a Réplica de Código
               </button>
             </div>
           </>

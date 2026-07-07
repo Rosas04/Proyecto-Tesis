@@ -74,6 +74,9 @@ export default function Evaluation() {
       } catch (err) {
         console.error(err);
       }
+    } else if (window.globalCaptureResult) {
+      parsedCapture = window.globalCaptureResult;
+      setCaptureResult(parsedCapture);
     }
 
     if (!savedHtml) {
@@ -293,31 +296,7 @@ export default function Evaluation() {
           </p>
         </section>
 
-        {/* ── Interface Tabs ───────────────── */}
-        {interfaces.length > 0 && (
-          <nav className="tabs-navigation" style={{ marginBottom: "22px" }}>
-            <button
-              type="button"
-              className={`tab-btn ${!selectedIface ? "tab-btn--active" : ""}`}
-              onClick={() => handleTabChange(null)}
-            >
-              <TypeBadge type="combined" />
-              <span>Paquete completo</span>
-            </button>
-
-            {interfaces.map((iface, i) => (
-              <button
-                key={i}
-                type="button"
-                className={`tab-btn ${selectedIface?.file_name === iface.file_name ? "tab-btn--active" : ""}`}
-                onClick={() => handleTabChange(iface)}
-              >
-                <TypeBadge type={iface.type} />
-                <span>{iface.file_name}</span>
-              </button>
-            ))}
-          </nav>
-        )}
+        {/* Tabs removed to keep them only in Replica section */}
 
         {error && <div className="error-box">{error}</div>}
 
@@ -443,7 +422,7 @@ export default function Evaluation() {
                               {item.severity || "Media"}
                             </span>
                           </td>
-                          <td>{item.finding || "Hallazgo no especificado."}</td>
+                          <td>{item.finding?.replace(/\[.*?\]\s*/g, '') || "Hallazgo no especificado."}</td>
                           <td>
                             {item.recommendation ||
                               "No se registró recomendación."}

@@ -95,7 +95,13 @@ export default function Input() {
         } : null;
 
         const result = await captureInterfaceByUrl(url.trim(), credentials);
-        localStorage.setItem("captureResult", JSON.stringify(result));
+        try {
+          localStorage.setItem("captureResult", JSON.stringify(result));
+        } catch (e) {
+          console.warn("localStorage quota exceeded, using global variable fallback.", e);
+          window.globalCaptureResult = result;
+          localStorage.removeItem("captureResult");
+        }
         navigate("/capture");
       } catch (err) {
         setError(

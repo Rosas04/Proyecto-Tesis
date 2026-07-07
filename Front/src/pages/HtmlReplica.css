@@ -27,11 +27,15 @@
 
 .html-summary strong,
 .html-stat strong {
-  display: block;
+  display: -webkit-box;
   color: #111827;
   font-size: 18px;
   font-weight: 900;
-  word-break: break-word;
+  word-break: break-all;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .html-stats-grid {

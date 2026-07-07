@@ -60,7 +60,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -84,8 +84,14 @@ def home():
 
 @app.post("/capture/url")
 def capture_url(request: UrlRequest):
-    agent = CaptureAgent()
-    return agent.run(request.url, request.credentials)
+    from fastapi import HTTPException
+    try:
+        agent = CaptureAgent()
+        return agent.run(request.url, request.credentials)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/replicate/html")

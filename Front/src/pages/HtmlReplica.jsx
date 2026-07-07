@@ -64,10 +64,13 @@ export default function HtmlReplica() {
 
   useEffect(() => {
     const savedCapture = localStorage.getItem("captureResult");
-    const savedReplica = localStorage.getItem("htmlReplicaResult");
 
     if (!savedCapture) {
-      setError("No se encontró contenido capturado. Inicie un nuevo análisis.");
+      if (window.globalCaptureResult) {
+        setCaptureResult(window.globalCaptureResult);
+        return;
+      }
+      setError("No se encontró una captura previa. Vuelve al inicio.");
       return;
     }
 
@@ -258,7 +261,7 @@ export default function HtmlReplica() {
 
       <main className="html-main">
         <section className="page-header">
-          <p className="page-kicker">Agente de Réplica HTML</p>
+          <p className="page-kicker">Agente de Réplica de Código</p>
           <h1 className="page-title">HTML real o replicado</h1>
           <p className="page-description">
             En esta etapa, el framework reconstruye una versión evaluable del

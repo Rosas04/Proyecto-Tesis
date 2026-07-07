@@ -18,8 +18,8 @@ const steps = [
   {
     path: "/html",
     number: "03",
-    title: "HTML",
-    description: "Réplica evaluable",
+    title: "Código",
+    description: "Réplica de Código",
   },
   {
     path: "/evaluation",
@@ -71,12 +71,12 @@ export default function Sidebar() {
           }
 
           return (
-            <div key={step.path} className={`flow-item ${status}`}>
+            <div key={step.path} className={`flow-item ${status} ${status === 'active' && step.path === '/report' ? 'no-pulse' : ''}`}>
               <span className="flow-step-icon">
                 {status === "completed" ? (
                   "✓"
                 ) : status === "active" ? (
-                  <span className="spinner-icon">⏳</span>
+                  step.path === "/report" ? "✓" : <span className="spinner-icon">⏳</span>
                 ) : (
                   step.number
                 )}
