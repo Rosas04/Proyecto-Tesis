@@ -76,6 +76,38 @@ def get_level(score):
     return "Crítico"
 
 
+
+def get_element_snippet(el):
+    if not hasattr(el, 'name') or not el.name:
+        if isinstance(el, str): return el
+        return ""
+    attrs = []
+    if el.get('id'):
+        attrs.append(f'id="{el.get("id")}"')
+    if el.get('class'):
+        cl = el.get("class")
+        cl_str = " ".join(cl) if isinstance(cl, list) else cl
+        attrs.append(f'class="{cl_str}"')
+    if el.get('src'):
+        attrs.append(f'src="{el.get("src")[:50]}"')
+    if el.get('href'):
+        attrs.append(f'href="{el.get("href")[:50]}"')
+    attr_str = " " + " ".join(attrs) if attrs else ""
+    return f"<{el.name}{attr_str}>"
+
+def format_snippets(elements, max_items=3):
+    if not elements:
+        return ""
+    snippets = []
+    for el in elements[:max_items]:
+        snippet = get_element_snippet(el)
+        if snippet:
+            snippets.append(snippet)
+    if not snippets:
+        return ""
+    suffix = "..." if len(elements) > max_items else ""
+    return f" (Ejemplo: {', '.join(snippets)}{suffix})"
+
 def evaluate_iso_25010(html: str):
     soup = BeautifulSoup(html or "", "html.parser")
 
@@ -176,7 +208,7 @@ def evaluate_iso_25010(html: str):
             "Adecuación funcional",
             "Jerarquía de información",
             "Media",
-            f"Se detectaron {len(h1_tags)} encabezados <h1> en la interfaz.",
+            f"Se detectaron {len(h1_tags)} encabezados <h1> en la interfaz." + format_snippets(h1_tags),
             "Mantener un solo encabezado <h1> principal y organizar el resto con <h2>, <h3> y niveles posteriores.",
             {"adecuacion_funcional": 5, "usabilidad": 5},
         )
@@ -227,7 +259,7 @@ def evaluate_iso_25010(html: str):
             "Accesibilidad",
             "Texto alternativo",
             "Alta",
-            f"Se detectaron {total} imágenes sin atributo alt.",
+            f"Se detectaron {total} imágenes sin atributo alt." + format_snippets(images_without_alt),
             "Agregar texto alternativo descriptivo en imágenes informativas y alt vacío (alt='') en imágenes decorativas.",
             {
                 "accesibilidad": min(15, total * 3),
@@ -250,7 +282,7 @@ def evaluate_iso_25010(html: str):
             "Accesibilidad",
             "Nombre accesible de controles",
             "Alta",
-            f"Se detectaron {total} botones sin texto visible ni nombre accesible.",
+            f"Se detectaron {total} botones sin texto visible ni nombre accesible." + format_snippets(buttons_without_text),
             "Agregar texto visible, atributo 'title' o 'aria-label' a cada botón para lectores de pantalla.",
             {
                 "accesibilidad": min(20, total * 4),
@@ -274,7 +306,7 @@ def evaluate_iso_25010(html: str):
             "Accesibilidad",
             "Nombre accesible de enlaces",
             "Alta",
-            f"Se detectaron {total} enlaces sin texto visible ni nombre accesible.",
+            f"Se detectaron {total} enlaces sin texto visible ni nombre accesible." + format_snippets(links_without_text),
             "Agregar texto descriptivo, aria-label o un elemento de imagen con 'alt' descriptivo dentro del enlace.",
             {
                 "accesibilidad": min(15, total * 2),
@@ -326,7 +358,7 @@ def evaluate_iso_25010(html: str):
             "Accesibilidad",
             "Identificación de formularios",
             "Alta",
-            f"Se detectaron {total} campos de formulario sin etiqueta accesible (label, aria-label o placeholder).",
+            f"Se detectaron {total} campos de formulario sin etiqueta accesible (label, aria-label o placeholder)." + format_snippets(inputs_without_label),
             "Asociar cada campo con una etiqueta <label> mediante el atributo 'for', o implementar atributos 'aria-label' / 'placeholder'.",
             {
                 "accesibilidad": min(15, total * 3),
@@ -340,7 +372,7 @@ def evaluate_iso_25010(html: str):
             "Usabilidad",
             "Protección contra errores de usuario",
             "Media",
-            f"Se detectaron {total} campos de entrada de datos sin atributos de validación nativos (required, pattern, etc.).",
+            f"Se detectaron {total} campos de entrada de datos sin atributos de validación nativos (required, pattern, etc.)." + format_snippets(inputs_without_validation),
             "Agregar validación nativa del navegador mediante atributos como 'required', 'pattern' o tipos específicos (type='email').",
             {"usabilidad": min(10, total * 2)},
         )
@@ -348,6 +380,7 @@ def evaluate_iso_25010(html: str):
     # 2.5 Relación de contraste de color bajo
     styled_elements = soup.find_all(style=True)
     low_contrast_count = 0
+    low_contrast_elements = []
     for el in styled_elements:
         style_attr = el.get("style", "")
         color_match = re.search(r"color\s*:\s*([^;]+)", style_attr)
@@ -361,13 +394,14 @@ def evaluate_iso_25010(html: str):
             ratio = get_contrast_ratio(c1, c2)
             if ratio and ratio < 4.5:
                 low_contrast_count += 1
+                low_contrast_elements.append(el)
 
     if low_contrast_count > 0:
         add_finding(
             "Accesibilidad",
             "Contraste mínimo",
             "Media",
-            f"Se detectaron {low_contrast_count} elementos con contraste de color bajo (< 4.5:1), dificultando la legibilidad.",
+            f"Se detectaron {low_contrast_count} elementos con contraste de color bajo (< 4.5:1), dificultando la legibilidad." + format_snippets(low_contrast_elements),
             "Asegurar una relación de contraste mínima de 4.5:1 para texto normal y de 3:1 para texto grande según la WCAG AA.",
             {"accesibilidad": 10, "usabilidad": 5},
         )
@@ -383,7 +417,7 @@ def evaluate_iso_25010(html: str):
             "Accesibilidad",
             "Flujo de enfoque",
             "Alta",
-            f"Se detectaron {len(tabindex_tags)} elementos con 'tabindex' mayor a 0, alterando la navegación natural.",
+            f"Se detectaron {len(tabindex_tags)} elementos con 'tabindex' mayor a 0, alterando la navegación natural." + format_snippets(tabindex_tags),
             "Evitar el uso de tabindex > 0. Utilizar tabindex='0' para elementos interactivos personalizados y estructurar el DOM lógicamente.",
             {"accesibilidad": 10, "usabilidad": 5},
         )
@@ -391,6 +425,7 @@ def evaluate_iso_25010(html: str):
     # 2.7 Pistas de subtítulos en videos/audios
     media_tags = soup.find_all(["video", "audio"])
     missing_tracks = 0
+    media_without_tracks = []
     for media in media_tags:
         tracks = media.find_all("track")
         has_subtitles = any(
@@ -398,13 +433,14 @@ def evaluate_iso_25010(html: str):
         )
         if not has_subtitles:
             missing_tracks += 1
+            media_without_tracks.append(media)
 
     if missing_tracks > 0:
         add_finding(
             "Accesibilidad",
             "Soporte multimedia",
             "Alta",
-            f"Se detectaron {missing_tracks} elementos multimedia (video/audio) sin pistas de subtítulos o transcripciones.",
+            f"Se detectaron {missing_tracks} elementos multimedia (video/audio) sin pistas de subtítulos o transcripciones." + format_snippets(media_without_tracks),
             "Agregar elementos <track kind='subtitles' srclang='es' src='subtítulos.vtt'> a todos los videos y audios.",
             {"accesibilidad": 10, "usabilidad": 5},
         )
@@ -419,7 +455,7 @@ def evaluate_iso_25010(html: str):
             "Usabilidad",
             "Legibilidad",
             "Media",
-            f"Se detectaron {total} párrafos extensos que pueden sobrecargar la lectura.",
+            f"Se detectaron {total} párrafos extensos que pueden sobrecargar la lectura." + format_snippets(long_paragraphs),
             "Dividir bloques de texto largos en secciones más pequeñas, listas o agregar subtítulos organizadores.",
             {"usabilidad": min(10, total * 2)},
         )
@@ -439,19 +475,21 @@ def evaluate_iso_25010(html: str):
     # 3.3 Estabilidad Visual (CLS) - Imágenes/Iframes sin dimensiones
     media_files = soup.find_all(["img", "iframe"])
     cls_violations = 0
+    elements_cls = []
     for med in media_files:
         has_dims = med.get("width") and med.get("height")
         style = med.get("style", "")
         has_style_dims = "width" in style and "height" in style
         if not (has_dims or has_style_dims):
             cls_violations += 1
+            elements_cls.append(med)
 
     if cls_violations > 0:
         add_finding(
             "Usabilidad",
             "Estética de la interfaz",
             "Media",
-            f"Se detectaron {cls_violations} elementos multimedia (imágenes/iframes) sin dimensiones explícitas, propiciando saltos de diseño (CLS).",
+            f"Se detectaron {cls_violations} elementos multimedia (imágenes/iframes) sin dimensiones explícitas, propiciando saltos de diseño (CLS)." + format_snippets(elements_cls),
             "Definir siempre atributos width/height en etiquetas de imágenes o configurar relaciones de aspecto en CSS (aspect-ratio).",
             {"usabilidad": 8, "eficiencia_desempeno": 8},
         )
@@ -480,7 +518,7 @@ def evaluate_iso_25010(html: str):
             "Eficiencia de desempeño",
             "Comportamiento temporal",
             "Media",
-            f"Se detectó un exceso de scripts en el documento ({len(scripts)} scripts).",
+            f"Se detectó un exceso de scripts en el documento ({len(scripts)} scripts)." + format_snippets(scripts, 2),
             "Unificar scripts, utilizar bundles y aplicar técnicas de carga diferida (defer/async).",
             {"eficiencia_desempeno": 10},
         )
@@ -490,7 +528,7 @@ def evaluate_iso_25010(html: str):
             "Eficiencia de desempeño",
             "Utilización de recursos",
             "Media",
-            f"Se detectaron {len(stylesheets)} hojas de estilo externas.",
+            f"Se detectaron {len(stylesheets)} hojas de estilo externas." + format_snippets(stylesheets, 2),
             "Minificar y concatenar archivos CSS, o implementar CSS crítico para mejorar el renderizado inicial.",
             {"eficiencia_desempeno": 8},
         )
@@ -500,7 +538,7 @@ def evaluate_iso_25010(html: str):
             "Eficiencia de desempeño",
             "Utilización de recursos",
             "Media",
-            f"Se detectaron {len(images)} imágenes en el marcado inicial.",
+            f"Se detectaron {len(images)} imágenes en el marcado inicial." + format_snippets(images, 2),
             "Implementar lazy loading nativo (loading='lazy') en imágenes secundarias y optimizar formatos a WebP/AVIF.",
             {"eficiencia_desempeno": 8},
         )
@@ -511,7 +549,7 @@ def evaluate_iso_25010(html: str):
             "Eficiencia de desempeño",
             "Recursos multimedia",
             "Media",
-            f"Se detectaron {len(videos)} etiquetas de video integradas de forma síncrona.",
+            f"Se detectaron {len(videos)} etiquetas de video integradas de forma síncrona." + format_snippets(videos, 2),
             "Cargar elementos multimedia de forma diferida o mediante reproducción a demanda para no penalizar la red.",
             {"eficiencia_desempeno": 10},
         )
@@ -543,7 +581,7 @@ def evaluate_iso_25010(html: str):
             "Eficiencia de desempeño",
             "Comportamiento temporal",
             "Alta",
-            "Se detectaron bloqueos potenciales al Largest Contentful Paint (LCP) (ej. scripts síncronos en el <head> o imagen hero cargada diferida).",
+            "Se detectaron bloqueos potenciales al Largest Contentful Paint (LCP) (ej. scripts síncronos en el <head> o imagen hero cargada diferida)." + format_snippets(head_scripts_blocking, 2),
             "Remover el atributo loading='lazy' de la imagen de portada/hero, y asegurar que los scripts del head utilicen defer o async.",
             {"eficiencia_desempeno": 10},
         )
@@ -553,14 +591,14 @@ def evaluate_iso_25010(html: str):
     for tag in soup.find_all(True):
         for attr in tag.attrs:
             if attr.lower().startswith("on"):
-                inline_events.append(attr)
+                inline_events.append(tag)
 
     if len(inline_events) > 5:
         add_finding(
             "Eficiencia de desempeño",
             "Comportamiento temporal",
             "Media",
-            f"Se detectaron {len(inline_events)} manejadores de eventos JavaScript inline, lo que puede degradar la interacción al usuario (INP).",
+            f"Se detectaron {len(inline_events)} manejadores de eventos JavaScript inline, lo que puede degradar la interacción al usuario (INP)." + format_snippets(inline_events, 2),
             "Mudar los manejadores de eventos inline (onclick) hacia listeners en archivos JS externos (.addEventListener).",
             {"eficiencia_desempeno": 10},
         )
@@ -764,7 +802,7 @@ def evaluate_iso_25010(html: str):
             "Mantenibilidad",
             "Modificabilidad",
             "Media",
-            f"Se detectaron {len(inline_styles)} elementos con estilos inline directos.",
+            f"Se detectaron {len(inline_styles)} elementos con estilos inline directos." + format_snippets(inline_styles, 2),
             "Migrar estilos inline hacia clases en hojas de estilo CSS reutilizables para facilitar la mantenibilidad.",
             {"mantenibilidad": min(15, len(inline_styles))},
         )
@@ -783,7 +821,7 @@ def evaluate_iso_25010(html: str):
             "Mantenibilidad",
             "Analizabilidad",
             "Media",
-            f"Se detectaron identificadores (id) duplicados en el DOM: {len(set(duplicated_ids))}.",
+            f"Se detectaron identificadores (id) duplicados en el DOM: {len(set(duplicated_ids))}." + " (Ejemplo: " + ", ".join(list(set(duplicated_ids))[:3]) + ")",
             "Asegurar la unicidad de cada atributo 'id' en el documento HTML para cumplir con los estándares DOM y accesibilidad.",
             {"mantenibilidad": 10, "accesibilidad": 5},
         )
