@@ -1,0 +1,188 @@
+[
+  {
+    "timestamp": "2026-07-14T15:09:45.453025Z",
+    "user_id": "43b26d92-4355-4e5e-9673-35611260bda0",
+    "evaluation": {
+      "global_score": 86,
+      "quality_level": "Alto",
+      "scores": {
+        "adecuacion_funcional": 90,
+        "eficiencia_desempeno": 82,
+        "usabilidad": 67,
+        "accesibilidad": 80,
+        "mantenibilidad": 90,
+        "compatibilidad": 90,
+        "seguridad": 100,
+        "portabilidad": 90
+      },
+      "total_findings": 8,
+      "findings": [
+        {
+          "dimension": "Adecuación funcional",
+          "subdimension": "Completitud funcional",
+          "severity": "Alta",
+          "finding": "No se detectó la etiqueta <main> para delimitar el contenido principal.",
+          "recommendation": "Agregar una etiqueta <main> para estructurar el contenido principal de la interfaz."
+        },
+        {
+          "dimension": "Accesibilidad",
+          "subdimension": "Contraste mínimo",
+          "severity": "Media",
+          "finding": "Se detectaron 1 elementos con contraste de color bajo (< 4.5:1), dificultando la legibilidad. (Encontrado en: <div>)",
+          "recommendation": "Asegurar una relación de contraste mínima de 4.5:1 para texto normal y de 3:1 para texto grande según la WCAG AA."
+        },
+        {
+          "dimension": "Accesibilidad",
+          "subdimension": "Flujo de enfoque",
+          "severity": "Alta",
+          "finding": "Se detectaron 1 elementos con 'tabindex' mayor a 0, alterando la navegación natural. (Encontrado en: <div>)",
+          "recommendation": "Evitar el uso de tabindex > 0. Utilizar tabindex='0' para elementos interactivos personalizados y estructurar el DOM lógicamente."
+        },
+        {
+          "dimension": "Usabilidad",
+          "subdimension": "Consistencia estética",
+          "severity": "Media",
+          "finding": "Se detectó una paleta de colores demasiado amplia (352 colores), afectando la sobriedad estética.",
+          "recommendation": "Establecer una paleta de colores unificada y consistente en el archivo de diseño global."
+        },
+        {
+          "dimension": "Usabilidad",
+          "subdimension": "Estética de la interfaz",
+          "severity": "Media",
+          "finding": "Se detectaron 4 elementos multimedia (imágenes/iframes) sin dimensiones explícitas, propiciando saltos de diseño (CLS). (Encontrado en: <img src=\"https://upao.instructure.com/images/thumbnails/328\">, <iframe id=\"instructure_ajax_error_result\" src=\"about:blank\">, <iframe id=\"post_message_forwarding\" src=\"https://sso.canvaslms.com/post_message_forwarding?\">...)",
+          "recommendation": "Definir siempre atributos width/height en etiquetas de imágenes o configurar relaciones de aspecto en CSS (aspect-ratio)."
+        },
+        {
+          "dimension": "Eficiencia de desempeño",
+          "subdimension": "Tamaño del documento",
+          "severity": "Media",
+          "finding": "El tamaño del archivo HTML supera los 80KB.",
+          "recommendation": "Dividir el HTML, remover scripts embebidos pesados e implementar renderizado dinámico o compresión Gzip/Brotli."
+        },
+        {
+          "dimension": "Compatibilidad",
+          "subdimension": "Coexistencia",
+          "severity": "Alta",
+          "finding": "Se detectaron estilos globales directos sobre etiquetas HTML (h2, input, span, p, body, h1, a, div, h3, button) en el bloque <style>.",
+          "recommendation": "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM."
+        },
+        {
+          "dimension": "Portabilidad",
+          "subdimension": "Adaptabilidad",
+          "severity": "Alta",
+          "finding": "Se detectaron 528 reglas de ancho rígido en píxeles (width: >400px) en la estructura.",
+          "recommendation": "Reemplazar anchos fijos en píxeles por unidades de diseño flexible (%, vw, rem, flex) para facilitar la portabilidad en diversos dispositivos."
+        }
+      ],
+      "engineering_tips": [
+        "Optimizar el marcado HTML y refactorizar dependencias para lograr la conformidad."
+      ],
+      "strict_mode": true
+    },
+    "report": {
+      "agent": "ReportAgent",
+      "status": "completed",
+      "standard": "ISO/IEC 25010",
+      "scope": "Frontend",
+      "generated_at": "2026-07-14 10:09:45",
+      "summary": {
+        "global_score": 86,
+        "quality_level": "Alto",
+        "total_findings": 8,
+        "severity_summary": {
+          "Crítica": 0,
+          "Alta": 4,
+          "Media": 4,
+          "Baja": 0
+        },
+        "dimension_summary": {
+          "Adecuación funcional": 1,
+          "Accesibilidad": 2,
+          "Usabilidad": 2,
+          "Eficiencia de desempeño": 1,
+          "Compatibilidad": 1,
+          "Portabilidad": 1
+        }
+      },
+      "scores": {
+        "adecuacion_funcional": 90,
+        "eficiencia_desempeno": 82,
+        "usabilidad": 67,
+        "accesibilidad": 80,
+        "mantenibilidad": 90,
+        "compatibilidad": 90,
+        "seguridad": 100,
+        "portabilidad": 90
+      },
+      "findings": [
+        {
+          "dimension": "Adecuación funcional",
+          "subdimension": "Completitud funcional",
+          "severity": "Alta",
+          "finding": "No se detectó la etiqueta <main> para delimitar el contenido principal.",
+          "recommendation": "Agregar una etiqueta <main> para estructurar el contenido principal de la interfaz."
+        },
+        {
+          "dimension": "Accesibilidad",
+          "subdimension": "Contraste mínimo",
+          "severity": "Media",
+          "finding": "Se detectaron 1 elementos con contraste de color bajo (< 4.5:1), dificultando la legibilidad. (Encontrado en: <div>)",
+          "recommendation": "Asegurar una relación de contraste mínima de 4.5:1 para texto normal y de 3:1 para texto grande según la WCAG AA."
+        },
+        {
+          "dimension": "Accesibilidad",
+          "subdimension": "Flujo de enfoque",
+          "severity": "Alta",
+          "finding": "Se detectaron 1 elementos con 'tabindex' mayor a 0, alterando la navegación natural. (Encontrado en: <div>)",
+          "recommendation": "Evitar el uso de tabindex > 0. Utilizar tabindex='0' para elementos interactivos personalizados y estructurar el DOM lógicamente."
+        },
+        {
+          "dimension": "Usabilidad",
+          "subdimension": "Consistencia estética",
+          "severity": "Media",
+          "finding": "Se detectó una paleta de colores demasiado amplia (352 colores), afectando la sobriedad estética.",
+          "recommendation": "Establecer una paleta de colores unificada y consistente en el archivo de diseño global."
+        },
+        {
+          "dimension": "Usabilidad",
+          "subdimension": "Estética de la interfaz",
+          "severity": "Media",
+          "finding": "Se detectaron 4 elementos multimedia (imágenes/iframes) sin dimensiones explícitas, propiciando saltos de diseño (CLS). (Encontrado en: <img src=\"https://upao.instructure.com/images/thumbnails/328\">, <iframe id=\"instructure_ajax_error_result\" src=\"about:blank\">, <iframe id=\"post_message_forwarding\" src=\"https://sso.canvaslms.com/post_message_forwarding?\">...)",
+          "recommendation": "Definir siempre atributos width/height en etiquetas de imágenes o configurar relaciones de aspecto en CSS (aspect-ratio)."
+        },
+        {
+          "dimension": "Eficiencia de desempeño",
+          "subdimension": "Tamaño del documento",
+          "severity": "Media",
+          "finding": "El tamaño del archivo HTML supera los 80KB.",
+          "recommendation": "Dividir el HTML, remover scripts embebidos pesados e implementar renderizado dinámico o compresión Gzip/Brotli."
+        },
+        {
+          "dimension": "Compatibilidad",
+          "subdimension": "Coexistencia",
+          "severity": "Alta",
+          "finding": "Se detectaron estilos globales directos sobre etiquetas HTML (h2, input, span, p, body, h1, a, div, h3, button) en el bloque <style>.",
+          "recommendation": "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM."
+        },
+        {
+          "dimension": "Portabilidad",
+          "subdimension": "Adaptabilidad",
+          "severity": "Alta",
+          "finding": "Se detectaron 528 reglas de ancho rígido en píxeles (width: >400px) en la estructura.",
+          "recommendation": "Reemplazar anchos fijos en píxeles por unidades de diseño flexible (%, vw, rem, flex) para facilitar la portabilidad en diversos dispositivos."
+        }
+      ],
+      "main_recommendations": [
+        "Agregar una etiqueta <main> para estructurar el contenido principal de la interfaz.",
+        "Asegurar una relación de contraste mínima de 4.5:1 para texto normal y de 3:1 para texto grande según la WCAG AA.",
+        "Evitar el uso de tabindex > 0. Utilizar tabindex='0' para elementos interactivos personalizados y estructurar el DOM lógicamente.",
+        "Establecer una paleta de colores unificada y consistente en el archivo de diseño global.",
+        "Definir siempre atributos width/height en etiquetas de imágenes o configurar relaciones de aspecto en CSS (aspect-ratio).",
+        "Dividir el HTML, remover scripts embebidos pesados e implementar renderizado dinámico o compresión Gzip/Brotli.",
+        "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM.",
+        "Reemplazar anchos fijos en píxeles por unidades de diseño flexible (%, vw, rem, flex) para facilitar la portabilidad en diversos dispositivos."
+      ],
+      "technical_conclusion": "La interfaz frontend presenta un nivel de calidad alto. Se recomienda atender los hallazgos identificados para fortalecer el cumplimiento de las características de calidad de la norma ISO/IEC 25010."
+    }
+  }
+]

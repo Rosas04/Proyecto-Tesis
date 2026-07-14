@@ -15,7 +15,7 @@ export async function captureInterfaceByUrl(url, credentials = null) {
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ url, credentials }),
+    body: JSON.stringify({ url, auth: credentials }),
   });
 
   return handleResponse(response, "No se pudo capturar la interfaz desde la URL.");

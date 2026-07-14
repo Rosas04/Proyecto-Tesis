@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 import Input from "./pages/Input";
 import Capture from "./pages/Capture";
@@ -21,6 +23,8 @@ export default function App() {
         <Route path="/" element={<Navigate to="/register" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/input" element={<ProtectedRoute><Input /></ProtectedRoute>} />
         <Route path="/capture" element={<ProtectedRoute><Capture /></ProtectedRoute>} />
         <Route path="/html" element={<ProtectedRoute><HtmlReplica /></ProtectedRoute>} />

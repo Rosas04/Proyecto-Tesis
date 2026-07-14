@@ -28,11 +28,13 @@ def _run_worker(request: dict) -> dict:
         raise RuntimeError(error_msg)
 
 
-def take_screenshots(url: str, credentials: dict = None) -> dict:
+def take_screenshots(url: str, auth: dict = None, max_pages: int = 10, credentials: dict = None) -> dict:
+    auth_data = auth if auth is not None else credentials
     return _run_worker({
         "action": "url",
         "url": url,
-        "credentials": credentials
+        "auth": auth_data,
+        "max_pages": max_pages
     })
 
 

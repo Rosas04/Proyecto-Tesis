@@ -1,28 +1,140 @@
 import os
 import re
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
+from typing import Any
+from urllib.parse import urlparse
+
 from playwright.sync_api import sync_playwright
 
-def take_screenshots(url: str, credentials: dict = None):
-    api_base_url = os.getenv("API_BASE_URL", "http://127.0.0.1:8001")
-    output_dir = Path("captures")
-    output_dir.mkdir(exist_ok=True)
+from services.auth_service import (
+    normalize_auth_config,
+    perform_form_login,
+    save_storage_state,
+)
+from services.route_discovery_service import discover_routes
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+CAPTURES_DIR = Path("captures")
 
-    viewports = [
-        {"device": "desktop", "width": 1366, "height": 768},
-        {"device": "tablet",  "width": 768,  "height": 1024},
-        {"device": "mobile",  "width": 390,  "height": 844},
-    ]
+VIEWPORTS = [
+    {
+        "device": "desktop",
+        "width": 1366,
+        "height": 768,
+    },
+    {
+        "device": "tablet",
+        "width": 768,
+        "height": 1024,
+    },
+    {
+        "device": "mobile",
+        "width": 390,
+        "height": 844,
+    },
+]
 
-    from urllib.parse import urlparse, urljoin
-    parsed_target = urlparse(url)
-    target_origin = f"{parsed_target.scheme}://{parsed_target.netloc}"
-    allowed_origins = {target_origin}
+def slugify(value: str) -> str:
+    value = value.strip().lower()
+    value = re.sub(r"https?://", "", value)
+    value = re.sub(r"[^a-z0-9]+", "-", value)
+    return value.strip("-")[:80] or "interface"
 
-    crawled_pages = {}
+def collect_dom_metrics(page) -> dict[str, int]:
+    return page.evaluate(
+        """
+        () => ({
+            total_nodes: document.querySelectorAll('*').length,
+            buttons: document.querySelectorAll('button, [role="button"]').length,
+            links: document.querySelectorAll('a[href]').length,
+            inputs: document.querySelectorAll('input, textarea, select').length,
+            images: document.querySelectorAll('img').length,
+            forms: document.querySelectorAll('form').length,
+            tables: document.querySelectorAll('table').length,
+            dialogs: document.querySelectorAll(
+                'dialog, [role="dialog"], [aria-modal="true"]'
+            ).length,
+            headings: document.querySelectorAll(
+                'h1, h2, h3, h4, h5, h6'
+            ).length,
+            semantic_elements: document.querySelectorAll(
+                'main, nav, header, footer, section, article, aside'
+            ).length
+        })
+        """
+    )
+
+def extract_cssom_styles(page) -> list[str]:
+    try:
+        extracted = page.evaluate("""() => {
+            const styles = [];
+            for (const sheet of document.styleSheets) {
+                try {
+                    const rules = sheet.cssRules || sheet.rules;
+                    if (rules) {
+                        let content = "";
+                        for (const rule of rules) {
+                            content += rule.cssText + "\n";
+                        }
+                        if (content.trim()) {
+                            styles.push(content);
+                        }
+                    }
+                } catch (e) {}
+            }
+            return styles;
+        }""")
+        if isinstance(extracted, list):
+            return extracted
+    except Exception:
+        pass
+    return []
+
+def wait_for_spa(page):
+    try:
+        # Esperar hasta que la red esté completamente en reposo
+        page.wait_for_load_state("networkidle", timeout=15000)
+    except Exception:
+        pass
+    try:
+        # Esperar a que los selectores principales sean VISIBLES, no solo que existan
+        page.locator("#root, main, [role='main']").first.wait_for(state="visible", timeout=15000)
+    except Exception:
+        pass
+    
+    # Pausa más holgada para scripts diferidos
+    page.wait_for_timeout(2000)
+    
+    try:
+        # Eliminar elementos altamente dinámicos/variantes que alteran la heurística de ISO 25010 (anuncios, cookies, iframes, skeletons)
+        page.evaluate("""
+            const selectorsToRemove = [
+                'iframe', 
+                '[id*="cookie"]', '[class*="cookie"]', 
+                '[role="dialog"]',
+                '.spinner', '.loader', '.skeleton', '[aria-busy="true"]'
+            ];
+            selectorsToRemove.forEach(selector => {
+                document.querySelectorAll(selector).forEach(el => el.remove());
+            });
+        """)
+    except Exception:
+        pass
+
+def take_screenshots(
+    url: str,
+    auth: dict[str, Any] | None = None,
+    max_pages: int = 10,
+) -> dict[str, Any]:
+    api_base_url = os.getenv("API_BASE_URL", "http://127.0.0.1:8000")
+    CAPTURES_DIR.mkdir(parents=True, exist_ok=True)
+
+    auth_config = normalize_auth_config(auth)
+
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+
+    results: list[dict[str, Any]] = []
+    routes: list[str] = []
     global_css_cache = {}
 
     def handle_response(response):
@@ -34,400 +146,250 @@ def take_screenshots(url: str, credentials: dict = None):
         except Exception:
             pass
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch(
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(
             headless=True,
             args=[
-                "--disable-blink-features=AutomationControlled",
                 "--no-sandbox",
                 "--disable-dev-shm-usage",
             ],
         )
 
-        context = browser.new_context(
-            user_agent=(
+        storage_state = auth_config.get("storage_state_path")
+
+        context_args: dict[str, Any] = {
+            "ignore_https_errors": False,
+            "user_agent": (
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                 "AppleWebKit/537.36 (KHTML, like Gecko) "
                 "Chrome/120.0.0.0 Safari/537.36"
             ),
-        )
+        }
 
-        page = context.new_page()
-        page.on("response", handle_response)
+        if (
+            auth_config["mode"] == "storage_state"
+            and storage_state
+            and Path(storage_state).exists()
+        ):
+            context_args["storage_state"] = storage_state
 
-        urls_to_visit = []
-        visited = set()
-        max_pages = 15
+        discovery_context = browser.new_context(**context_args)
+        discovery_page = discovery_context.new_page()
 
-        # 1. Automate login sequence if credentials are provided
-        if credentials and credentials.get("username_value") and credentials.get("password_value"):
-            login_url = credentials.get("login_url") or url
-            try:
-                page.goto(login_url, wait_until="domcontentloaded", timeout=60000)
-                page.wait_for_timeout(2000)
+        try:
+            if auth_config["mode"] == "form":
+                perform_form_login(
+                    discovery_page,
+                    auth_config,
+                    url=url,
+                )
+
+                generated_state_path = (
+                    f"playwright/.auth/session_{timestamp}.json"
+                )
+
+                save_storage_state(
+                    discovery_context,
+                    generated_state_path,
+                )
+
+                storage_state = generated_state_path
+
+                # Solo navegar a `url` si es diferente de la URL de login.
+                # Si no se pasó login_url explícito, significa que `url` ES el login_url.
+                login_url_used = auth_config.get("login_url") or url
                 
-                # Capture the login page HTML and state before logging in!
-                try:
-                    login_html = page.content()
-                    login_title = page.title() or login_url
-                    parsed_login = urlparse(login_url)
-                    login_norm = f"{parsed_login.scheme}://{parsed_login.netloc}{parsed_login.path.rstrip('/')}"
-                    
-                    path_str = parsed_login.path or "/"
-                    if not path_str or path_str == "/":
-                        file_name = "login.html"
-                    else:
-                        file_name = path_str.strip("/").replace("/", "_") + ".html"
-                        
-                    crawled_pages[login_norm] = {
-                        "html": login_html,
-                        "title": login_title,
-                        "url": login_url,
-                        "cssom_styles": [],
-                        "relative_path": path_str,
-                        "file_name": file_name,
-                    }
-                    visited.add(login_norm)
-                    
-                    # Extract links from the login page
-                    login_links = page.evaluate("""() => {
-                        return Array.from(document.querySelectorAll('a'))
-                            .map(a => a.href)
-                            .filter(href => href && !href.startsWith('javascript:') && !href.startsWith('#'));
-                    }""")
-                    for link in login_links:
-                        abs_link = urljoin(login_url, link)
-                        parsed_link = urlparse(abs_link)
-                        link_origin = f"{parsed_link.scheme}://{parsed_link.netloc}"
-                        link_path = parsed_link.path.lower()
+                if url != login_url_used:
+                    # Si el usuario quiere analizar /dashboard pero el login es en /login
+                    discovery_page.goto(
+                        url,
+                        wait_until="domcontentloaded",
+                        timeout=60_000,
+                    )
+            else:
+                discovery_page.goto(
+                    url,
+                    wait_until="domcontentloaded",
+                    timeout=60_000,
+                )
 
-                        is_internal = (link_origin in allowed_origins)
-                        is_logout = any(x in link_path or x in parsed_link.query.lower() for x in ["logout", "signout", "exit", "cerrar-sesion"])
-
-                        if is_internal and not is_logout:
-                            norm_link = f"{parsed_link.scheme}://{parsed_link.netloc}{parsed_link.path.rstrip('/')}"
-                            if norm_link not in visited:
-                                urls_to_visit.append(abs_link)
-                except Exception as capture_err:
-                    print(f"Failed to pre-capture login page: {capture_err}")
-                
-                # Fill username
-                if not credentials.get("username_selector"):
-                    try:
-                        has_input = page.locator("input[type='email'], input[type='text'], input[name*='user' i]").first.is_visible(timeout=2000)
-                        if not has_input:
-                            login_btn = page.locator("button:has-text('Log in'), button:has-text('Login'), a:has-text('Log in'), a:has-text('Login'), a[href*='login' i]").first
-                            if login_btn.is_visible(timeout=1000):
-                                try:
-                                    href = login_btn.get_attribute("href")
-                                    if href:
-                                        from urllib.parse import urljoin
-                                        page.goto(urljoin(page.url, href))
-                                        page.wait_for_timeout(3000)
-                                    else:
-                                        login_btn.click(force=True)
-                                        page.wait_for_timeout(3000)
-                                except Exception: pass
-                    except Exception: pass
-
-                user_sel = credentials.get("username_selector")
-                if not user_sel:
-                    for selector in ["input[type='email']", "input[type='text']", "input[name='username']", "input[name='email']", "input[name='login']", "input[id*='user' i]", "input[id*='email' i]", "input[name*='user' i]"]:
-                        try:
-                            if page.locator(selector).first.is_visible(timeout=1000):
-                                user_sel = selector
-                                break
-                        except Exception: pass
-                
-                # Fill password
-                pass_sel = credentials.get("password_selector")
-                if not pass_sel:
-                    for selector in ["input[type='password']", "input[name='password']", "input[name*='pass' i]", "input[id*='pass' i]"]:
-                        try:
-                            if page.locator(selector).first.is_visible(timeout=1000):
-                                pass_sel = selector
-                                break
-                        except Exception: pass
-                            
-                if user_sel:
-                    page.fill(user_sel, credentials["username_value"])
-                    
-                    if not pass_sel:
-                        page.press(user_sel, "Enter")
-                        page.wait_for_timeout(2000)
-                        for selector in ["input[type='password']", "input[name='password']", "input[name*='pass' i]", "input[id*='pass' i]"]:
-                            try:
-                                if page.locator(selector).first.is_visible(timeout=1000):
-                                    pass_sel = selector
-                                    break
-                            except Exception: pass
-                    
-                    if pass_sel:
-                        page.fill(pass_sel, credentials["password_value"])
-                        
-                        submit_sel = credentials.get("submit_selector")
-                        if submit_sel:
-                            try: page.click(submit_sel)
-                            except Exception: page.press(pass_sel, "Enter")
-                        else:
-                            submitted = False
-                            for selector in ["button[type=submit]", "input[type=submit]", "button:has-text('Iniciar')", "button:has-text('Login')", "button:has-text('Ingresar')"]:
-                                try:
-                                    if page.locator(selector).first.is_visible(timeout=1000):
-                                        page.click(selector)
-                                        submitted = True
-                                        break
-                                except Exception: pass
-                            if not submitted:
-                                page.press(pass_sel, "Enter")
-                            
-                    try: 
-                        page.wait_for_navigation(timeout=8000)
-                    except Exception: 
-                        page.wait_for_timeout(5000)
-                        
-                    # Also wait for a generic 'loading' overlay to disappear if present
-                    try:
-                        page.wait_for_selector("text=Cargando", state="detached", timeout=3000)
-                    except Exception:
-                        pass
-            except Exception as e:
-                print(f"Login failed: {e}")
-
-        # 2. Crawl discovery loop
-        post_login_url = page.url
-        parsed_post = urlparse(post_login_url)
-        post_norm = f"{parsed_post.scheme}://{parsed_post.netloc}{parsed_post.path.rstrip('/')}"
-        post_origin = f"{parsed_post.scheme}://{parsed_post.netloc}"
-        allowed_origins.add(post_origin)
-        
-        if post_norm in visited:
-            visited.remove(post_norm)
+            wait_for_spa(discovery_page)
             
-        if post_login_url not in urls_to_visit:
-            urls_to_visit.insert(0, post_login_url)
+            # Expand SPA dropdowns to ensure hidden links are in the DOM before discovering
+            #try:
+            #    discovery_page.evaluate("""() => {
+            #        const toggles = document.querySelectorAll('button, [role="button"], [aria-expanded], [aria-haspopup], .menu-item, [class*="dropdown"], [class*="nav"], [class*="menu"]');
+            #        toggles.forEach(t => {
+            #            try {
+            #                const text = (t.innerText || '').toLowerCase();
+            #                if(text.includes('logout') || text.includes('sign out') || text.includes('cerrar sesion') || text.includes('exit')) return;
+            #                if(text.includes('delete') || text.includes('remove') || text.includes('eliminar')) return;
+            #                t.click();
+            #            } catch(e) {}
+            #        });
+            #    }""")
+            #    discovery_page.wait_for_timeout(1500)
+            #except:
+            #    pass
 
-        while urls_to_visit and len(visited) < max_pages:
-            curr_url = urls_to_visit.pop(0)
-            parsed_curr = urlparse(curr_url)
-            normalized_url = f"{parsed_curr.scheme}://{parsed_curr.netloc}{parsed_curr.path.rstrip('/')}"
+            routes = discover_routes(
+                discovery_page,
+                start_url=discovery_page.url,
+                max_pages=max_pages,
+            )
 
-            if normalized_url in visited:
-                continue
+        finally:
+            discovery_context.close()
 
-            visited.add(normalized_url)
+        if not routes:
+            routes = [url]
 
-            try:
-                page.goto(curr_url, wait_until="domcontentloaded", timeout=30000)
-                page.wait_for_timeout(3500)
-                try:
-                    # Wait for any session loading screen to disappear
-                    page.wait_for_selector("text=Cargando", state="detached", timeout=5000)
-                except Exception:
-                    pass
+        for route_index, route_url in enumerate(routes, start=1):
+            parsed_route = urlparse(route_url)
+            path_segment = parsed_route.path.strip("/")
+            if not path_segment:
+                display_name = "Home"
+            else:
+                last_segment = path_segment.split("/")[-1]
+                display_name = last_segment.replace("-", " ").replace("_", " ").title()
 
-                # Check for redirection
-                final_url = page.url
-                parsed_final = urlparse(final_url)
-                final_origin = f"{parsed_final.scheme}://{parsed_final.netloc}"
+            route_result: dict[str, Any] = {
+                "route_index": route_index,
+                "url": route_url,
+                "name": display_name,
+                "file_name": f"interface_{route_index}.html",
+                "relative_path": parsed_route.path,
+                "status": "pending",
+                "html_content": "",
+                "cssom_styles": [],
+                "dom_metrics": {},
+                "captures": [],
+                "errors": [],
+            }
 
-                # Only extract links if we are still on the same origin (not logged out or external redirected)
-                if final_origin not in allowed_origins:
-                    continue
-
-                html = page.content()
-                title = page.title() or curr_url
-
-                # Get CSSOM styles
-                cssom_styles = []
-                try:
-                    extracted = page.evaluate("""() => {
-                        const styles = [];
-                        for (const sheet of document.styleSheets) {
-                            try {
-                                const rules = sheet.cssRules || sheet.rules;
-                                if (rules) {
-                                    let content = "";
-                                    for (const rule of rules) {
-                                        content += rule.cssText + "\\n";
-                                    }
-                                    if (content.trim()) {
-                                        styles.push(content);
-                                    }
-                                }
-                            } catch (e) {}
-                        }
-                        return styles;
-                    }""")
-                    if isinstance(extracted, list):
-                        cssom_styles = extracted
-                except Exception:
-                    pass
-
-                # Derive file_name and relative_path
-                path = parsed_final.path
-                frag = parsed_final.fragment
-                query = parsed_final.query
-                
-                full_path = path
-                if query: full_path += f"_{query}"
-                if frag: full_path += f"_{frag}"
-                
-                import re
-                safe_name = re.sub(r'[^a-zA-Z0-9_\-]', '_', full_path).strip('_')
-                if not safe_name: safe_name = "index"
-                file_name = safe_name + ".html"
-                relative_path = full_path
-
-                crawled_pages[normalized_url] = {
-                    "html": html,
-                    "title": title,
-                    "url": final_url,
-                    "cssom_styles": cssom_styles,
-                    "relative_path": relative_path,
-                    "file_name": file_name,
+            for viewport in VIEWPORTS:
+                context_options: dict[str, Any] = {
+                    "viewport": {
+                        "width": viewport["width"],
+                        "height": viewport["height"],
+                    },
+                    "device_scale_factor": 1,
+                    "user_agent": (
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                        "AppleWebKit/537.36 (KHTML, like Gecko) "
+                        "Chrome/120.0.0.0 Safari/537.36"
+                    ),
                 }
 
-                # Expand SPA dropdowns to ensure hidden links are in the DOM
+                if storage_state and Path(storage_state).exists():
+                    context_options["storage_state"] = storage_state
+
+                context = browser.new_context(**context_options)
+                page = context.new_page()
+                page.on("response", handle_response)
+
                 try:
-                    page.evaluate("""() => {
-                        const toggles = document.querySelectorAll('button, [role="button"], [aria-expanded], [aria-haspopup], .menu-item, [class*="dropdown"], [class*="nav"], [class*="menu"]');
-                        toggles.forEach(t => {
-                            try {
-                                const text = (t.innerText || '').toLowerCase();
-                                if(text.includes('logout') || text.includes('sign out') || text.includes('cerrar sesion') || text.includes('exit')) return;
-                                if(text.includes('delete') || text.includes('remove') || text.includes('eliminar')) return;
-                                t.click();
-                            } catch(e) {}
-                        });
-                    }""")
-                    page.wait_for_timeout(1500)
-                except:
-                    pass
+                    page.goto(
+                        route_url,
+                        wait_until="domcontentloaded",
+                        timeout=60_000,
+                    )
 
-                # Extract links on page
-                links = page.evaluate("""() => {
-                    return Array.from(document.querySelectorAll('a'))
-                        .map(a => a.href)
-                        .filter(href => href && !href.startsWith('javascript:'));
-                }""")
-
-                for link in links:
-                    abs_link = urljoin(final_url, link)
-                    parsed_link = urlparse(abs_link)
-                    link_origin = f"{parsed_link.scheme}://{parsed_link.netloc}"
-                    link_path = parsed_link.path.lower()
-
-                    is_internal = (link_origin in allowed_origins)
-                    is_logout = any(x in link_path or x in parsed_link.query.lower() for x in ["logout", "signout", "exit", "cerrar-sesion"])
-
-                    if is_internal and not is_logout:
-                        query_part = f"?{parsed_link.query}" if parsed_link.query else ""
-                        frag_part = f"#{parsed_link.fragment}" if parsed_link.fragment else ""
-                        norm_link = f"{parsed_link.scheme}://{parsed_link.netloc}{parsed_link.path}{query_part}{frag_part}"
-                        
-                        if norm_link not in visited and norm_link not in urls_to_visit:
-                            urls_to_visit.append(norm_link)
-            except Exception as e:
-                print(f"Error crawling {curr_url}: {e}")
-
-        # Close discovery page
-        page.close()
-
-        # 3. Take screenshots for all discovered pages and viewports
-        interfaces_list = []
-        parsed_main = urlparse(url)
-        main_normalized_url = f"{parsed_main.scheme}://{parsed_main.netloc}{parsed_main.path.rstrip('/')}"
-
-        for norm_url, p_info in crawled_pages.items():
-            page_captures = []
-            
-            for item in viewports:
-                vp_page = context.new_page()
-                try:
-                    vp_page.set_viewport_size({"width": item["width"], "height": item["height"]})
-                except Exception:
-                    pass
-                
-                try:
-                    vp_page.goto(p_info["url"], wait_until="domcontentloaded", timeout=30000)
-                    vp_page.wait_for_timeout(2000)
-                    try:
-                        # Wait for any session loading screen to disappear
-                        vp_page.wait_for_selector("text=Cargando", state="detached", timeout=5000)
-                    except Exception:
-                        pass
+                    wait_for_spa(page)
                     
                     try:
-                        vp_page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-                        vp_page.wait_for_timeout(500)
-                        vp_page.evaluate("window.scrollTo(0, 0)")
-                        vp_page.wait_for_timeout(500)
+                        page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                        page.wait_for_timeout(300)
+                        page.evaluate("window.scrollTo(0, 0)")
+                        page.wait_for_timeout(300)
                     except: pass
 
-                    file_name = f"{item['device']}_{timestamp}_{p_info['file_name'].replace('.html', '')}.png"
-                    file_path = output_dir / file_name
+                    if viewport["device"] == "desktop":
+                        route_result["html_content"] = page.content()
+                        route_result["cssom_styles"] = extract_cssom_styles(page)
+                        route_result["dom_metrics"] = collect_dom_metrics(page)
+                        route_result["title"] = page.title()
 
-                    vp_page.screenshot(path=str(file_path), full_page=True)
+                    file_name = (
+                        f"{timestamp}_"
+                        f"{route_index:02d}_"
+                        f"{slugify(route_url)}_"
+                        f"{viewport['device']}.png"
+                    )
 
-                    page_captures.append({
-                        "device": item["device"],
-                        "width": item["width"],
-                        "height": item["height"],
-                        "file_name": file_name,
-                        "file_path": str(file_path),
-                        "public_url": f"{api_base_url.rstrip('/')}/captures/{file_name}",
-                    })
-                except Exception as e:
-                    page_captures.append({
-                        "device": item["device"],
-                        "width": item["width"],
-                        "height": item["height"],
-                        "error": str(e),
-                    })
+                    file_path = CAPTURES_DIR / file_name
+
+                    page.screenshot(
+                        path=str(file_path),
+                        full_page=True,
+                    )
+
+                    route_result["captures"].append(
+                        {
+                            "device": viewport["device"],
+                            "width": viewport["width"],
+                            "height": viewport["height"],
+                            "file_name": file_name,
+                            "file_path": str(file_path),
+                            "public_url": (
+                                f"{api_base_url.rstrip('/')}/"
+                                f"captures/{file_name}"
+                            ),
+                            "success": True,
+                        }
+                    )
+
+                except Exception as exc:
+                    route_result["errors"].append(
+                        {
+                            "device": viewport["device"],
+                            "message": str(exc),
+                        }
+                    )
+
                 finally:
-                    vp_page.close()
+                    context.close()
 
-            p_info["captures"] = page_captures
-            
-            interfaces_list.append({
-                "file_name": p_info["file_name"],
-                "relative_path": p_info["relative_path"],
-                "html_content": p_info["html"],
-                "type": "html",
-                "captures": page_captures,
-                "cssom_styles": p_info["cssom_styles"],
-            })
+            successful = sum(
+                1
+                for capture in route_result["captures"]
+                if capture.get("success")
+            )
+
+            route_result["successful_captures"] = successful
+            route_result["status"] = (
+                "completed" if successful > 0 else "error"
+            )
+
+            results.append(route_result)
 
         browser.close()
+        
+    main_page_data = results[0] if results else None
+    html_content = main_page_data["html_content"] if main_page_data else ""
+    captures = main_page_data["captures"] if main_page_data else []
+    cssom_styles = main_page_data["cssom_styles"] if main_page_data else []
 
-    main_page_data = crawled_pages.get(main_normalized_url)
-    if not main_page_data and crawled_pages:
-        first_key = list(crawled_pages.keys())[0]
-        main_page_data = crawled_pages[first_key]
-
-    if main_page_data:
-        return {
-            "html_content": main_page_data["html"],
-            "captures": main_page_data["captures"],
-            "total_captures": len(main_page_data["captures"]),
-            "captured_at": timestamp,
-            "css_cache": global_css_cache,
-            "cssom_styles": main_page_data["cssom_styles"],
-            "interfaces": interfaces_list,
-            "source_type": "url",
-        }
-    else:
-        return {
-            "html_content": "",
-            "captures": [],
-            "total_captures": 0,
-            "captured_at": timestamp,
-            "css_cache": {},
-            "cssom_styles": [],
-            "interfaces": [],
-            "source_type": "url",
-        }
+    return {
+        "source_type": "authenticated_url",
+        "status": "completed",
+        "start_url": url,
+        "url": url,
+        "authentication_mode": auth_config["mode"],
+        "authenticated_state_created": bool(storage_state),
+        "routes_discovered": len(routes),
+        "interfaces": results,
+        "total_interfaces": len(results),
+        "total_captures": sum(
+            len(interface["captures"])
+            for interface in results
+        ),
+        "captured_at": timestamp,
+        "html_content": html_content,
+        "captures": captures,
+        "css_cache": global_css_cache,
+        "cssom_styles": cssom_styles,
+    }
 
 
 def take_screenshots_from_html(html_content: str, label: str = "zip"):

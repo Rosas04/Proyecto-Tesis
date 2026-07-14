@@ -64,6 +64,20 @@ export function AuthProvider({ children }) {
     setSession(null);
   };
 
+  const resetPassword = async (email, redirectTo) => {
+    if (!supabase) throw new Error("Base de datos (Supabase) no configurada.");
+    return await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: redirectTo,
+    });
+  };
+
+  const updatePassword = async (newPassword) => {
+    if (!supabase) throw new Error("Base de datos (Supabase) no configurada.");
+    return await supabase.auth.updateUser({
+      password: newPassword,
+    });
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -73,6 +87,8 @@ export function AuthProvider({ children }) {
         register,
         login,
         logout,
+        resetPassword,
+        updatePassword,
       }}
     >
       {children}

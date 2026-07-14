@@ -76,6 +76,10 @@ export default function Login() {
           </button>
 
           <p className="auth-link">
+            ¿Olvidaste tu contraseña? <Link to="/forgot-password">Recuperarla</Link>
+          </p>
+
+          <p className="auth-link">
             ¿No tienes cuenta? <Link to="/register">Crear cuenta</Link>
           </p>
         </form>

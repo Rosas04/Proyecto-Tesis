@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { API_URL } from "../services/api";
@@ -51,6 +51,7 @@ function TypeBadge({ type }) {
 
 export default function Capture() {
   const navigate = useNavigate();
+  const tabsRef = useRef(null);
 
   const [captureResult, setCaptureResult] = useState(null);
   const [error, setError]                 = useState("");
@@ -197,6 +198,108 @@ export default function Capture() {
                 </div>
               )}
             </section>
+
+            {/* ── Interfaces Tabs ─────────────────────────── */}
+            {interfaces.length > 0 && (
+              <section className="interfaces-tabs-section" style={{ marginBottom: "2rem" }}>
+                <div className="section-title">
+                  <h2>Interfaces detectadas</h2>
+                  <p>Selecciona una interfaz para ver sus capturas y realizar la réplica.</p>
+                </div>
+                <div className="tabs-wrapper">
+                  <button 
+                    className="tabs-scroll-btn" 
+                    onClick={() => tabsRef.current?.scrollBy({ left: -200, behavior: "smooth" })}
+                    title="Desplazar a la izquierda"
+                  >
+                    &#8592;
+                  </button>
+                  <div className="tabs-navigation" ref={tabsRef} style={{ gap: '8px', paddingBottom: '8px', alignItems: 'center', borderBottom: 'none', marginBottom: '0' }}>
+                    <button
+                      className={`tab-button ${!selectedIface ? 'active' : ''}`}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '8px',
+                        border: !selectedIface ? '2px solid #2563eb' : '1px solid #d1d5db',
+                        background: !selectedIface ? '#eff6ff' : '#fff',
+                        cursor: 'pointer',
+                        fontWeight: !selectedIface ? 'bold' : 'normal',
+                        color: !selectedIface ? '#1d4ed8' : '#374151',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        whiteSpace: 'nowrap'
+                      }}
+                      onClick={() => setSelectedIface(null)}
+                    >
+                      <TypeBadge type="combined" />
+                      Vista combinada
+                    </button>
+                    
+                    {interfaces.map((iface, idx) => {
+                      const isSelected = selectedIface === iface;
+                      let rawName = iface.file_name || `interfaz-${idx}`;
+                      let fileName = iface.name;
+                      
+                      if (!fileName) {
+                        const lowerName = rawName.toLowerCase();
+                        if (lowerName.includes('login') || lowerName.includes('signin') || lowerName.includes('auth')) {
+                          fileName = 'Login';
+                        } else if (lowerName.includes('register') || lowerName.includes('signup') || lowerName.includes('registro')) {
+                          fileName = 'Registro';
+                        } else if (lowerName.includes('home') || lowerName.includes('index') || lowerName.includes('inicio')) {
+                          fileName = 'Home';
+                        } else if (lowerName.includes('dashboard') || lowerName.includes('panel')) {
+                          fileName = 'Dashboard';
+                        } else if (lowerName.includes('profile') || lowerName.includes('perfil')) {
+                          fileName = 'Perfil';
+                        } else {
+                          // Limpiar nombres como www-dominio-com-ruta
+                          let cleanName = rawName.replace(/\.[^/.]+$/, ""); // quitar extensión
+                          const parts = cleanName.split('-');
+                          if (parts[0] === 'www' && parts.length >= 3) {
+                            cleanName = parts.length > 3 ? parts.slice(3).join(' ') : 'Home';
+                          }
+                          // Capitalizar
+                          fileName = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
+                        }
+                      }
+                      const ext = rawName.split('.').pop().toLowerCase();
+                      return (
+                        <button
+                          key={idx}
+                          className={`tab-button ${isSelected ? 'active' : ''}`}
+                          style={{
+                            padding: '8px 16px',
+                            borderRadius: '8px',
+                            border: isSelected ? '2px solid #2563eb' : '1px solid #d1d5db',
+                            background: isSelected ? '#eff6ff' : '#fff',
+                            cursor: 'pointer',
+                            fontWeight: isSelected ? 'bold' : 'normal',
+                            color: isSelected ? '#1d4ed8' : '#374151',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            whiteSpace: 'nowrap'
+                          }}
+                          onClick={() => setSelectedIface(iface)}
+                        >
+                          <TypeBadge type={ext} />
+                          {fileName}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <button 
+                    className="tabs-scroll-btn" 
+                    onClick={() => tabsRef.current?.scrollBy({ left: 200, behavior: "smooth" })}
+                    title="Desplazar a la derecha"
+                  >
+                    &#8594;
+                  </button>
+                </div>
+              </section>
+            )}
 
             {/* ── Captures grid ───────────────────────────── */}
             {captures.length > 0 ? (

@@ -19,17 +19,25 @@ from services.zip_service import extract_zip_project
 from services.history_service import add_entry, load_history
 
 
-class CredentialsModel(BaseModel):
-    login_url: str | None = None
-    username_selector: str | None = None
-    username_value: str | None = None
-    password_selector: str | None = None
-    password_value: str | None = None
-    submit_selector: str | None = None
+from typing import Literal, Optional
+from pydantic import Field
+
+class AuthConfig(BaseModel):
+    mode: Literal["none", "form", "storage_state"] = "none"
+    login_url: Optional[str] = None
+    username: Optional[str] = None
+    password: Optional[str] = None
+    username_selector: Optional[str] = None
+    password_selector: Optional[str] = None
+    submit_selector: Optional[str] = None
+    success_url_pattern: Optional[str] = None
+    success_selector: Optional[str] = None
+    storage_state_path: Optional[str] = None
 
 class UrlRequest(BaseModel):
     url: str
-    credentials: CredentialsModel | None = None
+    auth: Optional[AuthConfig] = None
+    max_pages: int = Field(default=10, ge=1, le=50)
 
 class HtmlRequest(BaseModel):
     html: str
@@ -87,7 +95,11 @@ def capture_url(request: UrlRequest):
     from fastapi import HTTPException
     try:
         agent = CaptureAgent()
-        return agent.run(request.url, request.credentials)
+        return agent.run(
+            url=request.url,
+            auth=request.auth.model_dump() if request.auth else None,
+            max_pages=request.max_pages,
+        )
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -97,15 +109,32 @@ def capture_url(request: UrlRequest):
 @app.post("/replicate/html")
 def replicate_html(request: UrlRequest):
     capture_agent = CaptureAgent()
-    capture_result = capture_agent.run(request.url, request.credentials)
+    capture_result = capture_agent.run(
+        url=request.url,
+        auth=request.auth.model_dump() if request.auth else None,
+        max_pages=request.max_pages,
+    )
 
     html_agent = HtmlReplicationAgent()
+    
+    # Replicate main HTML
     html_result = html_agent.run(
         html_content=capture_result.get("html_content", ""),
         url=capture_result.get("url", request.url),
         css_cache=capture_result.get("css_cache", {}),
         cssom_styles=capture_result.get("cssom_styles", []),
     )
+    
+    # Replicate all discovered interfaces
+    interfaces = capture_result.get("interfaces", [])
+    for iface in interfaces:
+        iface_html_result = html_agent.run(
+            html_content=iface.get("html_content", ""),
+            url=request.url, # they all share the same base domain
+            css_cache=capture_result.get("css_cache", {}),
+            cssom_styles=iface.get("cssom_styles", []),
+        )
+        iface["html_replication"] = iface_html_result
 
     return {
         "capture": capture_result,

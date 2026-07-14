@@ -44,8 +44,11 @@ class HtmlReplicationAgent:
             if isinstance(rel, str):
                 rel = [rel]
             href = link.get("href")
+            as_attr = link.get("as")
 
-            if href and any(r in ["stylesheet", "preload"] for r in rel):
+            is_css = "stylesheet" in rel or ("preload" in rel and as_attr == "style")
+
+            if href and is_css:
                 css_url = urljoin(url, href)
                 
                 # Check cache first

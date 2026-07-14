@@ -1,5 +1,5 @@
 @echo off
 cd /d "%~dp0"
 call venv\Scripts\activate
-python -m uvicorn main:app --reload
+python -m uvicorn main:app --reload --port 8001
 pause

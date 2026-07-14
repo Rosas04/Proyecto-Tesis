@@ -1,0 +1,65 @@
+Error: Tiempo de espera agotado durante la autenticación. Es posible que los heurísticos no hayan encontrado los campos en esta página específica.
+
+AGY_BROWSER_ACTIVE_PORT_FILE: C:\Users\Home\AppData\Roaming\Antigravity\DevToolsActivePort
+AGY_BROWSER_WS_URL: ws://127.0.0.1:54159/devtools/browser/a3d7c844-5d67-41a7-894f-75598a04fbe0
+ALLUSERSPROFILE: C:\ProgramData
+ANTIGRAVITY_AGENT: 1
+ANTIGRAVITY_CSRF_TOKEN: 23ea2c4f-af8a-4d19-84be-16ee64b12438
+ANTIGRAVITY_LS_ADDRESS: localhost:38062
+ANTIGRAVITY_PROJECT_ID: 88320eda-4d8e-4fc7-90c6-428680db5063
+ANTIGRAVITY_SOURCE_METADATA: {"tool":{"conversationId":"848dae00-29e2-4de5-aba9-65e8a1bbc470", "stepIndex":193, "toolCall":{"id":"1171vb6i", "name":"run_command", "argumentsJson":"{\"CommandLine\":\".\\\\iniciar-backend.bat\",\"Cwd\":\"c:\\\\Users\\\\Home\\\\Desktop\\\\Proyecto-Tesis\\\\frontmind-agents\",\"WaitMsBeforeAsync\":1000,\"toolAction\":\"Starting backend script\",\"toolSummary\":\"Start backend\"}", "thinkingSignature":"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", "originalName":"run_command"}}}
+ANTIGRAVITY_TRAJECTORY_ID: 7f493e43-1317-4ec9-b0cb-f61d06baef5e
+APPDATA: C:\Users\Home\AppData\Roaming
+CHROME_DEVTOOLS_MCP_JS: C:\Users\Home\AppData\Local\Programs\antigravity\resources\app.asar.unpacked\node_modules\chrome-devtools-mcp\build\src\bin\chrome-devtools-mcp.js
+COMMONPROGRAMFILES: C:\Program Files\Common Files
+COMMONPROGRAMFILES(X86): C:\Program Files (x86)\Common Files
+COMMONPROGRAMW6432: C:\Program Files\Common Files
+COMPUTERNAME: ROSAS
+COMSPEC: C:\WINDOWS\system32\cmd.exe
+DRIVERDATA: C:\Windows\System32\Drivers\DriverData
+EFC_8112_1262719628: 1
+EFC_8112_1592913036: 1
+EFC_8112_2283032206: 1
+EFC_8112_2775293581: 1
+EFC_8112_344590478: 1
+EFC_8112_3789132940: 1
+EFC_8112_4126798990: 1
+FPS_BROWSER_APP_PROFILE_STRING: Internet Explorer
+FPS_BROWSER_USER_PROFILE_STRING: Default
+HOMEDRIVE: C:
+HOMEPATH: \Users\Home
+LOCALAPPDATA: C:\Users\Home\AppData\Local
+LOGONSERVER: \\ROSAS
+NUMBER_OF_PROCESSORS: 4
+ONEDRIVE: C:\Users\Home\OneDrive
+ONEDRIVECONSUMER: C:\Users\Home\OneDrive
+OS: Windows_NT
+PATH: C:\Users\Home\Desktop\New Tesis\Proyecto-Tesis\frontmind-agents\venv\Scripts;C:/Users/Home/.gemini/antigravity/bin;C:\Users\Home\AppData\Roaming\Antigravity\bin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Terraform;C:\Program Files\Git\cmd;C:\Users\Home\Desktop\AGILE DEVELOPMENT\mongodb-database-tools-windows-x86_64-100.12.2\mongodb-database-tools-windows-x86_64-100.12.2\bin;C:\Program Files\MongoDB\Server\8.0\bin;;C:\ZKBioTime\Python27;C:\ZKBioTime\Python27\Scripts;C:\ZKBioTime\Python27\Library\bin;C:\Program Files\nodejs\;C:\Users\Home\AppData\Local\Microsoft\WindowsApps;C:\Users\Home\AppData\Local\Programs\Microsoft VS Code\bin;C:\Terraform;C:\Users\Home\AppData\Local\Microsoft\WinGet\Packages\Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe;C:\Program Files\MongoDB\Server\8.0\bin;C:\Users\Home\Desktop\AGILE DEVELOPMENT\mongodb-database-tools-windows-x86_64-100.12.2\mongodb-database-tools-windows-x86_64-100.12.2\bin;C:\Users\Home\AppData\Roaming\npm
+PATHEXT: .COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC;.CPL
+PROCESSOR_ARCHITECTURE: AMD64
+PROCESSOR_IDENTIFIER: AMD64 Family 23 Model 24 Stepping 1, AuthenticAMD
+PROCESSOR_LEVEL: 23
+PROCESSOR_REVISION: 1801
+PROGRAMDATA: C:\ProgramData
+PROGRAMFILES: C:\Program Files
+PROGRAMFILES(X86): C:\Program Files (x86)
+PROGRAMW6432: C:\Program Files
+PROMPT: (venv) $P$G
+PSMODULEPATH: C:\Users\Home\Documents\WindowsPowerShell\Modules;C:\Program Files\WindowsPowerShell\Modules;C:\WINDOWS\system32\WindowsPowerShell\v1.0\Modules
+PUBLIC: C:\Users\Public
+PYTHONUSERBASE: C:\Users\Home\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages
+SESSIONNAME: Console
+SYSTEMDRIVE: C:
+SYSTEMROOT: C:\WINDOWS
+TEMP: C:\Users\Home\AppData\Local\Temp
+TMP: C:\Users\Home\AppData\Local\Temp
+USERDOMAIN: ROSAS
+USERDOMAIN_ROAMINGPROFILE: ROSAS
+USERNAME: Home
+USERPROFILE: C:\Users\Home
+VBOX_HWVIRTEX_IGNORE_SVM_IN_USE: 1
+VIRTUAL_ENV: C:\Users\Home\Desktop\New Tesis\Proyecto-Tesis\frontmind-agents\venv
+VIRTUAL_ENV_PROMPT: (venv) 
+WINDIR: C:\WINDOWS
+_OLD_VIRTUAL_PATH: C:/Users/Home/.gemini/antigravity/bin;C:\Users\Home\AppData\Roaming\Antigravity\bin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Terraform;C:\Program Files\Git\cmd;C:\Users\Home\Desktop\AGILE DEVELOPMENT\mongodb-database-tools-windows-x86_64-100.12.2\mongodb-database-tools-windows-x86_64-100.12.2\bin;C:\Program Files\MongoDB\Server\8.0\bin;;C:\ZKBioTime\Python27;C:\ZKBioTime\Python27\Scripts;C:\ZKBioTime\Python27\Library\bin;C:\Program Files\nodejs\;C:\Users\Home\AppData\Local\Microsoft\WindowsApps;C:\Users\Home\AppData\Local\Programs\Microsoft VS Code\bin;C:\Terraform;C:\Users\Home\AppData\Local\Microsoft\WinGet\Packages\Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe;C:\Program Files\MongoDB\Server\8.0\bin;C:\Users\Home\Desktop\AGILE DEVELOPMENT\mongodb-database-tools-windows-x86_64-100.12.2\mongodb-database-tools-windows-x86_64-100.12.2\bin;C:\Users\Home\AppData\Roaming\npm
+_OLD_VIRTUAL_PROMPT: $P$G

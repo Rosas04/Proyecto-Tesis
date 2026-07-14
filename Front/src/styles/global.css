@@ -262,16 +262,42 @@ a {
 }
 
 /* Tabs Navigation Styling */
+.tabs-wrapper {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.tabs-scroll-btn {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 8px;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+
+.tabs-scroll-btn:hover {
+  color: #2563eb;
+  background-color: #f3f4f6;
+  border-radius: 8px;
+}
+
 .tabs-navigation {
   display: flex;
+  flex: 1;
   gap: 4px;
-  border-bottom: 2px solid #e5e7eb;
   padding-bottom: 0px;
-  margin-bottom: 24px;
   overflow-x: auto;
   scrollbar-width: none; /* Hide scrollbar for Firefox */
   background: transparent;
   align-items: flex-end;
+  scroll-behavior: smooth;
 }
 
 .tabs-navigation::-webkit-scrollbar {

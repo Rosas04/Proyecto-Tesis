@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { replicateHtmlFromContent } from "../services/api";
@@ -29,6 +29,34 @@ const TYPE_COLORS = {
   combined: { bg: "#f1f5f9", color: "#334155", label: "FULL"     },
 };
 
+function getInterfaceLabel(iface, idx) {
+  let rawName = iface.file_name || `interfaz-${idx}`;
+  let fileName = iface.name;
+  
+  if (!fileName) {
+    const lowerName = rawName.toLowerCase();
+    if (lowerName.includes('login') || lowerName.includes('signin') || lowerName.includes('auth')) {
+      fileName = 'Login';
+    } else if (lowerName.includes('register') || lowerName.includes('signup') || lowerName.includes('registro')) {
+      fileName = 'Registro';
+    } else if (lowerName.includes('home') || lowerName.includes('index') || lowerName.includes('inicio')) {
+      fileName = 'Home';
+    } else if (lowerName.includes('dashboard') || lowerName.includes('panel')) {
+      fileName = 'Dashboard';
+    } else if (lowerName.includes('profile') || lowerName.includes('perfil')) {
+      fileName = 'Perfil';
+    } else {
+      let cleanName = rawName.replace(/\.[^/.]+$/, "");
+      const parts = cleanName.split('-');
+      if (parts[0] === 'www' && parts.length >= 3) {
+        cleanName = parts.length > 3 ? parts.slice(3).join(' ') : 'Home';
+      }
+      fileName = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
+    }
+  }
+  return fileName || iface.title || rawName;
+}
+
 function TypeBadge({ type }) {
   const t = TYPE_COLORS[type] || TYPE_COLORS.combined;
   return (
@@ -43,6 +71,7 @@ function TypeBadge({ type }) {
 
 export default function HtmlReplica() {
   const navigate = useNavigate();
+  const tabsRef = useRef(null);
 
   const [captureResult, setCaptureResult] = useState(null);
   const [replicaResult, setReplicaResult] = useState(null);
@@ -326,28 +355,44 @@ export default function HtmlReplica() {
 
             {/* ── Interface Tabs ───────────────── */}
             {interfaces.length > 0 && (
-              <nav className="tabs-navigation">
-                <button
-                  type="button"
-                  className={`tab-btn ${!selectedIface ? "tab-btn--active" : ""}`}
-                  onClick={() => handleTabChange(null)}
+              <div className="tabs-wrapper">
+                <button 
+                  className="tabs-scroll-btn" 
+                  onClick={() => tabsRef.current?.scrollBy({ left: -200, behavior: "smooth" })}
+                  title="Desplazar a la izquierda"
                 >
-                  <TypeBadge type="combined" />
-                  <span>Paquete completo</span>
+                  &#8592;
                 </button>
-
-                {interfaces.map((iface, i) => (
+                <nav className="tabs-navigation" ref={tabsRef}>
                   <button
-                    key={i}
                     type="button"
-                    className={`tab-btn ${selectedIface?.file_name === iface.file_name ? "tab-btn--active" : ""}`}
-                    onClick={() => handleTabChange(iface)}
+                    className={`tab-btn ${!selectedIface ? "tab-btn--active" : ""}`}
+                    onClick={() => handleTabChange(null)}
                   >
-                    <TypeBadge type={iface.type} />
-                    <span>{iface.file_name}</span>
+                    <TypeBadge type="combined" />
+                    <span>Paquete completo</span>
                   </button>
-                ))}
-              </nav>
+
+                  {interfaces.map((iface, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      className={`tab-btn ${selectedIface?.file_name === iface.file_name ? "tab-btn--active" : ""}`}
+                      onClick={() => handleTabChange(iface)}
+                    >
+                      <TypeBadge type={iface.type} />
+                      <span>{getInterfaceLabel(iface, i)}</span>
+                    </button>
+                  ))}
+                </nav>
+                <button 
+                  className="tabs-scroll-btn" 
+                  onClick={() => tabsRef.current?.scrollBy({ left: 200, behavior: "smooth" })}
+                  title="Desplazar a la derecha"
+                >
+                  &#8594;
+                </button>
+              </div>
             )}
 
             <section className="html-workspace">

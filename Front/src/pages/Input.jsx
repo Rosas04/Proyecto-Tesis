@@ -86,11 +86,12 @@ export default function Input() {
         setLoading(true);
         
         const credentials = useCredentials ? {
+          mode: "form",
           login_url: loginUrl.trim() || url.trim(),
           username_selector: usernameSelector.trim() || null,
-          username_value: usernameValue,
+          username: usernameValue,
           password_selector: passwordSelector.trim() || null,
-          password_value: passwordValue,
+          password: passwordValue,
           submit_selector: submitSelector.trim() || null,
         } : null;
 

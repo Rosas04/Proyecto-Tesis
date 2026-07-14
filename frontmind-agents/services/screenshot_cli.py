@@ -22,7 +22,11 @@ def main():
         action = request.get("action")
         
         if action == "url":
-            results = take_screenshots(request.get("url"), request.get("credentials"))
+            results = take_screenshots(
+                url=request.get("url"),
+                auth=request.get("auth") or request.get("credentials"),
+                max_pages=request.get("max_pages", 10)
+            )
         elif action == "html":
             results = take_screenshots_from_html(
                 request.get("html"),

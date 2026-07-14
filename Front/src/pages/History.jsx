@@ -1,4 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import Sidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
 import { fetchUserRuns, fetchRunFindings } from "../historyService";
@@ -6,10 +9,12 @@ import "./History.css";
 
 export default function History() {
   const { user, loadingAuth } = useAuth();
+  const navigate = useNavigate();
   
   const [runs, setRuns] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [error, setError] = useState("");
+  const [generatingPdfId, setGeneratingPdfId] = useState(null);
   
   // Detalle del análisis seleccionado
   const [selectedRun, setSelectedRun] = useState(null);
@@ -115,6 +120,107 @@ export default function History() {
     }
   };
 
+  const handleDownloadReport = async (run, e) => {
+    e.stopPropagation();
+    try {
+      setGeneratingPdfId(run.id);
+      const runFindings = await fetchRunFindings(run.id);
+      
+      const doc = new jsPDF({ unit: "pt", format: "a4" });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const marginX = 40;
+      let cursorY = 50;
+
+      doc.setFillColor(37, 99, 235);
+      doc.rect(0, 0, pageWidth, 70, "F");
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.text("FrontMind AI - Reporte técnico de evaluación frontend", marginX, 35);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text("Norma aplicada: ISO/IEC 25010", marginX, 52);
+
+      cursorY = 95;
+      doc.setTextColor(17, 24, 39);
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text("Información general", marginX, cursorY);
+      cursorY += 18;
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+
+      const projectName = run.projects?.project_name || "Proyecto Principal";
+
+      const generalInfo = [
+        ["Proyecto", projectName],
+        ["Fecha de análisis", new Date(run.created_at).toLocaleString("es-ES")],
+        ["Puntaje global", `${run.global_score} / 100`],
+        ["Nivel de calidad", run.quality_level],
+        ["Total de hallazgos", `${run.total_findings}`],
+      ];
+
+      generalInfo.forEach(([label, value]) => {
+        doc.setFont("helvetica", "bold");
+        doc.text(`${label}:`, marginX, cursorY);
+        doc.setFont("helvetica", "normal");
+        doc.text(String(value), marginX + 150, cursorY);
+        cursorY += 16;
+      });
+
+      if (runFindings.length > 0) {
+        cursorY += 16;
+        if (cursorY > 750) {
+          doc.addPage();
+          cursorY = 50;
+        }
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("Hallazgos técnicos detectados", marginX, cursorY);
+        cursorY += 12;
+
+        const findingsRows = runFindings.map((item, index) => [
+          String(index + 1),
+          item.dimension || "No especificada",
+          item.severity || "Media",
+          item.finding?.replace(/\[.*?\]\s*/g, '') || "Hallazgo no especificado.",
+          item.recommendation || "Sin recomendación registrada.",
+        ]);
+
+        autoTable(doc, {
+          startY: cursorY + 8,
+          margin: { left: marginX, right: marginX },
+          head: [["N°", "Dimensión", "Severidad", "Hallazgo", "Recomendación"]],
+          body: findingsRows,
+          theme: "striped",
+          headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: "bold" },
+          styles: { fontSize: 8, cellPadding: 5 },
+          columnStyles: {
+            0: { cellWidth: 22 },
+            1: { cellWidth: 75 },
+            2: { cellWidth: 55 },
+            3: { cellWidth: 160 },
+            4: { cellWidth: 160 },
+          },
+        });
+      }
+
+      // Nombre del archivo como solicitó el usuario
+      const projectNameFile = projectName.replace(/https?:\/\//i, '').replace(/[\/\\]/g, '');
+      doc.save(`Reporte_${projectNameFile}.pdf`);
+    } catch (err) {
+      console.error(err);
+      setError("No se pudo generar el reporte PDF.");
+    } finally {
+      setGeneratingPdfId(null);
+    }
+  };
+
   const getScoreClass = (score) => {
     if (score >= 90) return "excellent";
     if (score >= 80) return "high";
@@ -135,13 +241,28 @@ export default function History() {
       <Sidebar />
 
       <main className="history-main">
-        <section className="page-header">
-          <p className="page-kicker">Historial de Auditoría</p>
-          <h1 className="page-title">Historial de análisis y calidad</h1>
-          <p className="page-description">
-            Revise los diagnósticos técnicos frontend realizados en esta cuenta bajo la norma ISO/IEC 25010. 
-            Haga clic en cualquier auditoría para ver el desglose de hallazgos detectados.
-          </p>
+        <section className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+          <div style={{ flex: '1 1 500px' }}>
+            <p className="page-kicker">Historial de Auditoría</p>
+            <h1 className="page-title">Historial de análisis y calidad</h1>
+            <p className="page-description">
+              Revise los diagnósticos técnicos frontend realizados en esta cuenta bajo la norma ISO/IEC 25010. 
+              Haga clic en cualquier auditoría para ver el desglose de hallazgos detectados.
+            </p>
+          </div>
+          <button 
+            className="primary-btn" 
+            style={{ width: 'auto', marginTop: '16px' }}
+            onClick={() => {
+              localStorage.removeItem("zipResult");
+              localStorage.removeItem("captureResult");
+              localStorage.removeItem("htmlReplicaResult");
+              localStorage.removeItem("htmlToEvaluate");
+              navigate("/input");
+            }}
+          >
+            + Nuevo Análisis
+          </button>
         </section>
 
         {error && <div className="error-box">{error}</div>}
@@ -233,6 +354,7 @@ export default function History() {
                           <th>Nivel de Calidad</th>
                           <th>Hallazgos</th>
                           <th>Acción</th>
+                          <th>Reporte</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -258,6 +380,48 @@ export default function History() {
                             <td>
                               <button className="view-details-btn">
                                 {selectedRun?.id === run.id ? "Visualizando" : "Ver detalles"}
+                              </button>
+                            </td>
+                            <td>
+                              <button 
+                                className="icon-btn" 
+                                style={{ 
+                                  padding: '8px', 
+                                  width: '36px', 
+                                  height: '36px', 
+                                  display: 'flex', 
+                                  alignItems: 'center', 
+                                  justifyContent: 'center',
+                                  borderRadius: '6px',
+                                  backgroundColor: 'transparent',
+                                  border: 'none',
+                                  color: '#000',
+                                  cursor: generatingPdfId === run.id ? 'not-allowed' : 'pointer',
+                                  opacity: generatingPdfId === run.id ? 0.5 : 1
+                                }}
+                                disabled={generatingPdfId === run.id}
+                                onClick={(e) => handleDownloadReport(run, e)}
+                                title="Descargar Reporte PDF"
+                              >
+                                {generatingPdfId === run.id ? (
+                                  <span style={{ fontSize: '0.75rem', color: '#000' }}>...</span>
+                                ) : (
+                                  <svg 
+                                    xmlns="http://www.w3.org/2000/svg" 
+                                    width="20" 
+                                    height="20" 
+                                    viewBox="0 0 24 24" 
+                                    fill="none" 
+                                    stroke="#000000" 
+                                    strokeWidth="2.5" 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round"
+                                  >
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                  </svg>
+                                )}
                               </button>
                             </td>
                           </tr>
