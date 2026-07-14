@@ -1,0 +1,1316 @@
+{
+    "users": [
+        {
+            "user_id": "c23bb71a-22e9-4144-96df-0641d6bf158f",
+            "email": "tester1@frontmind.ai",
+            "name": "Usuario de Pruebas 1",
+            "role": "tester"
+        },
+        {
+            "user_id": "d42081c7-f4f0-4c5b-812c-d9f51e9b2377",
+            "email": "tester2@frontmind.ai",
+            "name": "Usuario de Pruebas 2",
+            "role": "tester"
+        },
+        {
+            "user_id": "68313453-b258-49c1-af44-070bd6de0d7a",
+            "email": "tester3@frontmind.ai",
+            "name": "Usuario de Pruebas 3",
+            "role": "tester"
+        },
+        {
+            "user_id": "24ab5438-d60f-42c2-9cbc-e34ebcade2ca",
+            "email": "tester4@frontmind.ai",
+            "name": "Usuario de Pruebas 4",
+            "role": "tester"
+        },
+        {
+            "user_id": "71e51ce9-0540-4b8b-ac76-92999e9951ef",
+            "email": "tester5@frontmind.ai",
+            "name": "Usuario de Pruebas 5",
+            "role": "tester"
+        }
+    ],
+    "projects": [
+        {
+            "project_id": "19db28f6-880c-4cc4-99ae-fe5bbd2ed1ef",
+            "user_id": "c23bb71a-22e9-4144-96df-0641d6bf158f",
+            "name": "Sistema Académico",
+            "created_at": "2026-06-28T11:44:22.086024"
+        },
+        {
+            "project_id": "47083b5f-898d-4b4a-8e64-e58a3fe24b62",
+            "user_id": "c23bb71a-22e9-4144-96df-0641d6bf158f",
+            "name": "E-commerce Frontend",
+            "created_at": "2026-06-23T11:44:22.087030"
+        },
+        {
+            "project_id": "8fa35e89-2beb-427f-a32a-bc3d40943a21",
+            "user_id": "c23bb71a-22e9-4144-96df-0641d6bf158f",
+            "name": "Sistema Académico",
+            "created_at": "2026-06-15T11:44:22.087030"
+        },
+        {
+            "project_id": "0071cc42-3f96-4bc3-bbd8-54c5e01eea2a",
+            "user_id": "d42081c7-f4f0-4c5b-812c-d9f51e9b2377",
+            "name": "Sistema Académico",
+            "created_at": "2026-06-18T11:44:22.087030"
+        },
+        {
+            "project_id": "9905d1d0-557d-4459-ac61-0d321b9ee771",
+            "user_id": "68313453-b258-49c1-af44-070bd6de0d7a",
+            "name": "Portal de Noticias",
+            "created_at": "2026-06-21T11:44:22.087030"
+        },
+        {
+            "project_id": "dfd2878a-de89-44a1-b140-6362014bfa67",
+            "user_id": "24ab5438-d60f-42c2-9cbc-e34ebcade2ca",
+            "name": "Landing Page Corporativa",
+            "created_at": "2026-06-20T11:44:22.087030"
+        },
+        {
+            "project_id": "2614575b-0e46-4575-935c-513e93880867",
+            "user_id": "71e51ce9-0540-4b8b-ac76-92999e9951ef",
+            "name": "Portal de Noticias",
+            "created_at": "2026-07-05T11:44:22.087030"
+        }
+    ],
+    "interfaces": [
+        {
+            "interface_id": "ca30bf11-5b01-4f16-a7c2-96171933428f",
+            "project_id": "19db28f6-880c-4cc4-99ae-fe5bbd2ed1ef",
+            "name": "Sistema Académico - Vista 1",
+            "route": "/sistema-académico---vista-1",
+            "capture_time_seconds": 3.11,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_ca30bf11-5b01-4f16-a7c2-96171933428f_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_ca30bf11-5b01-4f16-a7c2-96171933428f_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_ca30bf11-5b01-4f16-a7c2-96171933428f_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "0dadbd11-3825-48ae-bd87-1620b491f427",
+            "project_id": "19db28f6-880c-4cc4-99ae-fe5bbd2ed1ef",
+            "name": "Sistema Académico - Vista 2",
+            "route": "/sistema-académico---vista-2",
+            "capture_time_seconds": 1.68,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_0dadbd11-3825-48ae-bd87-1620b491f427_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_0dadbd11-3825-48ae-bd87-1620b491f427_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_0dadbd11-3825-48ae-bd87-1620b491f427_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "cb00aa2e-d44b-4f4f-86f3-cb3e10de01db",
+            "project_id": "19db28f6-880c-4cc4-99ae-fe5bbd2ed1ef",
+            "name": "Sistema Académico - Vista 3",
+            "route": "/sistema-académico---vista-3",
+            "capture_time_seconds": 2.37,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_cb00aa2e-d44b-4f4f-86f3-cb3e10de01db_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_cb00aa2e-d44b-4f4f-86f3-cb3e10de01db_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_cb00aa2e-d44b-4f4f-86f3-cb3e10de01db_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "044e74e4-7907-44f0-9de8-ffc351bcb6fe",
+            "project_id": "19db28f6-880c-4cc4-99ae-fe5bbd2ed1ef",
+            "name": "Sistema Académico - Vista 4",
+            "route": "/sistema-académico---vista-4",
+            "capture_time_seconds": 3.65,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_044e74e4-7907-44f0-9de8-ffc351bcb6fe_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_044e74e4-7907-44f0-9de8-ffc351bcb6fe_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_044e74e4-7907-44f0-9de8-ffc351bcb6fe_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "00a7dc4f-3abf-4591-8f0b-a739b6ae555d",
+            "project_id": "19db28f6-880c-4cc4-99ae-fe5bbd2ed1ef",
+            "name": "Sistema Académico - Vista 5",
+            "route": "/sistema-académico---vista-5",
+            "capture_time_seconds": 2.31,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_00a7dc4f-3abf-4591-8f0b-a739b6ae555d_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_00a7dc4f-3abf-4591-8f0b-a739b6ae555d_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_00a7dc4f-3abf-4591-8f0b-a739b6ae555d_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "126a266d-c39b-4cf6-a35e-3c75de902d35",
+            "project_id": "19db28f6-880c-4cc4-99ae-fe5bbd2ed1ef",
+            "name": "Sistema Académico - Vista 6",
+            "route": "/sistema-académico---vista-6",
+            "capture_time_seconds": 3.05,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_126a266d-c39b-4cf6-a35e-3c75de902d35_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_126a266d-c39b-4cf6-a35e-3c75de902d35_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_126a266d-c39b-4cf6-a35e-3c75de902d35_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "764dbf5e-4467-4df9-84f4-0b1c29f18cce",
+            "project_id": "47083b5f-898d-4b4a-8e64-e58a3fe24b62",
+            "name": "E-commerce Frontend - Vista 1",
+            "route": "/e-commerce-frontend---vista-1",
+            "capture_time_seconds": 3.54,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_764dbf5e-4467-4df9-84f4-0b1c29f18cce_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_764dbf5e-4467-4df9-84f4-0b1c29f18cce_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_764dbf5e-4467-4df9-84f4-0b1c29f18cce_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "ff8a6928-7689-4d49-87b9-0e3efd2a97ed",
+            "project_id": "47083b5f-898d-4b4a-8e64-e58a3fe24b62",
+            "name": "E-commerce Frontend - Vista 2",
+            "route": "/e-commerce-frontend---vista-2",
+            "capture_time_seconds": 3.73,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_ff8a6928-7689-4d49-87b9-0e3efd2a97ed_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_ff8a6928-7689-4d49-87b9-0e3efd2a97ed_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_ff8a6928-7689-4d49-87b9-0e3efd2a97ed_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "574c4aca-2e08-4b7d-a315-c2c3adb62604",
+            "project_id": "47083b5f-898d-4b4a-8e64-e58a3fe24b62",
+            "name": "E-commerce Frontend - Vista 3",
+            "route": "/e-commerce-frontend---vista-3",
+            "capture_time_seconds": 1.79,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_574c4aca-2e08-4b7d-a315-c2c3adb62604_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_574c4aca-2e08-4b7d-a315-c2c3adb62604_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_574c4aca-2e08-4b7d-a315-c2c3adb62604_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "1dfb0b2f-8ffc-4a41-aa25-88601aa4fd91",
+            "project_id": "47083b5f-898d-4b4a-8e64-e58a3fe24b62",
+            "name": "E-commerce Frontend - Vista 4",
+            "route": "/e-commerce-frontend---vista-4",
+            "capture_time_seconds": 3.4,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_1dfb0b2f-8ffc-4a41-aa25-88601aa4fd91_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_1dfb0b2f-8ffc-4a41-aa25-88601aa4fd91_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_1dfb0b2f-8ffc-4a41-aa25-88601aa4fd91_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "d873b0db-f0a8-4824-a5f3-3ea67780375a",
+            "project_id": "8fa35e89-2beb-427f-a32a-bc3d40943a21",
+            "name": "Sistema Académico - Vista 1",
+            "route": "/sistema-académico---vista-1",
+            "capture_time_seconds": 4.0,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_d873b0db-f0a8-4824-a5f3-3ea67780375a_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_d873b0db-f0a8-4824-a5f3-3ea67780375a_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_d873b0db-f0a8-4824-a5f3-3ea67780375a_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "4d7be795-6f22-4fa9-8a42-b34f8a2e67d9",
+            "project_id": "8fa35e89-2beb-427f-a32a-bc3d40943a21",
+            "name": "Sistema Académico - Vista 2",
+            "route": "/sistema-académico---vista-2",
+            "capture_time_seconds": 3.68,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_4d7be795-6f22-4fa9-8a42-b34f8a2e67d9_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_4d7be795-6f22-4fa9-8a42-b34f8a2e67d9_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_4d7be795-6f22-4fa9-8a42-b34f8a2e67d9_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "3bc7b9cb-932a-449f-94f3-d7736380fc7e",
+            "project_id": "0071cc42-3f96-4bc3-bbd8-54c5e01eea2a",
+            "name": "Sistema Académico - Vista 1",
+            "route": "/sistema-académico---vista-1",
+            "capture_time_seconds": 2.22,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_3bc7b9cb-932a-449f-94f3-d7736380fc7e_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_3bc7b9cb-932a-449f-94f3-d7736380fc7e_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_3bc7b9cb-932a-449f-94f3-d7736380fc7e_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "5a8344ed-2217-4616-8f0a-5749c43878c4",
+            "project_id": "0071cc42-3f96-4bc3-bbd8-54c5e01eea2a",
+            "name": "Sistema Académico - Vista 2",
+            "route": "/sistema-académico---vista-2",
+            "capture_time_seconds": 3.98,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_5a8344ed-2217-4616-8f0a-5749c43878c4_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_5a8344ed-2217-4616-8f0a-5749c43878c4_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_5a8344ed-2217-4616-8f0a-5749c43878c4_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "1293ccc9-51be-41a0-94c7-caec85e7a7e1",
+            "project_id": "0071cc42-3f96-4bc3-bbd8-54c5e01eea2a",
+            "name": "Sistema Académico - Vista 3",
+            "route": "/sistema-académico---vista-3",
+            "capture_time_seconds": 3.23,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_1293ccc9-51be-41a0-94c7-caec85e7a7e1_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_1293ccc9-51be-41a0-94c7-caec85e7a7e1_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_1293ccc9-51be-41a0-94c7-caec85e7a7e1_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "0cbf1404-1aad-45ba-b122-2dd5749edb09",
+            "project_id": "0071cc42-3f96-4bc3-bbd8-54c5e01eea2a",
+            "name": "Sistema Académico - Vista 4",
+            "route": "/sistema-académico---vista-4",
+            "capture_time_seconds": 2.6,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_0cbf1404-1aad-45ba-b122-2dd5749edb09_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_0cbf1404-1aad-45ba-b122-2dd5749edb09_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_0cbf1404-1aad-45ba-b122-2dd5749edb09_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "2bb5b211-c35b-41be-a76d-46caff1689f3",
+            "project_id": "9905d1d0-557d-4459-ac61-0d321b9ee771",
+            "name": "Portal de Noticias - Vista 1",
+            "route": "/portal-de-noticias---vista-1",
+            "capture_time_seconds": 1.95,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_2bb5b211-c35b-41be-a76d-46caff1689f3_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_2bb5b211-c35b-41be-a76d-46caff1689f3_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_2bb5b211-c35b-41be-a76d-46caff1689f3_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "c1b8fded-d98a-4225-ac08-5bb0403ed150",
+            "project_id": "9905d1d0-557d-4459-ac61-0d321b9ee771",
+            "name": "Portal de Noticias - Vista 2",
+            "route": "/portal-de-noticias---vista-2",
+            "capture_time_seconds": 1.8,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_c1b8fded-d98a-4225-ac08-5bb0403ed150_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_c1b8fded-d98a-4225-ac08-5bb0403ed150_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_c1b8fded-d98a-4225-ac08-5bb0403ed150_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "d6b94628-267f-4c8b-ae61-7df757c91283",
+            "project_id": "9905d1d0-557d-4459-ac61-0d321b9ee771",
+            "name": "Portal de Noticias - Vista 3",
+            "route": "/portal-de-noticias---vista-3",
+            "capture_time_seconds": 2.37,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_d6b94628-267f-4c8b-ae61-7df757c91283_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_d6b94628-267f-4c8b-ae61-7df757c91283_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_d6b94628-267f-4c8b-ae61-7df757c91283_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "048179de-dc7f-48aa-9f47-0bcc965560ef",
+            "project_id": "9905d1d0-557d-4459-ac61-0d321b9ee771",
+            "name": "Portal de Noticias - Vista 4",
+            "route": "/portal-de-noticias---vista-4",
+            "capture_time_seconds": 2.95,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_048179de-dc7f-48aa-9f47-0bcc965560ef_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_048179de-dc7f-48aa-9f47-0bcc965560ef_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_048179de-dc7f-48aa-9f47-0bcc965560ef_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "6743986e-4a63-4d91-8e09-b8b1faf7bca3",
+            "project_id": "9905d1d0-557d-4459-ac61-0d321b9ee771",
+            "name": "Portal de Noticias - Vista 5",
+            "route": "/portal-de-noticias---vista-5",
+            "capture_time_seconds": 2.83,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_6743986e-4a63-4d91-8e09-b8b1faf7bca3_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_6743986e-4a63-4d91-8e09-b8b1faf7bca3_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_6743986e-4a63-4d91-8e09-b8b1faf7bca3_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "fb1aef36-c2ef-4fda-90a7-99fba9bb4410",
+            "project_id": "dfd2878a-de89-44a1-b140-6362014bfa67",
+            "name": "Landing Page Corporativa - Vista 1",
+            "route": "/landing-page-corporativa---vista-1",
+            "capture_time_seconds": 3.7,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_fb1aef36-c2ef-4fda-90a7-99fba9bb4410_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_fb1aef36-c2ef-4fda-90a7-99fba9bb4410_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_fb1aef36-c2ef-4fda-90a7-99fba9bb4410_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "fe453f88-2f76-4ca9-9bbd-66dbade32b45",
+            "project_id": "dfd2878a-de89-44a1-b140-6362014bfa67",
+            "name": "Landing Page Corporativa - Vista 2",
+            "route": "/landing-page-corporativa---vista-2",
+            "capture_time_seconds": 3.07,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_fe453f88-2f76-4ca9-9bbd-66dbade32b45_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_fe453f88-2f76-4ca9-9bbd-66dbade32b45_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_fe453f88-2f76-4ca9-9bbd-66dbade32b45_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "cd30be0c-7af8-4715-b4a3-f13d740eb468",
+            "project_id": "dfd2878a-de89-44a1-b140-6362014bfa67",
+            "name": "Landing Page Corporativa - Vista 3",
+            "route": "/landing-page-corporativa---vista-3",
+            "capture_time_seconds": 3.64,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_cd30be0c-7af8-4715-b4a3-f13d740eb468_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_cd30be0c-7af8-4715-b4a3-f13d740eb468_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_cd30be0c-7af8-4715-b4a3-f13d740eb468_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "96742988-bec3-4713-b387-deb884e0a761",
+            "project_id": "dfd2878a-de89-44a1-b140-6362014bfa67",
+            "name": "Landing Page Corporativa - Vista 4",
+            "route": "/landing-page-corporativa---vista-4",
+            "capture_time_seconds": 1.87,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_96742988-bec3-4713-b387-deb884e0a761_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_96742988-bec3-4713-b387-deb884e0a761_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_96742988-bec3-4713-b387-deb884e0a761_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "3a5a8e99-f322-4ef3-9104-cc6da33c66be",
+            "project_id": "dfd2878a-de89-44a1-b140-6362014bfa67",
+            "name": "Landing Page Corporativa - Vista 5",
+            "route": "/landing-page-corporativa---vista-5",
+            "capture_time_seconds": 4.28,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_3a5a8e99-f322-4ef3-9104-cc6da33c66be_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_3a5a8e99-f322-4ef3-9104-cc6da33c66be_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_3a5a8e99-f322-4ef3-9104-cc6da33c66be_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "68d2adcd-0450-4582-b457-84ff9dbbdeed",
+            "project_id": "2614575b-0e46-4575-935c-513e93880867",
+            "name": "Portal de Noticias - Vista 1",
+            "route": "/portal-de-noticias---vista-1",
+            "capture_time_seconds": 1.57,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_68d2adcd-0450-4582-b457-84ff9dbbdeed_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_68d2adcd-0450-4582-b457-84ff9dbbdeed_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_68d2adcd-0450-4582-b457-84ff9dbbdeed_mobile.png"
+                }
+            ]
+        },
+        {
+            "interface_id": "f6a16fd9-6448-47b0-a398-f20e7425d832",
+            "project_id": "2614575b-0e46-4575-935c-513e93880867",
+            "name": "Portal de Noticias - Vista 2",
+            "route": "/portal-de-noticias---vista-2",
+            "capture_time_seconds": 2.27,
+            "captures": [
+                {
+                    "device": "desktop",
+                    "public_url": "/captures/mock_f6a16fd9-6448-47b0-a398-f20e7425d832_desktop.png"
+                },
+                {
+                    "device": "tablet",
+                    "public_url": "/captures/mock_f6a16fd9-6448-47b0-a398-f20e7425d832_tablet.png"
+                },
+                {
+                    "device": "mobile",
+                    "public_url": "/captures/mock_f6a16fd9-6448-47b0-a398-f20e7425d832_mobile.png"
+                }
+            ]
+        }
+    ],
+    "evaluations": [
+        {
+            "evaluation_id": "6fe1b72b-ae9a-47ea-a346-c155464938d2",
+            "interface_id": "ca30bf11-5b01-4f16-a7c2-96171933428f",
+            "global_score": 66,
+            "quality_level": "Medio",
+            "scores": {
+                "adecuacion_funcional": 94,
+                "eficiencia_desempeno": 79,
+                "usabilidad": 79,
+                "mantenibilidad": 72
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 5
+        },
+        {
+            "evaluation_id": "28936b91-1e67-45d2-939e-858bf383fbda",
+            "interface_id": "0dadbd11-3825-48ae-bd87-1620b491f427",
+            "global_score": 70,
+            "quality_level": "Medio",
+            "scores": {
+                "adecuacion_funcional": 86,
+                "eficiencia_desempeno": 77,
+                "usabilidad": 71,
+                "mantenibilidad": 86
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 4
+        },
+        {
+            "evaluation_id": "10d59c72-26c8-464f-bb97-075b1ed7887f",
+            "interface_id": "cb00aa2e-d44b-4f4f-86f3-cb3e10de01db",
+            "global_score": 67,
+            "quality_level": "Medio",
+            "scores": {
+                "adecuacion_funcional": 94,
+                "eficiencia_desempeno": 95,
+                "usabilidad": 100,
+                "mantenibilidad": 84
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 1
+        },
+        {
+            "evaluation_id": "045b33db-480c-4b77-abbb-cdcd2214d202",
+            "interface_id": "044e74e4-7907-44f0-9de8-ffc351bcb6fe",
+            "global_score": 96,
+            "quality_level": "Excelente",
+            "scores": {
+                "adecuacion_funcional": 77,
+                "eficiencia_desempeno": 71,
+                "usabilidad": 89,
+                "mantenibilidad": 78
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 4
+        },
+        {
+            "evaluation_id": "3bb915c7-1872-47f4-a3d5-aa6dc0ff24f8",
+            "interface_id": "00a7dc4f-3abf-4591-8f0b-a739b6ae555d",
+            "global_score": 73,
+            "quality_level": "Medio",
+            "scores": {
+                "adecuacion_funcional": 93,
+                "eficiencia_desempeno": 68,
+                "usabilidad": 82,
+                "mantenibilidad": 70
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 5
+        },
+        {
+            "evaluation_id": "7b591aa4-6caa-4930-8657-b4c804627aa8",
+            "interface_id": "126a266d-c39b-4cf6-a35e-3c75de902d35",
+            "global_score": 96,
+            "quality_level": "Excelente",
+            "scores": {
+                "adecuacion_funcional": 81,
+                "eficiencia_desempeno": 76,
+                "usabilidad": 79,
+                "mantenibilidad": 80
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 2
+        },
+        {
+            "evaluation_id": "c4c95233-fc46-4c43-8546-f4cb03c9c3fd",
+            "interface_id": "764dbf5e-4467-4df9-84f4-0b1c29f18cce",
+            "global_score": 93,
+            "quality_level": "Excelente",
+            "scores": {
+                "adecuacion_funcional": 100,
+                "eficiencia_desempeno": 69,
+                "usabilidad": 92,
+                "mantenibilidad": 82
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 2
+        },
+        {
+            "evaluation_id": "68008bd6-87ab-4a43-b33c-33c8bf5464b1",
+            "interface_id": "ff8a6928-7689-4d49-87b9-0e3efd2a97ed",
+            "global_score": 68,
+            "quality_level": "Medio",
+            "scores": {
+                "adecuacion_funcional": 78,
+                "eficiencia_desempeno": 68,
+                "usabilidad": 80,
+                "mantenibilidad": 55
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 4
+        },
+        {
+            "evaluation_id": "917e961a-74d6-4984-b548-8c74cf806caf",
+            "interface_id": "574c4aca-2e08-4b7d-a315-c2c3adb62604",
+            "global_score": 69,
+            "quality_level": "Medio",
+            "scores": {
+                "adecuacion_funcional": 88,
+                "eficiencia_desempeno": 86,
+                "usabilidad": 87,
+                "mantenibilidad": 86
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 4
+        },
+        {
+            "evaluation_id": "1ed386b7-c36f-43ad-97e2-4d840e6b7064",
+            "interface_id": "1dfb0b2f-8ffc-4a41-aa25-88601aa4fd91",
+            "global_score": 89,
+            "quality_level": "Alto",
+            "scores": {
+                "adecuacion_funcional": 86,
+                "eficiencia_desempeno": 63,
+                "usabilidad": 87,
+                "mantenibilidad": 73
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 2
+        },
+        {
+            "evaluation_id": "df56d615-3e4d-4e5e-9b50-c52b176ac92d",
+            "interface_id": "d873b0db-f0a8-4824-a5f3-3ea67780375a",
+            "global_score": 94,
+            "quality_level": "Excelente",
+            "scores": {
+                "adecuacion_funcional": 89,
+                "eficiencia_desempeno": 82,
+                "usabilidad": 86,
+                "mantenibilidad": 76
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 5
+        },
+        {
+            "evaluation_id": "a110ca27-e772-4eca-9c8f-0f7da10f8f6c",
+            "interface_id": "4d7be795-6f22-4fa9-8a42-b34f8a2e67d9",
+            "global_score": 92,
+            "quality_level": "Excelente",
+            "scores": {
+                "adecuacion_funcional": 85,
+                "eficiencia_desempeno": 83,
+                "usabilidad": 82,
+                "mantenibilidad": 53
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 5
+        },
+        {
+            "evaluation_id": "cc6fa9b6-bc8f-4df1-9eb2-882367864ca0",
+            "interface_id": "3bc7b9cb-932a-449f-94f3-d7736380fc7e",
+            "global_score": 88,
+            "quality_level": "Alto",
+            "scores": {
+                "adecuacion_funcional": 99,
+                "eficiencia_desempeno": 73,
+                "usabilidad": 92,
+                "mantenibilidad": 85
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 2
+        },
+        {
+            "evaluation_id": "f103f8dc-46b3-47f5-89f2-8462ba1fcc0a",
+            "interface_id": "5a8344ed-2217-4616-8f0a-5749c43878c4",
+            "global_score": 91,
+            "quality_level": "Excelente",
+            "scores": {
+                "adecuacion_funcional": 84,
+                "eficiencia_desempeno": 86,
+                "usabilidad": 100,
+                "mantenibilidad": 62
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 2
+        },
+        {
+            "evaluation_id": "5ec8e258-4870-4b65-baea-787768cb3d06",
+            "interface_id": "1293ccc9-51be-41a0-94c7-caec85e7a7e1",
+            "global_score": 76,
+            "quality_level": "Medio",
+            "scores": {
+                "adecuacion_funcional": 72,
+                "eficiencia_desempeno": 66,
+                "usabilidad": 86,
+                "mantenibilidad": 54
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 2
+        },
+        {
+            "evaluation_id": "d37fc8d4-8c68-46d9-a992-3fb68102769f",
+            "interface_id": "0cbf1404-1aad-45ba-b122-2dd5749edb09",
+            "global_score": 75,
+            "quality_level": "Medio",
+            "scores": {
+                "adecuacion_funcional": 95,
+                "eficiencia_desempeno": 96,
+                "usabilidad": 99,
+                "mantenibilidad": 86
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 2
+        },
+        {
+            "evaluation_id": "ad3138df-72fc-4656-a089-0597906c12e0",
+            "interface_id": "2bb5b211-c35b-41be-a76d-46caff1689f3",
+            "global_score": 87,
+            "quality_level": "Alto",
+            "scores": {
+                "adecuacion_funcional": 82,
+                "eficiencia_desempeno": 62,
+                "usabilidad": 97,
+                "mantenibilidad": 75
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 1
+        },
+        {
+            "evaluation_id": "d13bf2ce-0e72-4796-b957-78b588d9cc66",
+            "interface_id": "c1b8fded-d98a-4225-ac08-5bb0403ed150",
+            "global_score": 86,
+            "quality_level": "Alto",
+            "scores": {
+                "adecuacion_funcional": 84,
+                "eficiencia_desempeno": 66,
+                "usabilidad": 72,
+                "mantenibilidad": 92
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 1
+        },
+        {
+            "evaluation_id": "565d4668-1a0c-4cc9-b564-9a84f656cec1",
+            "interface_id": "d6b94628-267f-4c8b-ae61-7df757c91283",
+            "global_score": 91,
+            "quality_level": "Excelente",
+            "scores": {
+                "adecuacion_funcional": 92,
+                "eficiencia_desempeno": 82,
+                "usabilidad": 98,
+                "mantenibilidad": 74
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 1
+        },
+        {
+            "evaluation_id": "6015926f-bf52-4fc6-9d94-9f66f1aad8a0",
+            "interface_id": "048179de-dc7f-48aa-9f47-0bcc965560ef",
+            "global_score": 80,
+            "quality_level": "Alto",
+            "scores": {
+                "adecuacion_funcional": 81,
+                "eficiencia_desempeno": 61,
+                "usabilidad": 76,
+                "mantenibilidad": 65
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 3
+        },
+        {
+            "evaluation_id": "f2b465bd-0229-4ff5-b720-38d1c4edf7d0",
+            "interface_id": "6743986e-4a63-4d91-8e09-b8b1faf7bca3",
+            "global_score": 65,
+            "quality_level": "Medio",
+            "scores": {
+                "adecuacion_funcional": 96,
+                "eficiencia_desempeno": 80,
+                "usabilidad": 98,
+                "mantenibilidad": 50
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 3
+        },
+        {
+            "evaluation_id": "aa8257fd-21ce-46ad-8661-4b959af55ef8",
+            "interface_id": "fb1aef36-c2ef-4fda-90a7-99fba9bb4410",
+            "global_score": 87,
+            "quality_level": "Alto",
+            "scores": {
+                "adecuacion_funcional": 95,
+                "eficiencia_desempeno": 76,
+                "usabilidad": 75,
+                "mantenibilidad": 51
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 3
+        },
+        {
+            "evaluation_id": "5e06a23b-701b-4541-8e78-59d34a9dfb98",
+            "interface_id": "fe453f88-2f76-4ca9-9bbd-66dbade32b45",
+            "global_score": 73,
+            "quality_level": "Medio",
+            "scores": {
+                "adecuacion_funcional": 90,
+                "eficiencia_desempeno": 93,
+                "usabilidad": 80,
+                "mantenibilidad": 89
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 2
+        },
+        {
+            "evaluation_id": "5a812a9b-0edc-4627-b4b2-f16048c9a108",
+            "interface_id": "cd30be0c-7af8-4715-b4a3-f13d740eb468",
+            "global_score": 70,
+            "quality_level": "Medio",
+            "scores": {
+                "adecuacion_funcional": 74,
+                "eficiencia_desempeno": 96,
+                "usabilidad": 89,
+                "mantenibilidad": 65
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 4
+        },
+        {
+            "evaluation_id": "61f0b76a-cb54-478b-a327-0925c9b1f647",
+            "interface_id": "96742988-bec3-4713-b387-deb884e0a761",
+            "global_score": 97,
+            "quality_level": "Excelente",
+            "scores": {
+                "adecuacion_funcional": 72,
+                "eficiencia_desempeno": 67,
+                "usabilidad": 71,
+                "mantenibilidad": 67
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 4
+        },
+        {
+            "evaluation_id": "640b1396-c5be-4fef-ad8d-056180fb3694",
+            "interface_id": "3a5a8e99-f322-4ef3-9104-cc6da33c66be",
+            "global_score": 95,
+            "quality_level": "Excelente",
+            "scores": {
+                "adecuacion_funcional": 76,
+                "eficiencia_desempeno": 74,
+                "usabilidad": 89,
+                "mantenibilidad": 64
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 3
+        },
+        {
+            "evaluation_id": "db804088-5eab-4f4b-816b-a9524ffe3e7e",
+            "interface_id": "68d2adcd-0450-4582-b457-84ff9dbbdeed",
+            "global_score": 74,
+            "quality_level": "Medio",
+            "scores": {
+                "adecuacion_funcional": 72,
+                "eficiencia_desempeno": 67,
+                "usabilidad": 83,
+                "mantenibilidad": 95
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 4
+        },
+        {
+            "evaluation_id": "f4727cd8-1c53-4c92-9e72-6a6190dce396",
+            "interface_id": "f6a16fd9-6448-47b0-a398-f20e7425d832",
+            "global_score": 98,
+            "quality_level": "Excelente",
+            "scores": {
+                "adecuacion_funcional": 74,
+                "eficiencia_desempeno": 87,
+                "usabilidad": 77,
+                "mantenibilidad": 77
+            },
+            "findings": [
+                {
+                    "severity": "Media",
+                    "dimension": "Usabilidad",
+                    "finding": "Contraste bajo",
+                    "recommendation": "Aumentar contraste a 4.5:1"
+                }
+            ],
+            "total_findings": 3
+        }
+    ],
+    "reports": [
+        {
+            "report_id": "584b2f2e-0bf2-4df4-9dea-d1323ff3497a",
+            "project_id": "19db28f6-880c-4cc4-99ae-fe5bbd2ed1ef",
+            "total_interfaces": 6,
+            "average_score": 78,
+            "overall_quality_level": "Medio",
+            "generated_at": "2026-07-14T11:44:22.087030"
+        },
+        {
+            "report_id": "63f97cf9-a9b0-48f6-9486-5d5716e8f479",
+            "project_id": "47083b5f-898d-4b4a-8e64-e58a3fe24b62",
+            "total_interfaces": 4,
+            "average_score": 79,
+            "overall_quality_level": "Medio",
+            "generated_at": "2026-07-14T11:44:22.087030"
+        },
+        {
+            "report_id": "3a9a0e44-55b7-4d7a-82d7-42a0eedf5389",
+            "project_id": "8fa35e89-2beb-427f-a32a-bc3d40943a21",
+            "total_interfaces": 2,
+            "average_score": 93,
+            "overall_quality_level": "Excelente",
+            "generated_at": "2026-07-14T11:44:22.087030"
+        },
+        {
+            "report_id": "47d7578f-65f8-42a7-bc03-fac78bc27884",
+            "project_id": "0071cc42-3f96-4bc3-bbd8-54c5e01eea2a",
+            "total_interfaces": 4,
+            "average_score": 82,
+            "overall_quality_level": "Alto",
+            "generated_at": "2026-07-14T11:44:22.087030"
+        },
+        {
+            "report_id": "7b73439e-c6b6-4738-8ce3-d2a385203878",
+            "project_id": "9905d1d0-557d-4459-ac61-0d321b9ee771",
+            "total_interfaces": 5,
+            "average_score": 81,
+            "overall_quality_level": "Alto",
+            "generated_at": "2026-07-14T11:44:22.087030"
+        },
+        {
+            "report_id": "6d86e55b-6142-4220-b048-0a00ef910a39",
+            "project_id": "dfd2878a-de89-44a1-b140-6362014bfa67",
+            "total_interfaces": 5,
+            "average_score": 84,
+            "overall_quality_level": "Alto",
+            "generated_at": "2026-07-14T11:44:22.087030"
+        },
+        {
+            "report_id": "df23a3c3-875d-4a28-90a5-0c8d1d99f839",
+            "project_id": "2614575b-0e46-4575-935c-513e93880867",
+            "total_interfaces": 2,
+            "average_score": 86,
+            "overall_quality_level": "Alto",
+            "generated_at": "2026-07-14T11:44:22.087030"
+        }
+    ]
+}
