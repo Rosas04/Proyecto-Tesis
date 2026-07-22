@@ -19,11 +19,11 @@ EXCLUDED_PATH_WORDS = {
 
 def wait_for_spa(page: Page):
     try:
-        page.wait_for_load_state("networkidle", timeout=15000)
+        page.wait_for_load_state("networkidle", timeout=5000)
     except Exception:
         pass
     try:
-        page.locator("#root, main, [role='main']").first.wait_for(state="visible", timeout=15000)
+        page.locator("#root, main, [role='main']").first.wait_for(state="visible", timeout=8000)
     except Exception:
         pass
     page.wait_for_timeout(2000)
@@ -108,8 +108,8 @@ def extract_routes_via_clicks(page: Page, origin: str) -> list[str]:
     try:
         # Find potential navigation elements
         locators = page.locator("button, [role='button'], [role='link'], [class*='nav'], [class*='menu'], [class*='sidebar'], [class*='flow-item'], [class*='tab'], [class*='link'], li").all()
-        # Limit to first 20 to avoid excessive clicking
-        locators = locators[:20]
+        # Limit to first 5 to avoid excessive clicking and massive time delays
+        locators = locators[:5]
         
         for loc in locators:
             try:
@@ -190,11 +190,6 @@ def discover_routes(
         
         links = extract_internal_links(page, start_url)
         print(f"[DEBUG] Found internal links via href: {links}", file=sys.stderr)
-        
-        click_links = extract_routes_via_clicks(page, start_url)
-        if click_links:
-            print(f"[DEBUG] Found internal links via clicks: {click_links}", file=sys.stderr)
-            links.extend(click_links)
 
         for link in links:
             if link not in visited and link not in queue:

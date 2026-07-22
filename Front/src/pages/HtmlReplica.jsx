@@ -355,44 +355,82 @@ export default function HtmlReplica() {
 
             {/* ── Interface Tabs ───────────────── */}
             {interfaces.length > 0 && (
-              <div className="tabs-wrapper">
-                <button 
-                  className="tabs-scroll-btn" 
-                  onClick={() => tabsRef.current?.scrollBy({ left: -200, behavior: "smooth" })}
-                  title="Desplazar a la izquierda"
-                >
-                  &#8592;
-                </button>
-                <nav className="tabs-navigation" ref={tabsRef}>
-                  <button
-                    type="button"
-                    className={`tab-btn ${!selectedIface ? "tab-btn--active" : ""}`}
-                    onClick={() => handleTabChange(null)}
+              <section className="interfaces-tabs-section" style={{ marginBottom: "2rem", marginTop: "2rem" }}>
+                <div className="section-title">
+                  <h2>Interfaces detectadas</h2>
+                  <p>Selecciona una interfaz para realizar su réplica HTML independiente.</p>
+                </div>
+                <div className="tabs-wrapper">
+                  <button 
+                    className="tabs-scroll-btn" 
+                    onClick={() => tabsRef.current?.scrollBy({ left: -200, behavior: "smooth" })}
+                    title="Desplazar a la izquierda"
                   >
-                    <TypeBadge type="combined" />
-                    <span>Paquete completo</span>
+                    &#8592;
                   </button>
-
-                  {interfaces.map((iface, i) => (
+                  <nav className="tabs-navigation" ref={tabsRef} style={{ gap: '8px', paddingBottom: '8px', alignItems: 'center', borderBottom: 'none', marginBottom: '0' }}>
                     <button
-                      key={i}
                       type="button"
-                      className={`tab-btn ${selectedIface?.file_name === iface.file_name ? "tab-btn--active" : ""}`}
-                      onClick={() => handleTabChange(iface)}
+                      className={`tab-button ${!selectedIface ? 'active' : ''}`}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '8px',
+                        border: !selectedIface ? '2px solid #2563eb' : '1px solid #d1d5db',
+                        background: !selectedIface ? '#eff6ff' : '#fff',
+                        cursor: 'pointer',
+                        fontWeight: !selectedIface ? 'bold' : 'normal',
+                        color: !selectedIface ? '#1d4ed8' : '#374151',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        whiteSpace: 'nowrap'
+                      }}
+                      onClick={() => handleTabChange(null)}
                     >
-                      <TypeBadge type={iface.type} />
-                      <span>{getInterfaceLabel(iface, i)}</span>
+                      <TypeBadge type="combined" />
+                      <span>Vista combinada</span>
                     </button>
-                  ))}
-                </nav>
-                <button 
-                  className="tabs-scroll-btn" 
-                  onClick={() => tabsRef.current?.scrollBy({ left: 200, behavior: "smooth" })}
-                  title="Desplazar a la derecha"
-                >
-                  &#8594;
-                </button>
-              </div>
+
+                    {interfaces.map((iface, i) => {
+                      const isSelected = selectedIface?.file_name === iface.file_name;
+                      const rawName = iface.file_name || `interfaz-${i}`;
+                      const ext = rawName.split('.').pop().toLowerCase();
+                      
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          className={`tab-button ${isSelected ? 'active' : ''}`}
+                          style={{
+                            padding: '8px 16px',
+                            borderRadius: '8px',
+                            border: isSelected ? '2px solid #2563eb' : '1px solid #d1d5db',
+                            background: isSelected ? '#eff6ff' : '#fff',
+                            cursor: 'pointer',
+                            fontWeight: isSelected ? 'bold' : 'normal',
+                            color: isSelected ? '#1d4ed8' : '#374151',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            whiteSpace: 'nowrap'
+                          }}
+                          onClick={() => handleTabChange(iface)}
+                        >
+                          <TypeBadge type={iface.type || ext} />
+                          <span>{getInterfaceLabel(iface, i)}</span>
+                        </button>
+                      );
+                    })}
+                  </nav>
+                  <button 
+                    className="tabs-scroll-btn" 
+                    onClick={() => tabsRef.current?.scrollBy({ left: 200, behavior: "smooth" })}
+                    title="Desplazar a la derecha"
+                  >
+                    &#8594;
+                  </button>
+                </div>
+              </section>
             )}
 
             <section className="html-workspace">

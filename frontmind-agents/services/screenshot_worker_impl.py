@@ -93,12 +93,12 @@ def extract_cssom_styles(page) -> list[str]:
 def wait_for_spa(page):
     try:
         # Esperar hasta que la red esté completamente en reposo
-        page.wait_for_load_state("networkidle", timeout=15000)
+        page.wait_for_load_state("networkidle", timeout=5000)
     except Exception:
         pass
     try:
         # Esperar a que los selectores principales sean VISIBLES, no solo que existan
-        page.locator("#root, main, [role='main']").first.wait_for(state="visible", timeout=15000)
+        page.locator("#root, main, [role='main']").first.wait_for(state="visible", timeout=8000)
     except Exception:
         pass
     
@@ -175,6 +175,14 @@ def take_screenshots(
 
         discovery_context = browser.new_context(**context_args)
         discovery_page = discovery_context.new_page()
+        
+        # Abort heavy assets during discovery phase for ultra-fast DOM parsing
+        discovery_page.route("**/*.{png,jpg,jpeg,gif,svg,mp4,webm,woff,woff2,css,ico}", lambda route: route.abort())
+        discovery_page.route("**/*google-analytics*", lambda route: route.abort())
+        discovery_page.route("**/*googletagmanager*", lambda route: route.abort())
+        discovery_page.route("**/*hotjar*", lambda route: route.abort())
+
+        discovery_page.on("dialog", lambda dialog: dialog.dismiss())
 
         try:
             if auth_config["mode"] == "form":
@@ -204,13 +212,13 @@ def take_screenshots(
                     discovery_page.goto(
                         url,
                         wait_until="domcontentloaded",
-                        timeout=60_000,
+                        timeout=15_000,
                     )
             else:
                 discovery_page.goto(
                     url,
                     wait_until="domcontentloaded",
-                    timeout=60_000,
+                    timeout=15_000,
                 )
 
             wait_for_spa(discovery_page)
@@ -267,88 +275,101 @@ def take_screenshots(
                 "errors": [],
             }
 
-            for viewport in VIEWPORTS:
-                context_options: dict[str, Any] = {
-                    "viewport": {
-                        "width": viewport["width"],
-                        "height": viewport["height"],
-                    },
-                    "device_scale_factor": 1,
-                    "user_agent": (
-                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                        "AppleWebKit/537.36 (KHTML, like Gecko) "
-                        "Chrome/120.0.0.0 Safari/537.36"
-                    ),
-                }
+            context_options: dict[str, Any] = {
+                "device_scale_factor": 1,
+                "user_agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/120.0.0.0 Safari/537.36"
+                ),
+            }
 
-                if storage_state and Path(storage_state).exists():
-                    context_options["storage_state"] = storage_state
+            if storage_state and Path(storage_state).exists():
+                context_options["storage_state"] = storage_state
 
-                context = browser.new_context(**context_options)
-                page = context.new_page()
-                page.on("response", handle_response)
+            context = browser.new_context(**context_options)
+            page = context.new_page()
+            page.on("response", handle_response)
+            page.on("dialog", lambda dialog: dialog.dismiss())
+            
+            # Block known trackers to prevent networkidle hangs
+            page.route("**/*google-analytics*", lambda route: route.abort())
+            page.route("**/*googletagmanager*", lambda route: route.abort())
+            page.route("**/*hotjar*", lambda route: route.abort())
+            page.route("**/*facebook.net*", lambda route: route.abort())
+            
+            try:
+                page.goto(
+                    route_url,
+                    wait_until="domcontentloaded",
+                    timeout=20_000,
+                )
 
+                wait_for_spa(page)
+                
                 try:
-                    page.goto(
-                        route_url,
-                        wait_until="domcontentloaded",
-                        timeout=60_000,
-                    )
+                    page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                    page.wait_for_timeout(300)
+                    page.evaluate("window.scrollTo(0, 0)")
+                    page.wait_for_timeout(300)
+                except: pass
 
-                    wait_for_spa(page)
-                    
+                route_result["html_content"] = page.content()
+                route_result["cssom_styles"] = extract_cssom_styles(page)
+                route_result["dom_metrics"] = collect_dom_metrics(page)
+                route_result["title"] = page.title()
+
+                for viewport in VIEWPORTS:
                     try:
-                        page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-                        page.wait_for_timeout(300)
-                        page.evaluate("window.scrollTo(0, 0)")
-                        page.wait_for_timeout(300)
-                    except: pass
+                        page.set_viewport_size({"width": viewport["width"], "height": viewport["height"]})
+                        page.wait_for_timeout(500)
 
-                    if viewport["device"] == "desktop":
-                        route_result["html_content"] = page.content()
-                        route_result["cssom_styles"] = extract_cssom_styles(page)
-                        route_result["dom_metrics"] = collect_dom_metrics(page)
-                        route_result["title"] = page.title()
+                        file_name = (
+                            f"{timestamp}_"
+                            f"{route_index:02d}_"
+                            f"{slugify(route_url)}_"
+                            f"{viewport['device']}.png"
+                        )
 
-                    file_name = (
-                        f"{timestamp}_"
-                        f"{route_index:02d}_"
-                        f"{slugify(route_url)}_"
-                        f"{viewport['device']}.png"
-                    )
+                        file_path = CAPTURES_DIR / file_name
 
-                    file_path = CAPTURES_DIR / file_name
+                        page.screenshot(
+                            path=str(file_path),
+                            full_page=True,
+                        )
 
-                    page.screenshot(
-                        path=str(file_path),
-                        full_page=True,
-                    )
+                        route_result["captures"].append(
+                            {
+                                "device": viewport["device"],
+                                "width": viewport["width"],
+                                "height": viewport["height"],
+                                "file_name": file_name,
+                                "file_path": str(file_path),
+                                "public_url": (
+                                    f"{api_base_url.rstrip('/')}/"
+                                    f"captures/{file_name}"
+                                ),
+                                "success": True,
+                            }
+                        )
+                    except Exception as exc:
+                        route_result["errors"].append(
+                            {
+                                "device": viewport["device"],
+                                "message": str(exc),
+                            }
+                        )
 
-                    route_result["captures"].append(
-                        {
-                            "device": viewport["device"],
-                            "width": viewport["width"],
-                            "height": viewport["height"],
-                            "file_name": file_name,
-                            "file_path": str(file_path),
-                            "public_url": (
-                                f"{api_base_url.rstrip('/')}/"
-                                f"captures/{file_name}"
-                            ),
-                            "success": True,
-                        }
-                    )
+            except Exception as exc:
+                route_result["errors"].append(
+                    {
+                        "device": "general",
+                        "message": str(exc),
+                    }
+                )
 
-                except Exception as exc:
-                    route_result["errors"].append(
-                        {
-                            "device": viewport["device"],
-                            "message": str(exc),
-                        }
-                    )
-
-                finally:
-                    context.close()
+            finally:
+                context.close()
 
             successful = sum(
                 1

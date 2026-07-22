@@ -1,0 +1,90 @@
+{
+  "agent": "ISOEvaluationAgent",
+  "status": "completed",
+  "standard": "ISO/IEC 25010",
+  "scope": "Frontend",
+  "evaluation": {
+    "global_score": 88,
+    "quality_level": "Alto",
+    "scores": {
+      "adecuacion_funcional": 70,
+      "eficiencia_desempeno": 100,
+      "usabilidad": 80,
+      "accesibilidad": 100,
+      "mantenibilidad": 75,
+      "compatibilidad": 90,
+      "seguridad": 100,
+      "portabilidad": 90
+    },
+    "total_findings": 9,
+    "findings": [
+      {
+        "dimension": "Adecuación funcional",
+        "subdimension": "Completitud funcional",
+        "severity": "Alta",
+        "finding": "No se detectó la etiqueta <main> para delimitar el contenido principal.",
+        "recommendation": "Agregar una etiqueta <main> para estructurar el contenido principal de la interfaz."
+      },
+      {
+        "dimension": "Adecuación funcional",
+        "subdimension": "Pertinencia funcional",
+        "severity": "Media",
+        "finding": "No se detectó una estructura de navegación principal (<nav>).",
+        "recommendation": "Incorporar una etiqueta <nav> o una estructura equivalente para mejorar la orientación del usuario."
+      },
+      {
+        "dimension": "Adecuación funcional",
+        "subdimension": "Completitud funcional",
+        "severity": "Alta",
+        "finding": "No se detectaron elementos visuales para el manejo de estados de carga (spinners/skeletons), errores o estados vacíos.",
+        "recommendation": "Implementar estados visuales de carga, control de excepciones (Error Boundaries/alertas) y estados vacíos en el ciclo de vida asíncrono."
+      },
+      {
+        "dimension": "Usabilidad",
+        "subdimension": "Consistencia estética",
+        "severity": "Media",
+        "finding": "Se detectó una paleta de colores demasiado amplia (41 colores), afectando la sobriedad estética.",
+        "recommendation": "Establecer una paleta de colores unificada y consistente en el archivo de diseño global."
+      },
+      {
+        "dimension": "Compatibilidad",
+        "subdimension": "Coexistencia",
+        "severity": "Alta",
+        "finding": "Se detectaron estilos globales directos sobre etiquetas HTML (body) en el bloque <style>.",
+        "recommendation": "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM."
+      },
+      {
+        "dimension": "Fiabilidad",
+        "subdimension": "Tolerancia a fallos",
+        "severity": "Alta",
+        "finding": "No se detectaron Error Boundaries ni manejadores de excepciones globales en el frontend de tipo Single Page Application (SPA).",
+        "recommendation": "Incorporar Error Boundaries en componentes jerárquicos clave de React para aislar y recuperar errores visuales."
+      },
+      {
+        "dimension": "Mantenibilidad",
+        "subdimension": "Modularidad y semántica",
+        "severity": "Media",
+        "finding": "Se detectó un uso excesivo de etiquetas <div> (303) en relación a etiquetas semánticas (0).",
+        "recommendation": "Reemplazar contenedores genéricos <div> por etiquetas semánticas de HTML5 (section, article, header, footer) para mejorar la legibilidad del DOM."
+      },
+      {
+        "dimension": "Mantenibilidad",
+        "subdimension": "Modificabilidad",
+        "severity": "Media",
+        "finding": "Se detectaron 52 elementos con estilos inline directos. (Encontrado en: <div>, <div class=\"css-g5y9jx r-13awgt0 r-1p0dtai r-1d2f490 r-u8s1d r-zchlnj r-ipm5af\">...)",
+        "recommendation": "Migrar estilos inline hacia clases en hojas de estilo CSS reutilizables para facilitar la mantenibilidad."
+      },
+      {
+        "dimension": "Portabilidad",
+        "subdimension": "Adaptabilidad",
+        "severity": "Alta",
+        "finding": "Se detectaron 1 reglas de ancho rígido en píxeles (width: >400px) en la estructura.",
+        "recommendation": "Reemplazar anchos fijos en píxeles por unidades de diseño flexible (%, vw, rem, flex) para facilitar la portabilidad en diversos dispositivos."
+      }
+    ],
+    "engineering_tips": [
+      "Optimizar el marcado HTML y refactorizar dependencias para lograr la conformidad."
+    ],
+    "strict_mode": true
+  }
+}

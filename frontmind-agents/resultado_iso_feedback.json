@@ -1,0 +1,69 @@
+{
+  "agent": "ISOEvaluationAgent",
+  "status": "completed",
+  "standard": "ISO/IEC 25010",
+  "scope": "Frontend",
+  "evaluation": {
+    "global_score": 94,
+    "quality_level": "Excelente",
+    "scores": {
+      "adecuacion_funcional": 95,
+      "eficiencia_desempeno": 100,
+      "usabilidad": 81,
+      "accesibilidad": 97,
+      "mantenibilidad": 100,
+      "compatibilidad": 90,
+      "seguridad": 100,
+      "portabilidad": 90
+    },
+    "total_findings": 6,
+    "findings": [
+      {
+        "dimension": "Adecuación funcional",
+        "subdimension": "Pertinencia funcional",
+        "severity": "Media",
+        "finding": "No se detectó una estructura de navegación principal (<nav>).",
+        "recommendation": "Incorporar una etiqueta <nav> o una estructura equivalente para mejorar la orientación del usuario."
+      },
+      {
+        "dimension": "Accesibilidad",
+        "subdimension": "Identificación de formularios",
+        "severity": "Alta",
+        "finding": "Se detectaron 1 campos de formulario sin etiqueta accesible (label, aria-label o placeholder). (Encontrado en: <input class=\"link-input\">)",
+        "recommendation": "Asociar cada campo con una etiqueta <label> mediante el atributo 'for', o implementar atributos 'aria-label' / 'placeholder'."
+      },
+      {
+        "dimension": "Usabilidad",
+        "subdimension": "Protección contra errores de usuario",
+        "severity": "Media",
+        "finding": "Se detectaron 1 campos de entrada de datos sin atributos de validación nativos (required, pattern, etc.). (Encontrado en: <input class=\"link-input\">)",
+        "recommendation": "Agregar validación nativa del navegador mediante atributos como 'required', 'pattern' o tipos específicos (type='email')."
+      },
+      {
+        "dimension": "Usabilidad",
+        "subdimension": "Consistencia estética",
+        "severity": "Media",
+        "finding": "Se detectó una paleta de colores demasiado amplia (26 colores), afectando la sobriedad estética.",
+        "recommendation": "Establecer una paleta de colores unificada y consistente en el archivo de diseño global."
+      },
+      {
+        "dimension": "Compatibilidad",
+        "subdimension": "Coexistencia",
+        "severity": "Alta",
+        "finding": "Se detectaron estilos globales directos sobre etiquetas HTML (input, h3) en el bloque <style>.",
+        "recommendation": "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM."
+      },
+      {
+        "dimension": "Portabilidad",
+        "subdimension": "Adaptabilidad",
+        "severity": "Alta",
+        "finding": "Se detectaron 5 reglas de ancho rígido en píxeles (width: >400px) en la estructura.",
+        "recommendation": "Reemplazar anchos fijos en píxeles por unidades de diseño flexible (%, vw, rem, flex) para facilitar la portabilidad en diversos dispositivos."
+      }
+    ],
+    "engineering_tips": [
+      "Optimizar el marcado HTML y refactorizar dependencias para lograr la conformidad."
+    ],
+    "strict_mode": true
+  }
+}
