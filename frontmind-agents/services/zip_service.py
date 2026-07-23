@@ -85,7 +85,7 @@ SCRIPT_EXTENSIONS = {".ts", ".js", ".mjs"}
 # ────────────────────────────────────────────────────────────────
 
 def extract_zip_project(zip_file_path: str):
-    extract_dir = Path("../extracted_projects_temp").resolve()
+    extract_dir = Path("extracted_projects_temp").resolve()
     if extract_dir.exists():
         shutil.rmtree(extract_dir)
     extract_dir.mkdir(exist_ok=True)

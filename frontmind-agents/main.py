@@ -76,7 +76,7 @@ app.add_middleware(
 
 Path("captures").mkdir(exist_ok=True)
 Path("uploads").mkdir(exist_ok=True)
-Path("../extracted_projects_temp").resolve().mkdir(exist_ok=True)
+Path("extracted_projects_temp").resolve().mkdir(exist_ok=True)
 
 app.mount("/captures", StaticFiles(directory="captures"), name="captures")
 
