@@ -116,6 +116,7 @@ export default function HtmlReplica() {
       setSelectedIface(initialIface);
 
       const cacheKey = initialIface ? initialIface.file_name : "combined";
+      const savedReplica = localStorage.getItem("htmlReplicaResult");
 
       if (savedReplica) {
         const parsedReplica = JSON.parse(savedReplica);

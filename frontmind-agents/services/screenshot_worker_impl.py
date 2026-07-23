@@ -246,8 +246,9 @@ def take_screenshots(
                 max_pages=max_pages,
             )
 
-        finally:
-            discovery_context.close()
+        except Exception as e:
+            print(f"Error during discovery: {e}")
+            pass
 
         if not routes:
             routes = [url]
@@ -275,22 +276,9 @@ def take_screenshots(
                 "errors": [],
             }
 
-            context_options: dict[str, Any] = {
-                "device_scale_factor": 1,
-                "user_agent": (
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                    "AppleWebKit/537.36 (KHTML, like Gecko) "
-                    "Chrome/120.0.0.0 Safari/537.36"
-                ),
-            }
-
-            if storage_state and Path(storage_state).exists():
-                context_options["storage_state"] = storage_state
-
-            context = browser.new_context(**context_options)
-            page = context.new_page()
-            page.on("response", handle_response)
-            page.on("dialog", lambda dialog: dialog.dismiss())
+            # Usar la misma página autenticada (discovery_page) para mantener intacto el sessionStorage y localStorage
+            page = discovery_page
+            # Solo agregar el listener si es necesario, o dejar el que ya está.
             
             # Block known trackers to prevent networkidle hangs
             page.route("**/*google-analytics*", lambda route: route.abort())
@@ -369,7 +357,7 @@ def take_screenshots(
                 )
 
             finally:
-                context.close()
+                page.close()
 
             successful = sum(
                 1
@@ -384,6 +372,7 @@ def take_screenshots(
 
             results.append(route_result)
 
+        discovery_context.close()
         browser.close()
         
     main_page_data = results[0] if results else None

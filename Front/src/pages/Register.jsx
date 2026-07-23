@@ -25,6 +25,17 @@ export default function Register() {
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      setError("El formato del correo electrónico es inválido.");
+      return;
+    }
+
+    if (password.includes(" ")) {
+      setError("La contraseña no debe contener espacios en blanco.");
+      return;
+    }
+
     if (password.length < 6) {
       setError("La contraseña debe tener al menos 6 caracteres.");
       return;
@@ -38,13 +49,46 @@ export default function Register() {
     try {
       setLoading(true);
 
+      // Verificación profunda con Abstract API
+      try {
+        const apiKey = "3d9886d76ee943e88062f6f57efec810";
+        const res = await fetch(`https://emailreputation.abstractapi.com/v1/?api_key=${apiKey}&email=${email.trim()}`);
+        if (res.ok) {
+          const apiData = await res.json();
+          const status = apiData.deliverability || apiData.email_deliverability?.status || "";
+          const isMxValid = apiData.is_mx_found?.value ?? apiData.email_deliverability?.is_mx_valid;
+          
+          // Si el estado no es estrictamente 'deliverable' o el MX es inválido, lo rechazamos.
+          if (isMxValid === false || status.toLowerCase() === "undeliverable" || status.toLowerCase() === "unknown" || status.toLowerCase() === "risky") {
+            setError(`El correo no parece ser válido o seguro (Estado: ${status}). Intente con otro.`);
+            setLoading(false);
+            return;
+          }
+        } else {
+          console.error("Error de la API:", res.status);
+          setError("Servicio de verificación de correos inactivo (Error " + res.status + "). Intente más tarde.");
+          setLoading(false);
+          return;
+        }
+      } catch (apiErr) {
+        console.error("Fallo al conectar con Abstract API:", apiErr);
+        setError("Fallo de conexión al verificar el correo (posible bloqueo por AdBlocker o CORS). Revise la consola (F12).");
+        setLoading(false);
+        return;
+      }
+
       const { data, error: registerError } = await register(email, password);
 
       if (registerError) {
-        if (registerError.message?.toLowerCase().includes("already registered")) {
+        const errorMsg = registerError.message || "";
+        if (errorMsg === "{}" || !errorMsg) {
+          setError("No se pudo enviar el correo de verificación. Es posible que el correo no exista o haya sido rechazado por el servidor.");
+        } else if (errorMsg.toLowerCase().includes("already registered")) {
           setError("Este correo ya está registrado. Intente iniciar sesión.");
+        } else if (errorMsg.toLowerCase().includes("rate limit")) {
+          setError("Se ha superado el límite de registros. Por favor, intente más tarde.");
         } else {
-          setError(registerError.message || "No se pudo crear la cuenta.");
+          setError(errorMsg || "No se pudo crear la cuenta.");
         }
         return;
       }

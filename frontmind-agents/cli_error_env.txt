@@ -1,14 +1,14 @@
-Error: BrowserContext.close: Target page, context or browser has been closed
+Error: Error durante la autenticación: No se pudo encontrar el campo de contraseña. Si el login tiene múltiples pasos complejos o reCAPTCHA, puede fallar el heurístico automático.
 
 AGY_BROWSER_ACTIVE_PORT_FILE: C:\Users\Home\AppData\Roaming\Antigravity\DevToolsActivePort
-AGY_BROWSER_WS_URL: ws://127.0.0.1:59217/devtools/browser/e529c988-5d94-4ad3-887e-3debbb521a36
+AGY_BROWSER_WS_URL: ws://127.0.0.1:11711/devtools/browser/7ee910d7-91d3-45ee-8cde-b8f2e2d5c7bc
 ALLUSERSPROFILE: C:\ProgramData
 ANTIGRAVITY_AGENT: 1
-ANTIGRAVITY_CSRF_TOKEN: 93c01fd3-dded-45f8-b915-c0a3e697637f
-ANTIGRAVITY_LS_ADDRESS: localhost:59219
-ANTIGRAVITY_PROJECT_ID: 88320eda-4d8e-4fc7-90c6-428680db5063
-ANTIGRAVITY_SOURCE_METADATA: {"tool":{"conversationId":"b2a56e08-52c6-4bb1-8c57-3ea83918949e", "stepIndex":17, "toolCall":{"id":"f01g9atv", "name":"run_command", "argumentsJson":"{\"CommandLine\":\".\\\\iniciar-backend.bat\",\"Cwd\":\"c:\\\\Users\\\\Home\\\\Desktop\\\\Proyecto-Tesis\\\\frontmind-agents\",\"WaitMsBeforeAsync\":3000,\"toolAction\":\"Running backend server\",\"toolSummary\":\"Run backend\"}", "originalName":"run_command"}}}
-ANTIGRAVITY_TRAJECTORY_ID: 89f184e8-315f-4722-bb08-06a67fe4d8d8
+ANTIGRAVITY_CSRF_TOKEN: 36f298cf-8fa2-4774-a272-e4692e437975
+ANTIGRAVITY_LS_ADDRESS: localhost:11714
+ANTIGRAVITY_PROJECT_ID: 41877c31-8390-4f7c-b17e-f5f7b52d2a56
+ANTIGRAVITY_SOURCE_METADATA: {"tool":{"conversationId":"bd057c78-3980-4b21-bdbf-b7bff214e799", "stepIndex":18, "toolCall":{"id":"vriexhkj", "name":"run_command", "argumentsJson":"{\"CommandLine\":\".\\\\venv\\\\Scripts\\\\activate; python -m uvicorn main:app --reload --port 8001\",\"Cwd\":\"c:\\\\Users\\\\Home\\\\Desktop\\\\Taller\\\\frontmind-agents\",\"WaitMsBeforeAsync\":2000,\"toolAction\":\"Running backend\",\"toolSummary\":\"Run backend\"}", "originalName":"run_command"}}}
+ANTIGRAVITY_TRAJECTORY_ID: 6d75650c-989a-432b-95e5-be8513d03104
 APPDATA: C:\Users\Home\AppData\Roaming
 CHROME_DEVTOOLS_MCP_JS: C:\Users\Home\AppData\Local\Programs\antigravity\resources\app.asar.unpacked\node_modules\chrome-devtools-mcp\build\src\bin\chrome-devtools-mcp.js
 COMMONPROGRAMFILES: C:\Program Files\Common Files
@@ -17,8 +17,14 @@ COMMONPROGRAMW6432: C:\Program Files\Common Files
 COMPUTERNAME: ROSAS
 COMSPEC: C:\WINDOWS\system32\cmd.exe
 DRIVERDATA: C:\Windows\System32\Drivers\DriverData
-EFC_10104_1592913036: 1
-EFC_10104_4126798990: 1
+EFC_8416_1262719628: 1
+EFC_8416_1592913036: 1
+EFC_8416_2283032206: 1
+EFC_8416_2775293581: 1
+EFC_8416_3789132940: 1
+EFC_8416_4126798990: 1
+FPS_BROWSER_APP_PROFILE_STRING: Internet Explorer
+FPS_BROWSER_USER_PROFILE_STRING: Default
 HOMEDRIVE: C:
 HOMEPATH: \Users\Home
 LOCALAPPDATA: C:\Users\Home\AppData\Local
@@ -27,7 +33,7 @@ NUMBER_OF_PROCESSORS: 4
 ONEDRIVE: C:\Users\Home\OneDrive
 ONEDRIVECONSUMER: C:\Users\Home\OneDrive
 OS: Windows_NT
-PATH: C:\Users\Home\Desktop\New Tesis\Proyecto-Tesis\frontmind-agents\venv\Scripts;C:/Users/Home/.gemini/antigravity/bin;C:\Users\Home\AppData\Roaming\Antigravity\bin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Terraform;C:\Program Files\Git\cmd;C:\Users\Home\Desktop\AGILE DEVELOPMENT\mongodb-database-tools-windows-x86_64-100.12.2\mongodb-database-tools-windows-x86_64-100.12.2\bin;C:\Program Files\MongoDB\Server\8.0\bin;;C:\ZKBioTime\Python27;C:\ZKBioTime\Python27\Scripts;C:\ZKBioTime\Python27\Library\bin;C:\Program Files\nodejs\;C:\Users\Home\AppData\Local\Microsoft\WindowsApps;C:\Users\Home\AppData\Local\Programs\Microsoft VS Code\bin;C:\Terraform;C:\Users\Home\AppData\Local\Microsoft\WinGet\Packages\Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe;C:\Program Files\MongoDB\Server\8.0\bin;C:\Users\Home\Desktop\AGILE DEVELOPMENT\mongodb-database-tools-windows-x86_64-100.12.2\mongodb-database-tools-windows-x86_64-100.12.2\bin;C:\Users\Home\AppData\Roaming\npm
+PATH: C:\Users\Home\Desktop\Taller\frontmind-agents\venv\Scripts;C:/Users/Home/.gemini/antigravity/bin;C:\Users\Home\AppData\Roaming\Antigravity\bin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Terraform;C:\Program Files\Git\cmd;C:\Users\Home\Desktop\AGILE DEVELOPMENT\mongodb-database-tools-windows-x86_64-100.12.2\mongodb-database-tools-windows-x86_64-100.12.2\bin;C:\Program Files\MongoDB\Server\8.0\bin;;C:\ZKBioTime\Python27;C:\ZKBioTime\Python27\Scripts;C:\ZKBioTime\Python27\Library\bin;C:\Program Files\nodejs\;C:\Users\Home\AppData\Local\Microsoft\WindowsApps;C:\Users\Home\AppData\Local\Programs\Microsoft VS Code\bin;C:\Terraform;C:\Users\Home\AppData\Local\Microsoft\WinGet\Packages\Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe;C:\Program Files\MongoDB\Server\8.0\bin;C:\Users\Home\Desktop\AGILE DEVELOPMENT\mongodb-database-tools-windows-x86_64-100.12.2\mongodb-database-tools-windows-x86_64-100.12.2\bin;C:\Users\Home\AppData\Roaming\npm
 PATHEXT: .COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC;.CPL
 PROCESSOR_ARCHITECTURE: AMD64
 PROCESSOR_IDENTIFIER: AMD64 Family 23 Model 24 Stepping 1, AuthenticAMD
@@ -37,7 +43,6 @@ PROGRAMDATA: C:\ProgramData
 PROGRAMFILES: C:\Program Files
 PROGRAMFILES(X86): C:\Program Files (x86)
 PROGRAMW6432: C:\Program Files
-PROMPT: (venv) $P$G
 PSMODULEPATH: C:\Users\Home\Documents\WindowsPowerShell\Modules;C:\Program Files\WindowsPowerShell\Modules;C:\WINDOWS\system32\WindowsPowerShell\v1.0\Modules
 PUBLIC: C:\Users\Public
 PYTHONUSERBASE: C:\Users\Home\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages
@@ -51,8 +56,7 @@ USERDOMAIN_ROAMINGPROFILE: ROSAS
 USERNAME: Home
 USERPROFILE: C:\Users\Home
 VBOX_HWVIRTEX_IGNORE_SVM_IN_USE: 1
-VIRTUAL_ENV: C:\Users\Home\Desktop\New Tesis\Proyecto-Tesis\frontmind-agents\venv
-VIRTUAL_ENV_PROMPT: (venv) 
+VIRTUAL_ENV: C:\Users\Home\Desktop\Taller\frontmind-agents\venv
+VIRTUAL_ENV_PROMPT: venv
 WINDIR: C:\WINDOWS
 _OLD_VIRTUAL_PATH: C:/Users/Home/.gemini/antigravity/bin;C:\Users\Home\AppData\Roaming\Antigravity\bin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Terraform;C:\Program Files\Git\cmd;C:\Users\Home\Desktop\AGILE DEVELOPMENT\mongodb-database-tools-windows-x86_64-100.12.2\mongodb-database-tools-windows-x86_64-100.12.2\bin;C:\Program Files\MongoDB\Server\8.0\bin;;C:\ZKBioTime\Python27;C:\ZKBioTime\Python27\Scripts;C:\ZKBioTime\Python27\Library\bin;C:\Program Files\nodejs\;C:\Users\Home\AppData\Local\Microsoft\WindowsApps;C:\Users\Home\AppData\Local\Programs\Microsoft VS Code\bin;C:\Terraform;C:\Users\Home\AppData\Local\Microsoft\WinGet\Packages\Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe;C:\Program Files\MongoDB\Server\8.0\bin;C:\Users\Home\Desktop\AGILE DEVELOPMENT\mongodb-database-tools-windows-x86_64-100.12.2\mongodb-database-tools-windows-x86_64-100.12.2\bin;C:\Users\Home\AppData\Roaming\npm
-_OLD_VIRTUAL_PROMPT: $P$G

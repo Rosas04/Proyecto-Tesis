@@ -66,7 +66,18 @@ def is_safe_internal_url(
     parsed_candidate = urlparse(candidate)
     parsed_origin = urlparse(origin)
 
-    if parsed_candidate.netloc != parsed_origin.netloc:
+    def get_base(netloc: str) -> str:
+        parts = netloc.split('.')
+        if len(parts) >= 2:
+            if parts[-2] in ["edu", "com", "gov", "org", "net", "mil", "gob"] and len(parts) >= 3:
+                return ".".join(parts[-3:])
+            return ".".join(parts[-2:])
+        return netloc
+
+    base_candidate = get_base(parsed_candidate.netloc)
+    base_origin = get_base(parsed_origin.netloc)
+
+    if base_candidate != base_origin:
         return False
 
     lower_path = parsed_candidate.path.lower()
@@ -191,7 +202,12 @@ def discover_routes(
         links = extract_internal_links(page, start_url)
         print(f"[DEBUG] Found internal links via href: {links}", file=sys.stderr)
 
-        for link in links:
+        clicked_links = extract_routes_via_clicks(page, start_url)
+        print(f"[DEBUG] Found internal links via clicks: {clicked_links}", file=sys.stderr)
+        
+        all_links = list(set(links + clicked_links))
+
+        for link in all_links:
             if link not in visited and link not in queue:
                 queue.append(link)
 
