@@ -282,6 +282,9 @@ def take_screenshots(
             # Solo agregar el listener si es necesario, o dejar el que ya está.
             
             # Block known trackers to prevent networkidle hangs
+            try:
+                page.unroute_all()
+            except: pass
             page.route("**/*google-analytics*", lambda route: route.abort())
             page.route("**/*googletagmanager*", lambda route: route.abort())
             page.route("**/*hotjar*", lambda route: route.abort())
@@ -357,8 +360,6 @@ def take_screenshots(
                     }
                 )
 
-            finally:
-                page.close()
 
             successful = sum(
                 1
