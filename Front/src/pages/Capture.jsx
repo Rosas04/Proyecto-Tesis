@@ -369,6 +369,7 @@ export default function Capture() {
                 type="button"
                 onClick={continueToHtml}
                 disabled={!activeHtml}
+                style={{ whiteSpace: "nowrap" }}
               >
                 Continuar a Réplica de Código
               </button>
