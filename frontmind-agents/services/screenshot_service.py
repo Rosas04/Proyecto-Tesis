@@ -8,9 +8,7 @@ def _run_worker(request: dict) -> dict:
     """Helper to run the screenshot worker in a clean subprocess to prevent asyncio loop errors."""
     cli_path = Path(__file__).parent / "screenshot_cli.py"
     
-    # We use venv python if available, otherwise fallback to sys.executable
-    venv_python = Path(__file__).parent.parent / "venv" / "Scripts" / "python.exe"
-    python_exe = str(venv_python) if venv_python.exists() else sys.executable
+    python_exe = sys.executable
     
     proc = subprocess.run(
         [python_exe, str(cli_path)],
