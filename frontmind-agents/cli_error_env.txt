@@ -1,4 +1,4 @@
-Error: Error durante la autenticación: No se pudo encontrar el campo de contraseña. Si el login tiene múltiples pasos complejos o reCAPTCHA, puede fallar el heurístico automático.
+Error: Page.route: Target page, context or browser has been closed
 
 AGY_BROWSER_ACTIVE_PORT_FILE: C:\Users\Home\AppData\Roaming\Antigravity\DevToolsActivePort
 AGY_BROWSER_WS_URL: ws://127.0.0.1:11711/devtools/browser/7ee910d7-91d3-45ee-8cde-b8f2e2d5c7bc

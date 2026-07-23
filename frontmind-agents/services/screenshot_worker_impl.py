@@ -247,7 +247,8 @@ def take_screenshots(
             )
 
         except Exception as e:
-            print(f"Error during discovery: {e}")
+            import sys
+            print(f"Error during discovery: {e}", file=sys.stderr)
             pass
 
         if not routes:

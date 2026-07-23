@@ -85,7 +85,7 @@ export default function HtmlReplica() {
   const inputType = localStorage.getItem("inputType") || "url";
   const inputUrl = localStorage.getItem("inputUrl") || "";
 
-  const isZip = captureResult?.source_type === "zip";
+
   const interfaces = useMemo(() => {
     if (!captureResult?.interfaces || !Array.isArray(captureResult.interfaces)) return [];
     return captureResult.interfaces;
@@ -147,7 +147,7 @@ export default function HtmlReplica() {
     }
   }, []);
 
-  const initialGenerate = async (htmlContent, iface, captureData) => {
+  async function initialGenerate(htmlContent, iface, captureData) {
     try {
       setLoading(true);
       setError("");
