@@ -106,7 +106,7 @@ def format_snippets(elements, max_items=3):
     if not snippets:
         return ""
     suffix = "..." if len(elements) > max_items else ""
-    return f" (Encontrado en: {', '.join(snippets)}{suffix})"
+    return f" (Ejemplo: {', '.join(snippets)}{suffix})"
 
 def evaluate_iso_25010(html: str):
     soup = BeautifulSoup(html or "", "html.parser")

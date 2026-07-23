@@ -541,7 +541,14 @@ export default function Report() {
                           <td>{item.dimension || "No especificada"}</td>
                           <td>{item.severity || "Media"}</td>
                           <td>
-                            {item.finding?.replace(/\[.*?\]\s*/g, '') || "Hallazgo no especificado."}
+                            {item.finding?.includes('[VIOLACIÓN]') ? (
+                              <>
+                                <span className="badge">VIOLACIÓN</span>
+                                {item.finding.replace('[VIOLACIÓN]', '')}
+                              </>
+                            ) : (
+                              item.finding || "Hallazgo no especificado."
+                            )}
                           </td>
                           <td>
                             {item.recommendation ||
