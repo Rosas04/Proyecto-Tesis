@@ -22,9 +22,6 @@ export default function Input() {
   const [passwordSelector, setPasswordSelector] = useState("");
   const [passwordValue, setPasswordValue] = useState("");
   const [submitSelector, setSubmitSelector] = useState("");
-  const [successSelector, setSuccessSelector] = useState("");
-  const [successUrlPattern, setSuccessUrlPattern] = useState("");
-  const [maxPages, setMaxPages] = useState(10);
   const [showAdvancedLogin, setShowAdvancedLogin] = useState(false);
 
   const cleanPreviousAnalysis = () => {
@@ -96,11 +93,9 @@ export default function Input() {
           password_selector: passwordSelector.trim() || null,
           password: passwordValue,
           submit_selector: submitSelector.trim() || null,
-          success_selector: successSelector.trim() || null,
-          success_url_pattern: successUrlPattern.trim() || null,
         } : null;
 
-        const result = await captureInterfaceByUrl(url.trim(), credentials, maxPages);
+        const result = await captureInterfaceByUrl(url.trim(), credentials);
         try {
           localStorage.setItem("captureResult", JSON.stringify(result));
         } catch (e) {
@@ -231,17 +226,6 @@ export default function Input() {
                 onChange={(event) => setUrl(event.target.value)}
               />
 
-              <label className="field-label" style={{ marginTop: "12px" }}>Número máximo de interfaces a recorrer</label>
-              <input
-                className="form-input"
-                type="number"
-                min="1"
-                max="50"
-                placeholder="10"
-                value={maxPages}
-                onChange={(event) => setMaxPages(parseInt(event.target.value, 10))}
-              />
-
               <label style={{ display: "flex", alignItems: "center", gap: "8px", margin: "18px 0 12px", cursor: "pointer", fontWeight: "bold", fontSize: "14px", color: "#374151" }}>
                 <input
                   type="checkbox"
@@ -334,26 +318,6 @@ export default function Input() {
                           placeholder="button[type=submit] o #login-btn"
                           value={submitSelector}
                           onChange={(e) => setSubmitSelector(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label className="field-label">Selector o URL de Confirmación (Opcional)</label>
-                        <input
-                          className="form-input"
-                          type="text"
-                          placeholder="#dashboard o texto único"
-                          value={successSelector}
-                          onChange={(e) => setSuccessSelector(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label className="field-label">Patrón de URL tras acceso (Opcional)</label>
-                        <input
-                          className="form-input"
-                          type="text"
-                          placeholder="/dashboard o https://.../home"
-                          value={successUrlPattern}
-                          onChange={(e) => setSuccessUrlPattern(e.target.value)}
                         />
                       </div>
                     </>
