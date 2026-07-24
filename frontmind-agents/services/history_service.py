@@ -2,7 +2,14 @@ import json
 import os
 from pathlib import Path
 
-HISTORY_FILE = Path(__file__).parent.parent.parent / "data" / "history.json"
+# Determinar la ruta de data dinámicamente para evitar problemas de permisos en Docker (raíz /)
+_project_root = Path(__file__).parent.parent.parent
+if _project_root.resolve() == Path("/").resolve() or not os.access(_project_root, os.W_OK):
+    _data_dir = Path(__file__).parent.parent / "data"
+else:
+    _data_dir = _project_root / "data"
+
+HISTORY_FILE = _data_dir / "history.json"
 
 def _ensure_history_file():
     os.makedirs(HISTORY_FILE.parent, exist_ok=True)
