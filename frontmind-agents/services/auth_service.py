@@ -76,7 +76,27 @@ def perform_form_login(
             page.wait_for_load_state("networkidle", timeout=8000)
         except PlaywrightTimeoutError:
             pass
+
+        # === NUEVO: Intentar cerrar banners de cookies automáticamente ===
+        try:
+            # Buscar botones comunes de cookies
+            cookie_btn = page.locator(
+                'button:has-text("Accept all cookies"), '
+                'button:has-text("Aceptar todas"), '
+                'button:has-text("Aceptar cookies"), '
+                'button:has-text("Accept Cookies"), '
+                '[aria-label*="cookie" i], '
+                'button[id*="cookie" i], '
+                'button[class*="cookie" i]'
+            ).first
             
+            if cookie_btn.count() > 0 and cookie_btn.is_visible():
+                cookie_btn.click(timeout=3000, force=True)
+                print("[DEBUG auth] Cookie banner dismissed.", file=sys.stderr)
+        except Exception as e:
+            pass
+        # ==============================================================
+
         def find_username_field():
             if auth.get("username_selector"):
                 return page.locator(auth["username_selector"]).first
@@ -92,14 +112,27 @@ def perform_form_login(
             username_field.wait_for(state="attached", timeout=5000)
         except PlaywrightTimeoutError:
             # Intentar buscar un enlace genérico de "Log in" y darle click
-            login_link = page.get_by_role("link", name=re.compile(r"iniciar sesión|login|sign in|acceder", re.IGNORECASE)).or_(page.locator("a[href*='login' i], a[href*='signin' i]")).first
-            if login_link.count() > 0:
-                try:
+            login_link = page.get_by_role("link", name=re.compile(r"iniciar sesión|login|sign in|acceder", re.IGNORECASE)).or_(
+                page.locator("a[href*='login' i], a[href*='signin' i], button:has-text('Log in')")
+            ).first
+            
+            # Usar un bloque try para verificar si es visible o si lo podemos clickear
+            try:
+                if login_link.is_visible():
                     login_link.click(force=True, timeout=5000)
                     page.wait_for_load_state("networkidle", timeout=8000)
+                    page.wait_for_timeout(2000)
                     username_field = find_username_field()
-                except Exception:
-                    pass
+                else:
+                    # Alternativa: redirigir forzosamente si encontramos un href
+                    href = login_link.get_attribute("href", timeout=2000)
+                    if href:
+                        page.goto(href if href.startswith('http') else page.url.rstrip('/') + '/' + href.lstrip('/'))
+                        page.wait_for_load_state("networkidle", timeout=8000)
+                        username_field = find_username_field()
+            except Exception as e:
+                print(f"[DEBUG auth] Error clicking login link: {e}", file=sys.stderr)
+                pass
 
         # Usar force=True para ignorar banners de cookies gigantes que interceptan clics
         username_field.fill(auth["username"], force=True)

@@ -12,8 +12,11 @@ def _ensure_history_file():
 
 def load_history():
     _ensure_history_file()
-    with open(HISTORY_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except json.JSONDecodeError:
+        return []
 
 def add_entry(entry: dict):
     _ensure_history_file()

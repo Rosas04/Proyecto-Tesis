@@ -50,7 +50,7 @@ class IsoRequest(BaseModel):
 
 
 class ReportRequest(BaseModel):
-    evaluation: dict
+    evaluation: dict | list
     user_id: str | None = None
 
 class HtmlContentRequest(BaseModel):

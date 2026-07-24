@@ -92,9 +92,25 @@ def extract_internal_links(
     page: Page,
     origin: str,
 ) -> list[str]:
-    raw_links = page.locator("a[href]").evaluate_all(
+    raw_links = page.evaluate(
         """
-        elements => elements.map(element => element.getAttribute('href'))
+        () => {
+            const getLinks = (root) => {
+                let urls = [];
+                // standard anchors
+                root.querySelectorAll('a[href], [role="link"][href]').forEach(el => urls.push(el.getAttribute('href')));
+                // elements with onclick that might have a data-href or similar
+                root.querySelectorAll('[data-href], [data-url], [data-link]').forEach(el => {
+                    urls.push(el.getAttribute('data-href') || el.getAttribute('data-url') || el.getAttribute('data-link'));
+                });
+                // Check shadow roots
+                root.querySelectorAll('*').forEach(el => {
+                    if (el.shadowRoot) urls = urls.concat(getLinks(el.shadowRoot));
+                });
+                return urls;
+            };
+            return getLinks(document);
+        }
         """
     )
 
@@ -117,20 +133,18 @@ def extract_internal_links(
 def extract_routes_via_clicks(page: Page, origin: str) -> list[str]:
     discovered_urls = []
     try:
-        # Find potential navigation elements
-        locators = page.locator("button, [role='button'], [role='link'], [class*='nav'], [class*='menu'], [class*='sidebar'], [class*='flow-item'], [class*='tab'], [class*='link'], li").all()
-        # Limit to first 5 to avoid excessive clicking and massive time delays
-        locators = locators[:5]
+        # Find potential navigation elements that DON'T have hrefs (since we already got those)
+        locators = page.locator("button:not([disabled]), [role='button']:not([disabled]), [role='link']:not([href]), [class*='nav']:not(nav), [class*='menu-item'], [class*='tab'], li:not(:has(a))").all()
+        # Limit to first 20 to avoid excessive clicking and massive time delays, prioritize visible ones
+        locators = [loc for loc in locators if loc.is_visible()][:20]
         
         for loc in locators:
             try:
-                if not loc.is_visible():
-                    continue
                 text = (loc.inner_text() or "").lower()
                 class_name = (loc.get_attribute("class") or "").lower()
                 
                 # Exclude destructive actions
-                excluded_terms = ["delete", "remove", "logout", "sign out", "cerrar", "submit", "save", "guardar", "enviar", "confirm", "pay", "checkout", "salir", "eliminar", "destroy"]
+                excluded_terms = ["delete", "remove", "logout", "sign out", "cerrar", "submit", "save", "guardar", "enviar", "confirm", "pay", "checkout", "salir", "eliminar", "destroy", "cancel"]
                 if any(bad in text for bad in excluded_terms):
                     continue
                 if any(bad in class_name for bad in excluded_terms):
@@ -143,7 +157,7 @@ def extract_routes_via_clicks(page: Page, origin: str) -> list[str]:
                     continue
                 
                 # Wait briefly to see if URL changes
-                page.wait_for_timeout(800)
+                page.wait_for_timeout(1000)
                 
                 new_url = page.url
                 if new_url != start_url:
@@ -151,8 +165,12 @@ def extract_routes_via_clicks(page: Page, origin: str) -> list[str]:
                     if normalized and is_safe_internal_url(normalized, origin):
                         discovered_urls.append(normalized)
                     
-                    # Go back to continue clicking
-                    page.go_back(timeout=10000)
+                    # Instead of just going back, which can break SPAs, let's try to reload the start_url
+                    # if go_back doesn't work or just to be safe.
+                    try:
+                        page.go_back(timeout=5000)
+                    except:
+                        page.goto(start_url, wait_until="domcontentloaded", timeout=10000)
                     wait_for_spa(page)
                     
             except Exception:

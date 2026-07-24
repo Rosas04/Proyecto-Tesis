@@ -3,40 +3,116 @@ from datetime import datetime
 
 class ReportAgent:
     def run(self, data: dict):
-        evaluation = data.get("evaluation", {})
+        evaluation_data = data.get("evaluation", {})
 
-        global_score = evaluation.get("global_score", 0)
-        quality_level = evaluation.get("quality_level", "No calculado")
-        scores = evaluation.get("scores", {})
-        findings = evaluation.get("findings", [])
-        total_findings = evaluation.get("total_findings", len(findings))
+        if isinstance(evaluation_data, list):
+            # Consolidate multiple evaluations
+            total_interfaces = len(evaluation_data)
+            total_findings = 0
+            total_score = 0
+            best_iface = "Ninguna"
+            worst_iface = "Ninguna"
+            best_score = -1
+            worst_score = 101
+            all_findings = []
 
-        severity_summary = self.build_severity_summary(findings)
-        dimension_summary = self.build_dimension_summary(findings)
-        main_recommendations = self.build_recommendations(findings)
+            for eval_item in evaluation_data:
+                # the item might be the direct result from ISOEvaluationAgent
+                inner_eval = eval_item.get("evaluation", eval_item)
+                score = inner_eval.get("global_score", 0)
+                findings = inner_eval.get("findings", [])
 
-        return {
-            "agent": "ReportAgent",
-            "status": "completed",
-            "standard": "ISO/IEC 25010",
-            "scope": "Frontend",
-            "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "summary": {
-                "global_score": global_score,
-                "quality_level": quality_level,
-                "total_findings": total_findings,
-                "severity_summary": severity_summary,
-                "dimension_summary": dimension_summary,
-            },
-            "scores": scores,
-            "findings": findings,
-            "main_recommendations": main_recommendations,
-            "technical_conclusion": self.build_conclusion(
-                global_score,
-                total_findings,
-                severity_summary,
-            ),
-        }
+                total_score += score
+                total_findings += len(findings)
+                all_findings.extend(findings)
+
+                name = eval_item.get("name", inner_eval.get("name", "Desconocida"))
+
+                if score > best_score:
+                    best_score = score
+                    best_iface = name
+                if score < worst_score:
+                    worst_score = score
+                    worst_iface = name
+
+            avg_score = round(total_score / total_interfaces) if total_interfaces > 0 else 0
+            
+            # Determine quality level based on avg_score
+            if avg_score >= 90:
+                quality_level = "Excelente"
+            elif avg_score >= 80:
+                quality_level = "Alto"
+            elif avg_score >= 60:
+                quality_level = "Medio"
+            elif avg_score >= 40:
+                quality_level = "Bajo"
+            else:
+                quality_level = "Crítico"
+
+            severity_summary = self.build_severity_summary(all_findings)
+            dimension_summary = self.build_dimension_summary(all_findings)
+            main_recommendations = self.build_recommendations(all_findings)
+
+            return {
+                "agent": "ReportAgent",
+                "status": "completed",
+                "standard": "ISO/IEC 25010",
+                "scope": "Frontend (Consolidado)",
+                "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "summary": {
+                    "total_interfaces": total_interfaces,
+                    "global_score": avg_score,
+                    "quality_level": quality_level,
+                    "total_findings": total_findings,
+                    "best_interface": best_iface,
+                    "worst_interface": worst_iface,
+                    "severity_summary": severity_summary,
+                    "dimension_summary": dimension_summary,
+                },
+                "scores": {},
+                "findings": all_findings,
+                "main_recommendations": main_recommendations,
+                "technical_conclusion": self.build_conclusion(
+                    avg_score,
+                    total_findings,
+                    severity_summary,
+                ),
+            }
+        else:
+            # Single evaluation
+            evaluation = evaluation_data
+            global_score = evaluation.get("global_score", 0)
+            quality_level = evaluation.get("quality_level", "No calculado")
+            scores = evaluation.get("scores", {})
+            findings = evaluation.get("findings", [])
+            total_findings = evaluation.get("total_findings", len(findings))
+
+            severity_summary = self.build_severity_summary(findings)
+            dimension_summary = self.build_dimension_summary(findings)
+            main_recommendations = self.build_recommendations(findings)
+
+            return {
+                "agent": "ReportAgent",
+                "status": "completed",
+                "standard": "ISO/IEC 25010",
+                "scope": "Frontend",
+                "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "summary": {
+                    "global_score": global_score,
+                    "quality_level": quality_level,
+                    "total_findings": total_findings,
+                    "severity_summary": severity_summary,
+                    "dimension_summary": dimension_summary,
+                },
+                "scores": scores,
+                "findings": findings,
+                "main_recommendations": main_recommendations,
+                "technical_conclusion": self.build_conclusion(
+                    global_score,
+                    total_findings,
+                    severity_summary,
+                ),
+            }
 
     def build_severity_summary(self, findings):
         summary = {

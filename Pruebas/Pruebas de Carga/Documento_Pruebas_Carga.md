@@ -23,9 +23,8 @@ Se medirán los tiempos de respuesta (latencia), la capacidad de procesamiento (
 - **Lenguaje / Framework:** Python 3.10.x con FastAPI (Uvicorn workers = 4).
 - **Base de Datos:** PostgreSQL Serverless (Supabase).
 
-### 2.2 Herramientas Teóricas de Simulación
-- **K6 (Grafana):** Escritura de scripts en JavaScript para inyección masiva de VUs (Virtual Users).
-- **Apache JMeter:** Configuración de hilos concurrentes para la subida masiva de payloads binarios (`.zip`).
+### 2.2 Herramientas de Simulación Implementadas
+- **Locust (Python):** Framework principal utilizado para la inyección de carga (`locustfile.py`). Permite crear usuarios virtuales concurrentes y diseñar escenarios complejos mediante código, emulando peticiones HTTP reales hacia el backend.
 - **Render Dashboard:** Monitorización nativa de picos de CPU y RAM.
 
 ---
@@ -94,7 +93,29 @@ A continuación, los resultados obtenidos tras simular los perfiles de carga def
 
 ---
 
-## 7. Conclusiones y Plan de Escalabilidad (Arquitectura Futura)
+## 7. Ejecución de las Pruebas (Scripts)
+
+Para responder adecuadamente al cómo se realizan las pruebas, el sistema cuenta con el script ejecutable `locustfile.py` ubicado en la raíz del proyecto backend (`frontmind-agents`). Este archivo encapsula los 3 escenarios descritos:
+
+1. **Ejecutar escenario CP-CAR-01 (Lectura/DB):**
+   ```bash
+   locust -f locustfile.py --tags cp-car-01 --headless -u 25 -r 5 --run-time 5m --host=http://localhost:8000
+   ```
+2. **Ejecutar escenario CP-CAR-02 (Subida de ZIP):**
+   ```bash
+   locust -f locustfile.py --tags cp-car-02 --headless -u 30 -r 10 --run-time 2m --host=http://localhost:8000
+   ```
+   *Nota: El script genera dinámicamente un archivo ZIP en memoria (I/O Buffer) para simular el payload masivo sin requerir archivos estáticos pesados en el repositorio.*
+3. **Ejecutar escenario CP-CAR-03 (Estrés de Memoria / Playwright):**
+   ```bash
+   locust -f locustfile.py --tags cp-car-03 --headless -u 10 -r 2 --run-time 3m --host=http://localhost:8000
+   ```
+
+Los reportes generados por la terminal de Locust y su interfaz web (accesible en `http://localhost:8089` cuando no se usa `--headless`) son la fuente de datos que alimenta la **Matriz de Resultados** expuesta en la sección 5.
+
+---
+
+## 8. Conclusiones y Plan de Escalabilidad (Arquitectura Futura)
 
 El framework **FrontMind AI** es altamente eficaz y se desempeña a la perfección en entornos controlados y usos de baja concurrencia (Load Testing normal). Sin embargo, bajo condiciones de estrés, la naturaleza pesada de la Inteligencia Artificial y la orquestación web (Playwright) expone rápidamente los límites del hardware monolítico.
 

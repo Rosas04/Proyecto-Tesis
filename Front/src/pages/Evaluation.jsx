@@ -99,10 +99,21 @@ export default function Evaluation() {
     if (savedEvaluation) {
       try {
         const parsedEval = JSON.parse(savedEvaluation);
+        
+        let allEvals = {};
+        const savedAllEvals = localStorage.getItem("isoEvaluations");
+        if (savedAllEvals) {
+            try { allEvals = JSON.parse(savedAllEvals); } catch(e) {}
+        }
+        
         setEvaluationResult(parsedEval);
-        setEvaluationCache({
+        
+        const initialCache = {
+          ...allEvals,
           [cacheKey]: parsedEval
-        });
+        };
+        setEvaluationCache(initialCache);
+        localStorage.setItem("isoEvaluations", JSON.stringify(initialCache));
         return;
       } catch (err) {
         console.error(err);
@@ -122,11 +133,20 @@ export default function Evaluation() {
 
       const result = await evaluateHtml(html);
 
+      // Assign the interface name to the evaluation result so the ReportAgent knows it
+      if (result && result.evaluation) {
+          result.evaluation.name = cacheKey;
+      }
+      
       setEvaluationResult(result);
-      setEvaluationCache(prev => ({
-        ...prev,
-        [cacheKey]: result
-      }));
+      setEvaluationCache(prev => {
+        const updated = {
+          ...prev,
+          [cacheKey]: result
+        };
+        localStorage.setItem("isoEvaluations", JSON.stringify(updated));
+        return updated;
+      });
       localStorage.setItem("isoEvaluation", JSON.stringify(result));
     } catch (err) {
       setError(
@@ -158,6 +178,8 @@ export default function Evaluation() {
       const cached = evaluationCache[cacheKey];
       setEvaluationResult(cached);
       localStorage.setItem("isoEvaluation", JSON.stringify(cached));
+      // Just to ensure it's up to date
+      localStorage.setItem("isoEvaluations", JSON.stringify(evaluationCache));
       return;
     }
 

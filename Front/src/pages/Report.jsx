@@ -25,6 +25,7 @@ export default function Report() {
 
   useEffect(() => {
     const savedReport = localStorage.getItem("technicalReport");
+    const savedEvaluations = localStorage.getItem("isoEvaluations");
     const savedEvaluation = localStorage.getItem("isoEvaluation");
 
     if (savedReport) {
@@ -36,7 +37,7 @@ export default function Report() {
       }
     }
 
-    if (!savedEvaluation) {
+    if (!savedEvaluation && !savedEvaluations) {
       setError(
         "No se encontró una evaluación previa. Regrese a la etapa de evaluación ISO/IEC 25010."
       );
@@ -47,9 +48,16 @@ export default function Report() {
     hasCalled.current = true;
 
     try {
-      const parsedEvaluation = JSON.parse(savedEvaluation);
-      const evaluation = parsedEvaluation?.evaluation || parsedEvaluation;
-      generateTechnicalReport(evaluation);
+      let evaluationData;
+      if (savedEvaluations) {
+          const parsedEvaluations = JSON.parse(savedEvaluations);
+          // Assuming it's an array or an object values of array
+          evaluationData = Array.isArray(parsedEvaluations) ? parsedEvaluations : Object.values(parsedEvaluations);
+      } else {
+          const parsedEvaluation = JSON.parse(savedEvaluation);
+          evaluationData = parsedEvaluation?.evaluation || parsedEvaluation;
+      }
+      generateTechnicalReport(evaluationData);
     } catch (err) {
       setError("No se pudo leer la evaluación almacenada.");
       console.error(err);
@@ -237,6 +245,12 @@ export default function Report() {
         ["Nivel de calidad", summary.quality_level || "No calculado"],
         ["Total de hallazgos", `${summary.total_findings ?? findings.length}`],
       ];
+
+      if (summary.total_interfaces !== undefined) {
+        generalInfo.push(["Total de interfaces", `${summary.total_interfaces}`]);
+        generalInfo.push(["Mejor interfaz", `${summary.best_interface || "N/A"}`]);
+        generalInfo.push(["Peor interfaz", `${summary.worst_interface || "N/A"}`]);
+      }
 
       generalInfo.forEach(([label, value]) => {
         doc.setFont("helvetica", "bold");
@@ -440,6 +454,23 @@ export default function Report() {
                 <span className="summary-label">Total de hallazgos</span>
                 <strong>{summary.total_findings ?? findings.length}</strong>
               </div>
+
+              {summary.total_interfaces !== undefined && (
+                <>
+                  <div>
+                    <span className="summary-label">Total de interfaces</span>
+                    <strong>{summary.total_interfaces}</strong>
+                  </div>
+                  <div>
+                    <span className="summary-label">Mejor interfaz</span>
+                    <strong>{summary.best_interface || "N/A"}</strong>
+                  </div>
+                  <div>
+                    <span className="summary-label">Peor interfaz</span>
+                    <strong>{summary.worst_interface || "N/A"}</strong>
+                  </div>
+                </>
+              )}
             </section>
 
             <section className="severity-grid">
