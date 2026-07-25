@@ -5,6 +5,8 @@ import autoTable from "jspdf-autotable";
 import Sidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
 import { fetchUserRuns, fetchRunFindings } from "../historyService";
+import html2canvas from "html2canvas";
+import { ReportDashboard } from "../components/ReportDashboard";
 import "./History.css";
 
 export default function History() {
@@ -20,6 +22,10 @@ export default function History() {
   const [selectedRun, setSelectedRun] = useState(null);
   const [findings, setFindings] = useState([]);
   const [loadingFindings, setLoadingFindings] = useState(false);
+
+  // PDF Dashboard ref and data
+  const dashboardRef = React.useRef(null);
+  const [downloadData, setDownloadData] = useState(null);
 
   // Filtros y paginación
   const [filterScore, setFilterScore] = useState("");
@@ -126,100 +132,87 @@ export default function History() {
       setGeneratingPdfId(run.id);
       const runFindings = await fetchRunFindings(run.id);
       
-      const doc = new jsPDF({ unit: "pt", format: "a4" });
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const marginX = 40;
-      let cursorY = 50;
-
-      doc.setFillColor(37, 99, 235);
-      doc.rect(0, 0, pageWidth, 70, "F");
-
-      doc.setTextColor(255, 255, 255);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(18);
-      doc.text("FrontMind AI - Reporte técnico de evaluación frontend", marginX, 35);
-
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      doc.text("Norma aplicada: ISO/IEC 25010", marginX, 52);
-
-      cursorY = 95;
-      doc.setTextColor(17, 24, 39);
-
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.text("Información general", marginX, cursorY);
-      cursorY += 18;
-
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-
       const projectName = run.projects?.project_name || "Proyecto Principal";
 
-      const generalInfo = [
-        ["Proyecto", projectName],
-        ["Fecha de análisis", new Date(run.created_at).toLocaleString("es-ES")],
-        ["Puntaje global", `${run.global_score} / 100`],
-        ["Nivel de calidad", run.quality_level],
-        ["Total de hallazgos", `${run.total_findings}`],
-      ];
-
-      generalInfo.forEach(([label, value]) => {
-        doc.setFont("helvetica", "bold");
-        doc.text(`${label}:`, marginX, cursorY);
-        doc.setFont("helvetica", "normal");
-        doc.text(String(value), marginX + 150, cursorY);
-        cursorY += 16;
+      const severitySummary = { "Crítica": 0, "Alta": 0, "Media": 0, "Baja": 0 };
+      const recommendations = [];
+      runFindings.forEach(f => {
+         const sev = f.severity || 'Media';
+         if(severitySummary[sev] !== undefined) severitySummary[sev]++;
+         if(f.recommendation && f.recommendation !== "Sin recomendación registrada.") {
+           if(!recommendations.includes(f.recommendation)) {
+              recommendations.push(f.recommendation);
+           }
+         }
       });
 
-      if (runFindings.length > 0) {
-        cursorY += 16;
-        if (cursorY > 750) {
-          doc.addPage();
-          cursorY = 50;
-        }
+      const mockReportResult = {
+        generated_at: new Date(run.created_at).toLocaleString("es-ES"),
+        summary: {
+          global_score: run.global_score,
+          quality_level: run.quality_level,
+          total_findings: run.total_findings,
+          total_interfaces: 1,
+          severity_summary: severitySummary
+        },
+        scores: {},
+        findings: runFindings,
+        main_recommendations: recommendations
+      };
 
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(12);
-        doc.text("Hallazgos técnicos detectados", marginX, cursorY);
-        cursorY += 12;
-
-        const findingsRows = runFindings.map((item, index) => [
-          String(index + 1),
-          item.dimension || "No especificada",
-          item.severity || "Media",
-          item.finding?.replace(/\[.*?\]\s*/g, '') || "Hallazgo no especificado.",
-          item.recommendation || "Sin recomendación registrada.",
-        ]);
-
-        autoTable(doc, {
-          startY: cursorY + 8,
-          margin: { left: marginX, right: marginX },
-          head: [["N°", "Dimensión", "Severidad", "Hallazgo", "Recomendación"]],
-          body: findingsRows,
-          theme: "striped",
-          headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: "bold" },
-          styles: { fontSize: 8, cellPadding: 5 },
-          columnStyles: {
-            0: { cellWidth: 22 },
-            1: { cellWidth: 75 },
-            2: { cellWidth: 55 },
-            3: { cellWidth: 160 },
-            4: { cellWidth: 160 },
-          },
-        });
-      }
-
-      // Nombre del archivo como solicitó el usuario
-      const projectNameFile = projectName.replace(/https?:\/\//i, '').replace(/[\/\\]/g, '');
-      doc.save(`Reporte_${projectNameFile}.pdf`);
+      setDownloadData({ reportResult: mockReportResult, sourceLabel: projectName });
     } catch (err) {
       console.error(err);
-      setError("No se pudo generar el reporte PDF.");
-    } finally {
+      setError("No se pudo preparar el reporte para descarga.");
       setGeneratingPdfId(null);
     }
   };
+
+  useEffect(() => {
+    const processPdf = async () => {
+      if (downloadData && dashboardRef.current) {
+        try {
+          const doc = new jsPDF({ unit: "pt", format: "a4", orientation: "portrait" });
+          const pages = dashboardRef.current.querySelectorAll('.pdf-page');
+
+          if (!pages || pages.length === 0) {
+            throw new Error("No se encontraron las páginas del reporte.");
+          }
+
+          for (let i = 0; i < pages.length; i++) {
+            const pageElement = pages[i];
+            const canvas = await html2canvas(pageElement, {
+              scale: 2,
+              useCORS: true,
+              logging: false,
+              backgroundColor: '#ffffff'
+            });
+
+            const imgData = canvas.toDataURL("image/jpeg", 1.0);
+            const pdfWidth = doc.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+            
+            if (i > 0) doc.addPage();
+            doc.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
+          }
+
+          const fileSafeSource = downloadData.sourceLabel
+            .replace(/^https?:\/\//, "")
+            .replace(/[^a-zA-Z0-9]/g, "_")
+            .slice(0, 40);
+
+          doc.save(`Reporte_${fileSafeSource || "Historial"}.pdf`);
+        } catch (err) {
+          console.error(err);
+          setError("No se pudo generar el reporte PDF.");
+        } finally {
+          setGeneratingPdfId(null);
+          setDownloadData(null);
+        }
+      }
+    };
+    processPdf();
+  }, [downloadData]);
 
   const getScoreClass = (score) => {
     if (score >= 90) return "excellent";
@@ -241,6 +234,14 @@ export default function History() {
       <Sidebar />
 
       <main className="history-main">
+        {downloadData && (
+          <ReportDashboard 
+            ref={dashboardRef} 
+            reportResult={downloadData.reportResult} 
+            sourceLabel={downloadData.sourceLabel} 
+            inputType="url"
+          />
+        )}
         <section className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
           <div style={{ flex: '1 1 500px' }}>
             <p className="page-kicker">Historial de Auditoría</p>

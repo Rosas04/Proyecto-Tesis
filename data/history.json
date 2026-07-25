@@ -354,5 +354,47 @@
       "main_recommendations": [],
       "technical_conclusion": "La interfaz frontend presenta un nivel de calidad alto. Se recomienda atender los hallazgos identificados para fortalecer el cumplimiento de las características de calidad de la norma ISO/IEC 25010."
     }
+  },
+  {
+    "timestamp": "2026-07-24T14:36:06.418913Z",
+    "user_id": "test",
+    "evaluation": [
+      {
+        "agent": "ISOEvaluationAgent",
+        "evaluation": {
+          "global_score": 94,
+          "findings": []
+        }
+      }
+    ],
+    "report": {
+      "agent": "ReportAgent",
+      "status": "completed",
+      "standard": "ISO/IEC 25010",
+      "scope": "Frontend (Consolidado)",
+      "generated_at": "2026-07-24 09:36:06",
+      "summary": {
+        "total_interfaces": 1,
+        "global_score": 94,
+        "quality_level": "Excelente",
+        "total_findings": 0,
+        "best_interface": "Desconocida",
+        "worst_interface": "Desconocida",
+        "severity_summary": {
+          "Crítica": 0,
+          "Alta": 0,
+          "Media": 0,
+          "Baja": 0
+        },
+        "dimension_summary": {}
+      },
+      "scores": {},
+      "findings": [],
+      "main_recommendations": [],
+      "technical_conclusion": "La interfaz frontend presenta un nivel de calidad excelente. Los hallazgos detectados son mínimos y no comprometen de forma significativa la eficiencia, accesibilidad o mantenibilidad del artefacto evaluado."
+    }
+  },
+  {
+    "test": "success"
   }
 ]

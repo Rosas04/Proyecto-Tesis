@@ -15,12 +15,19 @@ class ReportAgent:
             best_score = -1
             worst_score = 101
             all_findings = []
+            
+            total_dimension_scores = {}
 
             for eval_item in evaluation_data:
                 # the item might be the direct result from ISOEvaluationAgent
                 inner_eval = eval_item.get("evaluation", eval_item)
                 score = inner_eval.get("global_score", 0)
                 findings = inner_eval.get("findings", [])
+                
+                # accumulate dimension scores
+                eval_scores = inner_eval.get("scores", {})
+                for k, v in eval_scores.items():
+                    total_dimension_scores[k] = total_dimension_scores.get(k, 0) + v
 
                 total_score += score
                 total_findings += len(findings)
@@ -36,6 +43,11 @@ class ReportAgent:
                     worst_iface = name
 
             avg_score = round(total_score / total_interfaces) if total_interfaces > 0 else 0
+            
+            avg_scores = {}
+            if total_interfaces > 0:
+                for k, v in total_dimension_scores.items():
+                    avg_scores[k] = round(v / total_interfaces)
             
             # Determine quality level based on avg_score
             if avg_score >= 90:
@@ -69,7 +81,7 @@ class ReportAgent:
                     "severity_summary": severity_summary,
                     "dimension_summary": dimension_summary,
                 },
-                "scores": {},
+                "scores": avg_scores,
                 "findings": all_findings,
                 "main_recommendations": main_recommendations,
                 "technical_conclusion": self.build_conclusion(

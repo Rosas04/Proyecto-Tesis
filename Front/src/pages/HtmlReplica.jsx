@@ -243,6 +243,26 @@ export default function HtmlReplica() {
     return captureResult?.extraction?.combined_html || captureResult?.html_content || "";
   }, [captureResult]);
 
+  const previewHtmlWithBase = useMemo(() => {
+    if (!htmlPreview) return "";
+    let sourceUrl = selectedIface?.url || captureResult?.url || inputUrl;
+    
+    // Validate if it's a valid URL
+    if (!sourceUrl || !sourceUrl.startsWith('http')) return htmlPreview;
+
+    // If it already has a base tag, do nothing
+    if (htmlPreview.includes('<base ')) return htmlPreview;
+
+    const baseTag = `<base href="${sourceUrl}">`;
+    if (htmlPreview.includes('<head>')) {
+      return htmlPreview.replace('<head>', `<head>\n  ${baseTag}`);
+    } else if (htmlPreview.includes('<html>')) {
+      return htmlPreview.replace('<html>', `<html>\n<head>\n  ${baseTag}\n</head>`);
+    } else {
+      return `${baseTag}\n${htmlPreview}`;
+    }
+  }, [htmlPreview, selectedIface, captureResult, inputUrl]);
+
   const combinedHtmlStats = useMemo(() => {
     const html = combinedHtml || "";
 
@@ -470,7 +490,7 @@ export default function HtmlReplica() {
                     <iframe
                       title="Vista previa HTML"
                       className="preview-frame"
-                      srcDoc={htmlPreview}
+                      srcDoc={previewHtmlWithBase}
                       sandbox="allow-same-origin allow-scripts"
                     />
                   ) : (
