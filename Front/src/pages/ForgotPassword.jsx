@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import logoImg from "../assets/logo.png";
 import "./Login.css"; // Reuse the same styles
 
 export default function ForgotPassword() {
@@ -44,9 +45,9 @@ export default function ForgotPassword() {
     <main className="auth-page">
       <section className="auth-card">
         <div className="auth-brand">
-          <div className="auth-logo">FM</div>
-          <h1>FrontMind AI</h1>
-          <p>Recuperar contraseña</p>
+          <img src={logoImg} alt="FrontMind AI" className="auth-logo" />
+          <h1>Recuperar Contraseña</h1>
+          <p>Te enviaremos un enlace para restablecerla</p>
         </div>
 
         <form onSubmit={handleReset}>

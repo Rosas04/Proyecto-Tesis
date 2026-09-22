@@ -1,233 +1,370 @@
 .pdf-report-wrapper {
   position: absolute;
-  left: -9999px;
   top: 0;
+  left: 0;
+  z-index: -9999;
+  opacity: 0.01;
+  pointer-events: none;
   width: 1200px;
   display: flex;
   flex-direction: column;
   gap: 20px;
   background-color: transparent;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
 .pdf-page {
   width: 1200px;
   height: 1697px; /* A4 aspect ratio at 1200px width */
-  background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
-  padding: 60px;
+  background: #f8fafc;
+  padding: 50px 60px;
   box-sizing: border-box;
-  font-family: 'Inter', system-ui, sans-serif;
   color: #1e293b;
   position: relative;
   overflow: hidden;
 }
 
-/* Page 1 Specific */
+/* Headers */
 .pdf-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 40px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 15px;
+  margin-bottom: 30px;
 }
 
-.pdf-header h1 {
-  font-size: 38px;
-  color: #0f172a;
-  margin: 0 0 10px 0;
+.pdf-header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.pdf-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.pdf-header-left h2 {
+  margin: 0;
+  font-size: 24px;
+  color: #1e3a8a;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.pdf-header-left p {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.pdf-header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  text-align: right;
+}
+
+.header-meta {
+  display: flex;
+  flex-direction: column;
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #dcfce7;
+  color: #166534;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Titles */
+.pdf-main-title {
+  margin-bottom: 30px;
+}
+
+.pdf-main-title h1 {
+  margin: 0;
+  font-size: 32px;
+  color: #1e3a8a;
   font-weight: 800;
   letter-spacing: -1px;
 }
 
-.pdf-header p {
-  font-size: 18px;
+.pdf-main-title p {
+  margin: 5px 0 0 0;
+  font-size: 16px;
   color: #64748b;
-  margin: 0;
+  font-weight: 500;
 }
 
-.pdf-branding {
-  text-align: right;
-}
-
-.pdf-branding span {
-  display: block;
-  font-size: 32px;
-  font-weight: 900;
-  color: #2563eb;
-  letter-spacing: 1px;
-}
-
-.pdf-grid-top {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+/* Grid layout */
+.pdf-grid-2col {
+  display: flex;
   gap: 30px;
-  margin-bottom: 30px;
 }
 
-.pdf-card {
-  background: white;
-  border-radius: 24px;
-  padding: 30px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-}
-
-.pdf-card h3 {
-  font-size: 15px;
-  text-transform: uppercase;
-  color: #64748b;
-  letter-spacing: 1px;
-  margin: 0 0 20px 0;
-  font-weight: 700;
-}
-
-.pdf-metric {
-  text-align: center;
+.pdf-col {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
+  gap: 20px;
 }
 
-.pdf-metric-value {
-  font-size: 72px;
+/* Cards */
+.pdf-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.card-title {
+  margin: 0 0 20px 0;
+  font-size: 16px;
   font-weight: 800;
-  color: #0f172a;
-  line-height: 1;
-  margin-bottom: 10px;
-}
-
-.pdf-metric-label {
-  font-size: 18px;
-  color: #64748b;
-  font-weight: 600;
-}
-
-.pdf-score-container {
+  color: #1e293b;
   display: flex;
   align-items: center;
-  justify-content: center;
-  height: 250px;
+  gap: 8px;
 }
 
-.pdf-grid-main {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 30px;
-  margin-bottom: 30px;
+/* Resumen Ejecutivo */
+.exec-summary-content {
+  display: flex;
+  gap: 24px;
+  align-items: center;
 }
 
-.pdf-chart-area {
-  height: 400px;
+.score-circle-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
 }
 
-.pdf-chart-bar {
-  height: 350px;
+.score-label {
+  color: white;
+  padding: 4px 16px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
-.pdf-info-list {
-  list-style: none;
-  padding: 0;
+.exec-text {
+  flex: 1;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.exec-text p {
+  margin: 0 0 16px 0;
+}
+
+.exec-text h4 {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  color: #1e293b;
+  font-weight: 700;
+}
+
+/* Resumen de hallazgos */
+.findings-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.findings-total {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.findings-total .total-num {
+  display: block;
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.findings-total .total-label {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.findings-counts {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.count-box {
+  flex: 1;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.count-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.dot-crit { background: #ef4444; }
+.dot-alta { background: #f59e0b; }
+.dot-media { background: #eab308; }
+.dot-baja { background: #22c55e; }
+
+.count-val {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+/* Metodologia */
+.methodology-text {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.6;
   margin: 0;
 }
 
-.pdf-info-list li {
-  display: flex;
-  justify-content: space-between;
-  padding: 20px 0;
-  border-bottom: 1px solid #f1f5f9;
-  font-size: 18px;
-}
-
-.pdf-info-list li:last-child {
-  border-bottom: none;
-}
-
-.pdf-info-list .info-label {
-  color: #64748b;
-}
-
-.pdf-info-list .info-value {
-  font-weight: 700;
-  color: #0f172a;
-  text-align: right;
-  max-width: 60%;
-  word-wrap: break-word;
-}
-
-/* Page 2 Specific */
-.pdf-table-container {
-  margin-top: 10px;
-  background: white;
-  border-radius: 24px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
-  overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.8);
-}
-
-.pdf-table {
+/* Ficha del proyecto */
+.info-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.pdf-table th {
-  background: #f8fafc;
-  padding: 20px 24px;
-  text-align: left;
-  font-size: 14px;
-  font-weight: 700;
-  color: #475569;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  border-bottom: 2px solid #e2e8f0;
-}
-
-.pdf-table td {
-  padding: 20px 24px;
-  font-size: 15px;
-  color: #334155;
+.info-table td {
+  padding: 10px 0;
   border-bottom: 1px solid #f1f5f9;
-  vertical-align: top;
-  line-height: 1.5;
 }
 
-.pdf-table tr:last-child td {
+.info-table tr:last-child td {
   border-bottom: none;
 }
 
-.pdf-badge {
-  display: inline-block;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 13px;
+.info-lbl {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+  padding-left: 12px;
+}
+
+.info-val {
+  font-size: 12px;
+  color: #1e293b;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Resultados por caracteristica */
+.chars-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.char-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.char-name {
+  width: 180px;
+  font-size: 12px;
+  color: #475569;
+  font-weight: 500;
+}
+
+.char-bar-bg {
+  flex: 1;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.char-bar-fill {
+  height: 100%;
+  background: #1e3a8a;
+  border-radius: 4px;
+}
+
+.char-score {
+  width: 40px;
+  text-align: right;
+  font-size: 12px;
   font-weight: 700;
-  text-transform: uppercase;
+  color: #64748b;
 }
 
-.pdf-badge.crítica { background: #fee2e2; color: #b91c1c; }
-.pdf-badge.alta { background: #ffedd5; color: #c2410c; }
-.pdf-badge.media { background: #fef3c7; color: #b45309; }
-.pdf-badge.baja { background: #e0f2fe; color: #0369a1; }
-
-.pdf-recommendations {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  margin-top: 30px;
+.note-text {
+  margin: 16px 0 0 0;
+  font-size: 11px;
+  color: #94a3b8;
+  font-style: italic;
 }
 
-.pdf-rec-item {
-  background: white;
-  padding: 24px;
-  border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-  border-left: 6px solid #3b82f6;
-  font-size: 16px;
-  color: #334155;
+/* Limitaciones */
+.limitation-card {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.text-red {
+  color: #ef4444 !important;
+}
+
+.limitation-list {
+  margin: 0;
+  padding-left: 20px;
+  color: #475569;
+  font-size: 12px;
   line-height: 1.6;
 }
 
+.limitation-list li {
+  margin-bottom: 8px;
+}
+
+/* PDF Footer */
 .pdf-footer {
   position: absolute;
   bottom: 40px;
@@ -235,8 +372,133 @@
   right: 60px;
   display: flex;
   justify-content: space-between;
-  color: #94a3b8;
-  font-size: 14px;
   border-top: 1px solid #e2e8f0;
-  padding-top: 20px;
+  padding-top: 15px;
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* Utils */
+.mb-0 { margin-bottom: 0; }
+.mb-30 { margin-bottom: 30px; }
+.mt-30 { margin-top: 30px; }
+.p-0 { padding: 0; }
+
+/* Detail Tables */
+.pdf-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.pdf-table th {
+  background: #f8fafc;
+  padding: 10px 8px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  color: #1e293b;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.pdf-table td {
+  padding: 8px;
+  font-size: 11px;
+  color: #475569;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: top;
+  line-height: 1.4;
+}
+
+/* Findings table – constrain long descriptions */
+.findings-table td {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+}
+
+.findings-table td:nth-child(4),
+.findings-table td:nth-child(6) {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 260px;
+}
+
+.compact-table th, .compact-table td {
+  padding: 8px;
+  font-size: 10px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.badge-alta { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+.badge-media { background: #fef9c3; color: #a16207; border: 1px solid #fef08a; }
+.badge-baja { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+
+.badge-abierto { background: #ffedd5; color: #c2410c; }
+.badge-revision { background: #e0f2fe; color: #0369a1; }
+.badge-resuelto { background: #dcfce7; color: #15803d; }
+
+/* Evidences */
+.evidence-grid {
+  display: flex;
+  gap: 16px;
+}
+.evidence-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.evidence-img {
+  width: 100%;
+  height: 80px;
+  background: #cbd5e1;
+  border-radius: 8px;
+  border: 1px solid #94a3b8;
+}
+.evidence-item span {
+  font-size: 10px;
+  color: #64748b;
+  text-align: center;
+}
+
+/* Recommendations */
+.rec-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rec-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 12px;
+  color: #334155;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+.rec-list li svg {
+  width: 14px;
+  height: 14px;
+  color: #3b82f6;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Conclusion */
+.conclusion-text {
+  font-size: 12px;
+  color: #475569;
+  line-height: 1.6;
+  margin: 0;
 }

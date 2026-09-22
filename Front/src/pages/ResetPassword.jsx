@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import logoImg from "../assets/logo.png";
 import "./Login.css";
 
 export default function ResetPassword() {
@@ -54,9 +55,9 @@ export default function ResetPassword() {
     <main className="auth-page">
       <section className="auth-card">
         <div className="auth-brand">
-          <div className="auth-logo">FM</div>
+          <img src={logoImg} alt="FrontMind AI" className="auth-logo" />
           <h1>FrontMind AI</h1>
-          <p>Crear nueva contraseña</p>
+          <p>Nueva contraseña</p>
         </div>
 
         <form onSubmit={handleUpdate}>

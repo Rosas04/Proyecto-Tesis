@@ -4,10 +4,10 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
-  console.error(
+  throw new Error(
     "Faltan las variables de entorno VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY. " +
-      "Verifique el archivo .env (desarrollo) o las variables de entorno configuradas en el despliegue."
+    "Asegúrese de configurar el archivo .env o las variables en producción."
   );
 }
 
-export const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
+export const supabase = createClient(supabaseUrl, supabaseKey);

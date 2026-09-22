@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import logoImg from "../assets/logo.png";
 import "./Register.css";
 
 export default function Register() {
@@ -36,8 +37,8 @@ export default function Register() {
       return;
     }
 
-    if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres.");
+    if (password.length < 8) {
+      setError("La contraseña debe tener al menos 8 caracteres.");
       return;
     }
 
@@ -49,30 +50,19 @@ export default function Register() {
     try {
       setLoading(true);
 
-      // Verificación profunda con Abstract API
+      // Verificación de email vía nuestro propio Backend (CRIT-03)
       try {
-        const apiKey = "3d9886d76ee943e88062f6f57efec810";
-        const res = await fetch(`https://emailreputation.abstractapi.com/v1/?api_key=${apiKey}&email=${email.trim()}`);
-        if (res.ok) {
-          const apiData = await res.json();
-          const status = apiData.deliverability || apiData.email_deliverability?.status || "";
-          const isMxValid = apiData.is_mx_found?.value ?? apiData.email_deliverability?.is_mx_valid;
-          
-          // Si el estado no es estrictamente 'deliverable' o el MX es inválido, lo rechazamos.
-          if (isMxValid === false || status.toLowerCase() === "undeliverable" || status.toLowerCase() === "unknown" || status.toLowerCase() === "risky") {
-            setError(`El correo no parece ser válido o seguro (Estado: ${status}). Intente con otro.`);
-            setLoading(false);
-            return;
-          }
-        } else {
-          console.error("Error de la API:", res.status);
-          setError("Servicio de verificación de correos inactivo (Error " + res.status + "). Intente más tarde.");
+        const { verifyEmail } = await import("../services/api");
+        const verifyData = await verifyEmail(email.trim());
+
+        if (verifyData.deliverability !== "DELIVERABLE") {
+          setError(`El correo no parece ser válido o seguro (Estado: ${verifyData.deliverability}). Intente con otro.`);
           setLoading(false);
           return;
         }
       } catch (apiErr) {
-        console.error("Fallo al conectar con Abstract API:", apiErr);
-        setError("Fallo de conexión al verificar el correo (posible bloqueo por AdBlocker o CORS). Revise la consola (F12).");
+        console.error("Fallo al verificar el correo mediante el backend:", apiErr);
+        setError("Error al verificar el correo. Intente más tarde.");
         setLoading(false);
         return;
       }
@@ -119,9 +109,9 @@ export default function Register() {
     <main className="auth-page">
       <section className="auth-card">
         <div className="auth-brand">
-          <div className="auth-logo">FM</div>
+          <img src={logoImg} alt="FrontMind AI" className="auth-logo" />
           <h1>FrontMind AI</h1>
-          <p>Framework agéntico de evaluación frontend</p>
+          <p>Crear una nueva cuenta</p>
         </div>
 
         <form onSubmit={handleRegister}>

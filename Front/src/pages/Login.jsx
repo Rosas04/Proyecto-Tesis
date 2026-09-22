@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import logoImg from "../assets/logo.png";
 import "./Login.css";
 
 export default function Login() {
@@ -32,7 +33,7 @@ export default function Login() {
         return;
       }
 
-      navigate("/input");
+      navigate("/");
     } catch (err) {
       setError("No se pudo iniciar sesión.");
       console.error(err);
@@ -45,7 +46,7 @@ export default function Login() {
     <main className="auth-page">
       <section className="auth-card">
         <div className="auth-brand">
-          <div className="auth-logo">FM</div>
+          <img src={logoImg} alt="FrontMind AI" className="auth-logo" />
           <h1>FrontMind AI</h1>
           <p>Framework agéntico de evaluación frontend</p>
         </div>

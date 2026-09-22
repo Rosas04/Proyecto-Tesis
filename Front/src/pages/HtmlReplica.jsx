@@ -2,72 +2,10 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { replicateHtmlFromContent } from "../services/api";
+import { storageService } from "../services/storageService";
+import { getInterfaceLabel } from "../utils/interfaceLabel";
+import { TypeBadge } from "../components/TypeBadge";
 import "./HtmlReplica.css";
-
-const TYPE_COLORS = {
-  html:     { bg: "#ecfdf5", color: "#047857", label: "HTML"     },
-  jsx:      { bg: "#eff6ff", color: "#1d4ed8", label: "JSX"      },
-  tsx:      { bg: "#f5f3ff", color: "#6d28d9", label: "TSX"      },
-  ts:       { bg: "#fdf4ff", color: "#7e22ce", label: "TS"       },
-  js:       { bg: "#fefce8", color: "#92400e", label: "JS"       },
-  vue:      { bg: "#f0fdf4", color: "#15803d", label: "VUE"      },
-  svelte:   { bg: "#fff7ed", color: "#c2410c", label: "SVELTE"   },
-  astro:    { bg: "#faf5ff", color: "#7c3aed", label: "ASTRO"    },
-  cshtml:   { bg: "#f0f9ff", color: "#0369a1", label: "CSHTML"   },
-  razor:    { bg: "#f0f9ff", color: "#0369a1", label: "RAZOR"    },
-  php:      { bg: "#f5f3ff", color: "#5b21b6", label: "PHP"      },
-  blade:    { bg: "#fdf2f8", color: "#9d174d", label: "BLADE"    },
-  erb:      { bg: "#fef2f2", color: "#991b1b", label: "ERB"      },
-  hbs:      { bg: "#fff8f0", color: "#c2410c", label: "HBS"      },
-  mustache: { bg: "#fff8f0", color: "#c2410c", label: "MUSTACHE" },
-  ejs:      { bg: "#f0fdf4", color: "#166534", label: "EJS"      },
-  pug:      { bg: "#f9fafb", color: "#374151", label: "PUG"      },
-  jinja:    { bg: "#fefce8", color: "#854d0e", label: "JINJA"    },
-  njk:      { bg: "#fefce8", color: "#854d0e", label: "NJK"      },
-  twig:     { bg: "#f0fdf4", color: "#065f46", label: "TWIG"     },
-  liquid:   { bg: "#eff6ff", color: "#1e40af", label: "LIQUID"   },
-  combined: { bg: "#f1f5f9", color: "#334155", label: "FULL"     },
-};
-
-function getInterfaceLabel(iface, idx) {
-  let rawName = iface.file_name || `interfaz-${idx}`;
-  let fileName = iface.name;
-  
-  if (!fileName) {
-    const lowerName = rawName.toLowerCase();
-    if (lowerName.includes('login') || lowerName.includes('signin') || lowerName.includes('auth')) {
-      fileName = 'Login';
-    } else if (lowerName.includes('register') || lowerName.includes('signup') || lowerName.includes('registro')) {
-      fileName = 'Registro';
-    } else if (lowerName.includes('home') || lowerName.includes('index') || lowerName.includes('inicio')) {
-      fileName = 'Home';
-    } else if (lowerName.includes('dashboard') || lowerName.includes('panel')) {
-      fileName = 'Dashboard';
-    } else if (lowerName.includes('profile') || lowerName.includes('perfil')) {
-      fileName = 'Perfil';
-    } else {
-      let cleanName = rawName.replace(/\.[^/.]+$/, "");
-      const parts = cleanName.split('-');
-      if (parts[0] === 'www' && parts.length >= 3) {
-        cleanName = parts.length > 3 ? parts.slice(3).join(' ') : 'Home';
-      }
-      fileName = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
-    }
-  }
-  return fileName || iface.title || rawName;
-}
-
-function TypeBadge({ type }) {
-  const t = TYPE_COLORS[type] || TYPE_COLORS.combined;
-  return (
-    <span
-      className="type-badge"
-      style={{ background: t.bg, color: t.color }}
-    >
-      {t.label}
-    </span>
-  );
-}
 
 export default function HtmlReplica() {
   const navigate = useNavigate();
@@ -116,10 +54,9 @@ export default function HtmlReplica() {
       setSelectedIface(initialIface);
 
       const cacheKey = initialIface ? initialIface.file_name : "combined";
-      const savedReplica = localStorage.getItem("htmlReplicaResult");
+      const parsedReplica = storageService.getHtmlReplicaResult();
 
-      if (savedReplica) {
-        const parsedReplica = JSON.parse(savedReplica);
+      if (parsedReplica) {
         setReplicaResult(parsedReplica);
 
         const html =
@@ -175,7 +112,8 @@ export default function HtmlReplica() {
       setReplicatedCache({
         [cacheKey]: { result, html: replicatedHtml }
       });
-      localStorage.setItem("htmlReplicaResult", JSON.stringify(result));
+      // Bypass localStorage for massive HTML replicas to avoid QuotaExceededError
+      // storageService.setHtmlReplicaResult(result);
     } catch (err) {
       setError("No se pudo generar la réplica HTML. Verifique que el backend esté encendido.");
       console.error(err);
@@ -283,21 +221,21 @@ export default function HtmlReplica() {
     }
 
     try {
-      localStorage.setItem("htmlToEvaluate", htmlPreview);
+      if (!storageService.setHtmlToEvaluate(htmlPreview)) {
+        // Fallback for quota limit
+        console.warn("Quota exceeded, cleaning older storage...");
+        storageService.removeItem("zipResult");
+        storageService.removeItem("captureResult");
+        storageService.removeItem("htmlReplicaResult");
+        
+        if (!storageService.setHtmlToEvaluate(htmlPreview)) {
+          setError("El HTML es demasiado grande para guardarse en el almacenamiento.");
+          return;
+        }
+      }
       navigate("/evaluation");
     } catch (e) {
-      console.warn("localStorage quota exceeded, cleaning up older items...", e);
-      // Clean up massive temporary items that are no longer strictly needed in evaluation
-      localStorage.removeItem("zipResult");
-      localStorage.removeItem("captureResult");
-      localStorage.removeItem("htmlReplicaResult");
-      try {
-        localStorage.setItem("htmlToEvaluate", htmlPreview);
-        navigate("/evaluation");
-      } catch (retryError) {
-        setError("El archivo HTML es demasiado grande para guardarse en el almacenamiento de su navegador. Pruebe reduciendo el tamaño del archivo o limpiando la caché.");
-        console.error("Fallo definitivo al guardar en localStorage:", retryError);
-      }
+      console.error(e);
     }
   };
 
@@ -310,15 +248,24 @@ export default function HtmlReplica() {
       <Sidebar />
 
       <main className="html-main">
-        <section className="page-header">
-          <p className="page-kicker">Agente de Réplica de Código</p>
-          <h1 className="page-title">HTML real o replicado</h1>
-          <p className="page-description">
-            En esta etapa, el framework reconstruye una versión evaluable del
-            artefacto frontend, incorporando estructura HTML, estilos y recursos
-            necesarios para su posterior evaluación técnica bajo ISO/IEC 25010.
-          </p>
-        </section>
+        <header className="page-header replica-header">
+          <div className="replica-header-left">
+            <div className="replica-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="16 18 22 12 16 6"></polyline>
+                <polyline points="8 6 2 12 8 18"></polyline>
+              </svg>
+            </div>
+            <div>
+              <h1 className="page-title">HTML real o replicado</h1>
+              <p className="page-description" style={{ margin: "6px 0 0" }}>Verificación de la autenticidad del contenido HTML para identificar si es una réplica de la interfaz original.</p>
+            </div>
+          </div>
+          <div className="replica-header-right">
+            <span>Informe de evaluación</span>
+            <strong>FrontMind</strong>
+          </div>
+        </header>
 
         {error && <div className="error-box">{error}</div>}
 
@@ -330,62 +277,68 @@ export default function HtmlReplica() {
 
         {!loading && captureResult && (
           <>
-            <section className="html-summary card">
-              <div>
-                <span>Fuente</span>
-                <strong>{captureResult.url || inputUrl || "No especificada"}</strong>
+            <section className="source-summary-card">
+              <div className="source-summary-left">
+                <span className="label">Fuente</span>
+                <strong>
+                  {captureResult.url || inputUrl || "No especificada"}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: "4px" }}>
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <line x1="10" y1="14" x2="21" y2="3"></line>
+                  </svg>
+                </strong>
+                <span className="sub">URL analizada</span>
               </div>
-
-              <div>
-                <span>Tipo</span>
-                <strong>{inputType.toUpperCase()}</strong>
-              </div>
-
-              <div>
-                <span>Caracteres</span>
-                <strong>{combinedHtmlStats.characters}</strong>
-              </div>
-
-              <div>
-                <span>Etiquetas</span>
-                <strong>{combinedHtmlStats.tags}</strong>
-              </div>
-            </section>
-
-            <section className="html-stats-grid">
-              <article className="html-stat card">
-                <span>Líneas</span>
-                <strong>{combinedHtmlStats.lines}</strong>
-              </article>
-
-              <article className="html-stat card">
-                <span>Imágenes</span>
-                <strong>{combinedHtmlStats.images}</strong>
-              </article>
-
-              <article className="html-stat card">
-                <span>Enlaces</span>
-                <strong>{combinedHtmlStats.links}</strong>
-              </article>
-
-              <article className="html-stat card">
-                <span>Botones</span>
-                <strong>{combinedHtmlStats.buttons}</strong>
-              </article>
-            </section>
-
-            {/* ── Interface Tabs ───────────────── */}
-            {interfaces.length > 0 && (
-              <section className="interfaces-tabs-section" style={{ marginBottom: "2rem", marginTop: "2rem" }}>
-                <div className="section-title">
-                  <h2>Interfaces detectadas</h2>
-                  <p>Selecciona una interfaz para realizar su réplica HTML independiente.</p>
+              
+              <div className="source-summary-stats">
+                <div className="stat-item">
+                  <span>Tipo</span>
+                  <strong>{inputType.toUpperCase()}</strong>
                 </div>
+                <div className="stat-item">
+                  <span>Características</span>
+                  <strong>{combinedHtmlStats.characters}</strong>
+                </div>
+                <div className="stat-item">
+                  <span>Etiquetas</span>
+                  <strong>{combinedHtmlStats.tags}</strong>
+                </div>
+                <div className="stat-item">
+                  <span>Líneas</span>
+                  <strong>{combinedHtmlStats.lines}</strong>
+                </div>
+                <div className="stat-item">
+                  <span>Imágenes</span>
+                  <strong>{combinedHtmlStats.images}</strong>
+                </div>
+                <div className="stat-item">
+                  <span>Enlaces</span>
+                  <strong>{combinedHtmlStats.links}</strong>
+                </div>
+                <div className="stat-item">
+                  <span>Botones</span>
+                  <strong>{combinedHtmlStats.buttons}</strong>
+                </div>
+              </div>
+            </section>
+
+            {interfaces.length > 0 && (
+              <section className="interfaces-tabs-section card" style={{ padding: "24px", marginBottom: "24px" }}>
+                <div className="section-icon-title">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                    <polyline points="2 17 12 22 22 17"></polyline>
+                    <polyline points="2 12 12 17 22 12"></polyline>
+                  </svg>
+                  <h2>Interfaces detectadas</h2>
+                </div>
+                <p style={{ color: "#6b7280", fontSize: "14px", margin: "0 0 16px 0" }}>Selecciona una interfaz para revisar su réplica HTML independiente.</p>
+                
                 <div className="tabs-wrapper">
                   <button 
                     className="tabs-scroll-btn" 
                     onClick={() => tabsRef.current?.scrollBy({ left: -200, behavior: "smooth" })}
-                    title="Desplazar a la izquierda"
                   >
                     &#8592;
                   </button>
@@ -396,11 +349,11 @@ export default function HtmlReplica() {
                       style={{
                         padding: '8px 16px',
                         borderRadius: '8px',
-                        border: !selectedIface ? '2px solid #2563eb' : '1px solid #d1d5db',
-                        background: !selectedIface ? '#eff6ff' : '#fff',
+                        border: !selectedIface ? 'none' : '1px solid #d1d5db',
+                        background: !selectedIface ? '#1e3a8a' : '#fff',
                         cursor: 'pointer',
                         fontWeight: !selectedIface ? 'bold' : 'normal',
-                        color: !selectedIface ? '#1d4ed8' : '#374151',
+                        color: !selectedIface ? '#fff' : '#374151',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px',
@@ -408,8 +361,14 @@ export default function HtmlReplica() {
                       }}
                       onClick={() => handleTabChange(null)}
                     >
-                      <TypeBadge type="combined" />
-                      <span>Vista combinada</span>
+                      {!selectedIface && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                          <line x1="3" y1="9" x2="21" y2="9"></line>
+                          <line x1="9" y1="21" x2="9" y2="9"></line>
+                        </svg>
+                      )}
+                      <span>Todas</span>
                     </button>
 
                     {interfaces.map((iface, i) => {
@@ -425,11 +384,11 @@ export default function HtmlReplica() {
                           style={{
                             padding: '8px 16px',
                             borderRadius: '8px',
-                            border: isSelected ? '2px solid #2563eb' : '1px solid #d1d5db',
-                            background: isSelected ? '#eff6ff' : '#fff',
+                            border: isSelected ? 'none' : '1px solid #d1d5db',
+                            background: isSelected ? '#1e3a8a' : '#fff',
                             cursor: 'pointer',
                             fontWeight: isSelected ? 'bold' : 'normal',
-                            color: isSelected ? '#1d4ed8' : '#374151',
+                            color: isSelected ? '#fff' : '#374151',
                             display: 'flex',
                             alignItems: 'center',
                             gap: '8px',
@@ -438,7 +397,7 @@ export default function HtmlReplica() {
                           onClick={() => handleTabChange(iface)}
                         >
                           <TypeBadge type={iface.type || ext} />
-                          <span>{getInterfaceLabel(iface, i)}</span>
+                          <span>{iface.name || getInterfaceLabel(iface.url || rawName, iface.name)}</span>
                         </button>
                       );
                     })}
@@ -446,7 +405,6 @@ export default function HtmlReplica() {
                   <button 
                     className="tabs-scroll-btn" 
                     onClick={() => tabsRef.current?.scrollBy({ left: 200, behavior: "smooth" })}
-                    title="Desplazar a la derecha"
                   >
                     &#8594;
                   </button>
@@ -455,67 +413,83 @@ export default function HtmlReplica() {
             )}
 
             <section className="html-workspace">
-              <article className="html-code-panel card">
-                <div className="panel-header">
-                  <div>
-                    <h2>Código HTML evaluable</h2>
-                    <p>
-                      Contenido generado por el Agente de Réplica para ser
-                      analizado por el Agente ISO/IEC 25010.
-                    </p>
-                  </div>
+              <article className="html-code-panel card" style={{ padding: "24px" }}>
+                <div className="section-icon-title">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                  </svg>
+                  <h2>Código HTML evaluable</h2>
                 </div>
-
-                <textarea
-                  className="html-code"
-                  value={htmlPreview}
-                  onChange={(event) => setHtmlPreview(event.target.value)}
-                  spellCheck="false"
-                />
+                <p style={{ color: "#6b7280", fontSize: "14px", margin: "0 0 16px 0" }}>Contenido generado por el agente de Réplica para ser analizado por el Agente ISO/IEC 25010.</p>
+                
+                <div className="editor-container">
+                  <div className="editor-header">
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="16 18 22 12 16 6"></polyline>
+                        <polyline points="8 6 2 12 8 18"></polyline>
+                      </svg>
+                      HTML
+                    </div>
+                    <button className="editor-copy-btn" onClick={() => navigator.clipboard.writeText(htmlPreview)}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                      </svg>
+                      Copiar
+                    </button>
+                  </div>
+                  <textarea
+                    className="html-code"
+                    style={{ border: "none", borderRadius: "0" }}
+                    value={htmlPreview}
+                    onChange={(event) => setHtmlPreview(event.target.value)}
+                    spellCheck="false"
+                  />
+                </div>
               </article>
 
-              <article className="html-preview-panel card">
-                <div className="panel-header">
-                  <div>
-                    <h2>Vista previa</h2>
-                    <p>
-                      Renderización aproximada del HTML replicado para validar
-                      su estructura visual.
-                    </p>
-                  </div>
+              <article className="html-preview-panel card" style={{ padding: "24px" }}>
+                <div className="section-icon-title">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  <h2>Vista previa</h2>
                 </div>
+                <p style={{ color: "#6b7280", fontSize: "14px", margin: "0 0 16px 0" }}>Renderización aproximada del HTML replicado para validar su estructura visual.</p>
 
-                <div className="preview-frame-wrapper">
-                  {htmlPreview ? (
-                    <iframe
-                      title="Vista previa HTML"
-                      className="preview-frame"
-                      srcDoc={previewHtmlWithBase}
-                      sandbox="allow-same-origin allow-scripts"
-                    />
-                  ) : (
-                    <div className="empty-preview">
-                      No existe HTML para mostrar.
+                <div className="browser-mockup">
+                  <div className="browser-header">
+                    <div className="browser-dots">
+                      <span></span><span></span><span></span>
                     </div>
-                  )}
+                    <div className="browser-url-bar">
+                      {selectedIface?.url || captureResult?.url || inputUrl || "https://interfaz-evaluada.com"}
+                    </div>
+                  </div>
+                  <div className="preview-frame-wrapper" style={{ border: "none", borderRadius: "0" }}>
+                    {htmlPreview ? (
+                      <iframe
+                        title="Vista previa HTML"
+                        className="preview-frame"
+                        srcDoc={previewHtmlWithBase}
+                        sandbox="allow-same-origin"
+                      />
+                    ) : (
+                      <div className="empty-preview">No existe HTML para mostrar.</div>
+                    )}
+                  </div>
                 </div>
               </article>
             </section>
 
-            {replicaResult && (
-              <section className="replica-info card">
-                <h2>Resultado del agente</h2>
-                <p>
-                  {replicaResult?.html_replication?.source ||
-                    replicaResult?.source ||
-                    "HTML replicado correctamente."}
-                </p>
-              </section>
-            )}
 
-            <div className="page-actions">
-              <button className="secondary-btn" type="button" onClick={goBack}>
-                Volver
+
+            <div className="page-actions" style={{ justifyContent: "flex-start", gap: "16px", padding: "0" }}>
+              <button className="secondary-btn" type="button" onClick={goBack} style={{ width: "auto" }}>
+                ← Volver
               </button>
 
               <button
@@ -523,8 +497,9 @@ export default function HtmlReplica() {
                 type="button"
                 onClick={continueToEvaluation}
                 disabled={!htmlPreview.trim()}
+                style={{ width: "auto", background: "#3b4369" }}
               >
-                Evaluar con ISO/IEC 25010
+                ↻ Evaluar con ISO/IEC 25010
               </button>
             </div>
           </>
