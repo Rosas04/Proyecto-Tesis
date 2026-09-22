@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-import sys
+import logging
+import re
 from pathlib import Path
 from typing import Any
-import re
 
 from playwright.sync_api import BrowserContext, Page, TimeoutError as PlaywrightTimeoutError
+
+logger = logging.getLogger(__name__)
 
 
 class AuthenticationError(RuntimeError):
@@ -74,8 +76,20 @@ def perform_form_login(
         # Darle tiempo a la página por si hay alguna redirección (ej. a /login)
         try:
             page.wait_for_load_state("networkidle", timeout=8000)
-        except PlaywrightTimeoutError:
+        except Exception:
             pass
+
+        # Manejo agresivo de banners de cookies
+        try:
+            cookie_btn = page.get_by_role("button", name=re.compile(r"accept all|aceptar|allow all", re.IGNORECASE)).first
+            if not cookie_btn.is_visible(timeout=1000):
+                cookie_btn = page.locator("button, [role='button'], a").filter(has_text=re.compile(r"accept all|aceptar|allow all", re.IGNORECASE)).first
+            
+            if cookie_btn.is_visible(timeout=2000):
+                cookie_btn.click(timeout=1000)
+                page.wait_for_timeout(1000)
+        except Exception as e:
+            logger.info("No se encontró o no se pudo hacer clic en banner de cookies: %s", e)
 
         # === NUEVO: Intentar cerrar banners de cookies automáticamente ===
         try:
@@ -92,18 +106,42 @@ def perform_form_login(
             
             if cookie_btn.count() > 0 and cookie_btn.is_visible():
                 cookie_btn.click(timeout=3000, force=True)
-                print("[DEBUG auth] Cookie banner dismissed.", file=sys.stderr)
+                logger.debug("Cookie banner dismissed.")
         except Exception as e:
             pass
-        # ==============================================================
+        # === NUEVO: Intentar usar LLM para encontrar selectores si no se proveyeron ===
+        llm_selectors = None
+        # Desactivado: El LLM es propenso a alucinar selectores incorrectos que rompen el login
+        # if not auth.get("username_selector") or not auth.get("password_selector"):
+        #     logger.info("Intentando descubrir selectores de login usando LLM...")
+        #     from services.llm_service import llm_find_login_selectors
+        logger.info("Ejecutando login en %s...", page.url)
+
+        # Si aterrizamos en una página de registro en lugar de login, intentar ir al login
+        if any(w in page.url.lower() for w in ["register", "signup", "crear-cuenta", "registro"]):
+            logger.info("Detectada página de registro. Intentando navegar a la página de login...")
+            login_link = page.locator("a").filter(has_text=re.compile(r"iniciar sesión|login|sign in|ingresar|ya tienes cuenta", re.IGNORECASE)).first
+            if login_link.is_visible(timeout=2000):
+                login_link.click(timeout=3000)
+                page.wait_for_load_state("domcontentloaded")
+                page.wait_for_timeout(1000)
+                logger.info("Navegado a la página de login: %s", page.url)
 
         def find_username_field():
             if auth.get("username_selector"):
                 return page.locator(auth["username_selector"]).first
+            if llm_selectors and llm_selectors.get("username_selector"):
+                return page.locator(llm_selectors["username_selector"]).first
             loc1 = page.get_by_placeholder(re.compile(r"correo|email|usuario|username|id", re.IGNORECASE))
             loc2 = page.get_by_label(re.compile(r"correo|email|usuario|username|id", re.IGNORECASE))
-            loc3 = page.locator("input[type='email' i], input[type='text' i], input[name*='email' i], input[name*='user' i], input[id*='user' i]")
-            return loc1.or_(loc2).or_(loc3).first
+            loc3 = page.locator("input[type='email' i], input[name*='email' i], input[name*='user' i], input[id*='user' i]")
+            loc4 = page.locator("input[type='text' i]")
+            
+            for loc in [loc1, loc2, loc3, loc4]:
+                for element in loc.all():
+                    if element.is_visible():
+                        return element
+            return loc1.first # Fallback
 
         username_field = find_username_field()
         
@@ -131,21 +169,31 @@ def perform_form_login(
                         page.wait_for_load_state("networkidle", timeout=8000)
                         username_field = find_username_field()
             except Exception as e:
-                print(f"[DEBUG auth] Error clicking login link: {e}", file=sys.stderr)
+                logger.debug("Error clicking login link: %s", e)
                 pass
 
-        # Usar force=True para ignorar banners de cookies gigantes que interceptan clics
-        username_field.fill(auth["username"], force=True)
+        # Llenar usuario interactuando con eventos
+        username_field.focus()
+        username_field.fill("")
+        username_field.type(auth["username"], delay=10)
         page.wait_for_timeout(500)
 
         # 2. Buscar campo de Password
         def get_password_field():
             if auth.get("password_selector"):
                 return page.locator(auth["password_selector"]).first
+            if llm_selectors and llm_selectors.get("password_selector"):
+                return page.locator(llm_selectors["password_selector"]).first
             loc1 = page.get_by_placeholder(re.compile(r"contraseña|password|clave|pass", re.IGNORECASE))
             loc2 = page.get_by_label(re.compile(r"contraseña|password|clave|pass", re.IGNORECASE))
-            loc3 = page.locator("input[type='password' i], input[name*='password' i], input[name*='clave' i], input[name*='pass' i], input[id*='pass' i], input[id*='clave' i]")
-            return loc1.or_(loc2).or_(loc3).first
+            loc3 = page.locator("input[type='password' i]")
+            loc4 = page.locator("input[name*='password' i], input[name*='clave' i], input[name*='pass' i], input[id*='pass' i], input[id*='clave' i]")
+            
+            for loc in [loc1, loc2, loc3, loc4]:
+                for element in loc.all():
+                    if element.is_visible():
+                        return element
+            return loc1.first # Fallback
 
         password_field = get_password_field()
 
@@ -171,40 +219,50 @@ def perform_form_login(
 
         try:
             password_field.wait_for(state="attached", timeout=8000)
-            password_field.fill(auth["password"], force=True, timeout=5000)
+            password_field.focus()
+            password_field.fill("")
+            password_field.type(auth["password"], delay=10)
+            page.wait_for_timeout(500)
         except PlaywrightTimeoutError:
             raise AuthenticationError(
                 "No se pudo encontrar el campo de contraseña. Si el login tiene múltiples pasos complejos o reCAPTCHA, puede fallar el heurístico automático."
             )
 
         # 3. Enviar el formulario (Submit)
+        # Buscar y clickear el botón explícitamente
         try:
-            # Es mucho más seguro presionar Enter directamente en el campo de contraseña
-            password_field.press("Enter")
-            page.wait_for_timeout(1000)
-        except Exception:
-            pass
-            
-        # Si la URL no cambió o hubo un problema, intentamos buscar y clickear el botón explícitamente
-        try:
+            submit_btn = None
             if auth.get("submit_selector"):
-                submit_btn = page.locator(auth["submit_selector"]).first
-                if submit_btn.is_visible():
-                    submit_btn.click(force=True, timeout=3000)
-            else:
-                loc1 = page.get_by_role("button", name=re.compile(r"ingresar|iniciar sesión|login|sign in|acceder|continuar|entrar", re.IGNORECASE))
-                loc2 = page.locator("button[type='submit'], input[type='submit'], button")
-                submit_btn = loc1.or_(loc2).first
-                if submit_btn.is_visible():
-                    submit_btn.click(force=True, timeout=3000)
+                btn = page.locator(auth["submit_selector"]).first
+                if btn.is_visible():
+                    submit_btn = btn
+            
+            if submit_btn is None and llm_selectors and llm_selectors.get("submit_selector"):
+                btn = page.locator(llm_selectors["submit_selector"]).first
+                if btn.is_visible():
+                    submit_btn = btn
+                    
+            if submit_btn is None:
+                loc1 = page.locator("button[type='submit'], input[type='submit']")
+                loc2 = page.locator("button:has-text('login'), button:has-text('ingresar'), button:has-text('iniciar')")
+                loc3 = page.locator("button")
+                
+                for loc in [loc1, loc2, loc3]:
+                    for element in loc.all():
+                        if element.is_visible():
+                            submit_btn = element
+                            break
+                    if submit_btn:
+                        break
+                        
+            if submit_btn and submit_btn.is_visible():
+                submit_btn.click(timeout=3000)
         except Exception:
             pass
 
         # 4. Esperar a que pase el login (Redirección o cambio de DOM)
         success_selector = auth.get("success_selector")
         success_url_pattern = auth.get("success_url_pattern")
-
-        page.screenshot(path="debug_before_wait.png")
 
         if success_selector:
             try:
@@ -225,26 +283,33 @@ def perform_form_login(
             except PlaywrightTimeoutError:
                 pass
         else:
-            # Esperar a que la URL cambie
+            # Esperar a que la URL cambie o el formulario desaparezca (SPA)
             initial_url = page.url
-            print(f"[DEBUG auth] Waiting for URL to change from {initial_url}...", file=sys.stderr)
+            logger.debug("Waiting for URL to change from %s or form to disappear...", initial_url)
+            
             try:
-                # Wait for navigation to something that is not the initial login page
-                # and hopefully not an intermediate SSO redirect if possible, by waiting longer
-                page.wait_for_url(lambda u: u != initial_url and "login" not in u.lower() and "sso" not in u.lower(), timeout=15000)
-                print(f"[DEBUG auth] URL changed to {page.url}!", file=sys.stderr)
+                # Opcion 1: esperar a que desaparezca el campo de contrasena (SPA/Modal login)
+                password_field.wait_for(state="hidden", timeout=15000)
+                logger.debug("Password field is no longer visible, assuming successful login.")
             except PlaywrightTimeoutError:
-                print(f"[DEBUG auth] Timeout waiting for URL change. Current URL is {page.url}", file=sys.stderr)
+                logger.debug("Password field is still visible. Checking URL change...")
+                
+            try:
+                if password_field.is_visible():
+                    # Wait for navigation to something that is not the initial login page
+                    page.wait_for_url(lambda u: u != initial_url and "login" not in u.lower() and "sso" not in u.lower(), timeout=10000)
+                    logger.debug("URL changed to %s!", page.url)
+            except Exception:
+                logger.debug("Timeout waiting for URL change. Current URL is %s", page.url)
 
             try:
                 page.wait_for_load_state("networkidle", timeout=8000)
-                page.wait_for_timeout(3000)
-            except PlaywrightTimeoutError:
+            except Exception:
                 pass
-            print(f"[DEBUG auth] Final URL before return: {page.url}", file=sys.stderr)
+            page.wait_for_timeout(3000)
+            logger.debug("Final URL before return: %s", page.url)
 
         page.wait_for_timeout(2_000)
-        page.screenshot(path="debug_after_wait.png")
 
     except PlaywrightTimeoutError as exc:
         raise AuthenticationError(

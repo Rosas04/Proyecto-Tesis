@@ -1,13 +1,31 @@
-from playwright.sync_api import sync_playwright
+import json
+import logging
+import sys
+from agents.capture_agent import CaptureAgent
 
-with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True)
-    page = browser.new_page()
-    page.goto('https://identity.macmillaneducationeverywhere.com/authentication/login', wait_until="domcontentloaded")
-    page.wait_for_timeout(5000)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s', stream=sys.stdout)
+
+def main():
+    print("Iniciando captura con autenticación para: Macmillan")
+    agent = CaptureAgent()
+    auth_config = {
+        "mode": "form",
+        "login_url": "https://www.macmillaneducationeverywhere.com/",
+        "username": "AngelBazauri",
+        "password": "Sebastian123",
+    }
     
-    page.screenshot(path='macmillan_page.png')
-    with open('macmillan_page.html', 'w', encoding='utf-8') as f:
-        f.write(page.content())
+    result = agent.run(url="https://www.macmillaneducationeverywhere.com/", auth=auth_config, max_pages=5)
+    
+    with open("resultado_macmillan.json", "w", encoding="utf-8") as f:
+        json.dump(result, f, indent=2, ensure_ascii=False)
         
-    browser.close()
+    print(f"Status: {result.get('status')}")
+    print(f"Total captures: {result.get('total_captures')}")
+    interfaces = result.get('interfaces', [])
+    print(f"Interfaces: {len(interfaces)}")
+    for i in interfaces:
+        print(f"- {i['route']}")
+        
+if __name__ == "__main__":
+    main()

@@ -19,6 +19,8 @@ def _run_worker(request: dict) -> dict:
     )
     
     if proc.returncode == 0:
+        if proc.stderr:
+            print("WORKER STDERR:\n", proc.stderr, file=sys.stderr)
         return json.loads(proc.stdout)
     else:
         # Raise the error so it can be handled by callers

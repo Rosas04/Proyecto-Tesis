@@ -8,3 +8,15 @@ uploads/
 extracted_projects_temp/
 *.log
 .env
+
+# Ignorar sesiones y archivos generados
+playwright/.auth/
+resultado_*.json
+synthetic_*.json
+data/history.json
+macmillan_page.html
+upao.html
+cli_error_env.txt
+debug_*.png
+*.html
+!templates/

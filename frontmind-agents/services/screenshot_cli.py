@@ -13,6 +13,17 @@ from services.screenshot_worker_impl import (
     take_screenshots_for_multiple_htmls
 )
 
+import logging
+
+# Configure logging to write to progress.txt
+logging.basicConfig(
+    filename='progress.txt',
+    filemode='w',
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    datefmt='%H:%M:%S',
+    level=logging.INFO
+)
+
 def main():
     try:
         # Read request from stdin

@@ -91,21 +91,37 @@ def extract_zip_project(zip_file_path: str):
     extract_dir.mkdir(exist_ok=True)
 
     try:
+        # HIGH-04: Extracción segura — protección contra Zip Slip y Zip Bomb
+        from core.security import safe_extract_zip
+        safe_extract_zip(zip_file_path, str(extract_dir))
+
+        # Post-extracción: filtrar solo archivos de frontend permitidos
         with zipfile.ZipFile(zip_file_path, "r") as zip_ref:
-            # OPTIMIZATION: Only extract valid frontend files to save disk I/O and time!
             for member in zip_ref.infolist():
                 if member.is_dir():
                     continue
-                
                 parts = Path(member.filename).parts
                 if any(d in parts for d in IGNORED_DIRS):
+                    extracted_path = extract_dir / member.filename
+                    if extracted_path.exists():
+                        extracted_path.unlink(missing_ok=True)
                     continue
-                
                 ext = _get_extension(Path(member.filename))
                 if ext not in ALLOWED_EXTENSIONS:
-                    continue
-                
-                zip_ref.extract(member, extract_dir)
+                    extracted_path = extract_dir / member.filename
+                    if extracted_path.exists():
+                        extracted_path.unlink(missing_ok=True)
+
+    except ValueError as e:
+        # Errores de seguridad (Zip Slip, Zip Bomb)
+        return {
+            "status": "error",
+            "message": str(e),
+            "total_files": 0,
+            "interfaces": [],
+            "combined_html": "",
+            "project_type": "unknown",
+        }
     except zipfile.BadZipFile:
         return {
             "status": "error",

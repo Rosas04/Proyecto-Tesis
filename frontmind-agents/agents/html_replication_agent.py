@@ -1,10 +1,15 @@
+from __future__ import annotations
+
+import logging
+import re
+
+import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
-import requests
-import re
-import urllib3
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+from core.security import validate_url
+
+logger = logging.getLogger(__name__)
 
 
 class HtmlReplicationAgent:
@@ -126,11 +131,15 @@ class HtmlReplicationAgent:
 </html>"""
 
     def fetch_css(self, css_url: str):
+        # HIGH-06: Validar URL antes de hacer el request (prevención SSRF)
+        if not validate_url(css_url):
+            logger.debug("fetch_css: URL bloqueada por seguridad: %s", css_url)
+            return ""
         try:
             response = requests.get(
                 css_url,
                 timeout=10,
-                verify=False,  # Bypass SSL certificate errors
+                verify=True,   # CRIT-05: SSL habilitado
                 headers={
                     "User-Agent": (
                         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "

@@ -1,24 +1,31 @@
 import json
-from services.screenshot_worker_impl import take_screenshots
+import logging
+import sys
+from agents.capture_agent import CaptureAgent
 
-url = "https://upao.instructure.com/"
-auth = {
-    "mode": "form",
-    "login_url": "https://upao.instructure.com/",
-    "username": "000247856",
-    "password": "302004Jk"
-}
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s', stream=sys.stdout)
 
-try:
-    print("Running take_screenshots...")
-    result = take_screenshots(url=url, auth=auth, max_pages=10)
+def main():
+    print("Iniciando captura con autenticación para: FrontMind")
+    agent = CaptureAgent()
+    auth_config = {
+        "mode": "form",
+        "login_url": "https://frontmind-frontend.onrender.com/login",
+        "username": "lrosasm@upao.edu.pe",
+        "password": "302004*",
+    }
+    
+    result = agent.run(url="https://frontmind-frontend.onrender.com/", auth=auth_config, max_pages=5)
+    
+    with open("resultado_frontmind.json", "w", encoding="utf-8") as f:
+        json.dump(result, f, indent=2, ensure_ascii=False)
+        
     print(f"Status: {result.get('status')}")
-    print(f"Total interfaces found: {result.get('total_interfaces')}")
-    for idx, interface in enumerate(result.get('interfaces', [])):
-        print(f"  {idx+1}. {interface.get('name')} - {interface.get('url')}")
-        if interface.get('errors'):
-            print(f"     Errors: {interface.get('errors')}")
-except Exception as e:
-    print("Error occurred:")
-    import traceback
-    traceback.print_exc()
+    print(f"Total captures: {result.get('total_captures')}")
+    interfaces = result.get('interfaces', [])
+    print(f"Interfaces: {len(interfaces)}")
+    for i in interfaces:
+        print(f"- {i['route']}")
+        
+if __name__ == "__main__":
+    main()

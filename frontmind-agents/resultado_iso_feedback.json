@@ -4,13 +4,13 @@
   "standard": "ISO/IEC 25010",
   "scope": "Frontend",
   "evaluation": {
-    "global_score": 94,
+    "global_score": 93,
     "quality_level": "Excelente",
     "scores": {
-      "adecuacion_funcional": 95,
+      "adecuacion_funcional": 85,
       "eficiencia_desempeno": 100,
-      "usabilidad": 81,
-      "accesibilidad": 97,
+      "usabilidad": 76,
+      "accesibilidad": 100,
       "mantenibilidad": 100,
       "compatibilidad": 90,
       "seguridad": 100,
@@ -20,44 +20,44 @@
     "findings": [
       {
         "dimension": "Adecuación funcional",
+        "subdimension": "Completitud funcional",
+        "severity": "Alta",
+        "finding": "No se detectó la etiqueta <main> para delimitar el contenido principal.",
+        "recommendation": "Agregar una etiqueta <main> para estructurar el contenido principal de la interfaz."
+      },
+      {
+        "dimension": "Adecuación funcional",
         "subdimension": "Pertinencia funcional",
         "severity": "Media",
         "finding": "No se detectó una estructura de navegación principal (<nav>).",
         "recommendation": "Incorporar una etiqueta <nav> o una estructura equivalente para mejorar la orientación del usuario."
       },
       {
-        "dimension": "Accesibilidad",
-        "subdimension": "Identificación de formularios",
-        "severity": "Alta",
-        "finding": "Se detectaron 1 campos de formulario sin etiqueta accesible (label, aria-label o placeholder). (Encontrado en: <input class=\"link-input\">)",
-        "recommendation": "Asociar cada campo con una etiqueta <label> mediante el atributo 'for', o implementar atributos 'aria-label' / 'placeholder'."
-      },
-      {
         "dimension": "Usabilidad",
         "subdimension": "Protección contra errores de usuario",
         "severity": "Media",
-        "finding": "Se detectaron 1 campos de entrada de datos sin atributos de validación nativos (required, pattern, etc.). (Encontrado en: <input class=\"link-input\">)",
+        "finding": "Se detectaron 2 campos de entrada de datos sin atributos de validación nativos (required, pattern, etc.). (Ejemplo: <input id=\"username\" class=\"ng-untouched ng-pristine ng-invalid\">, <input id=\"password\" class=\"ng-untouched ng-pristine ng-invalid\">)",
         "recommendation": "Agregar validación nativa del navegador mediante atributos como 'required', 'pattern' o tipos específicos (type='email')."
       },
       {
         "dimension": "Usabilidad",
         "subdimension": "Consistencia estética",
         "severity": "Media",
-        "finding": "Se detectó una paleta de colores demasiado amplia (26 colores), afectando la sobriedad estética.",
+        "finding": "Se detectó una paleta de colores demasiado amplia (21 colores), afectando la sobriedad estética.",
         "recommendation": "Establecer una paleta de colores unificada y consistente en el archivo de diseño global."
       },
       {
         "dimension": "Compatibilidad",
         "subdimension": "Coexistencia",
         "severity": "Alta",
-        "finding": "Se detectaron estilos globales directos sobre etiquetas HTML (input, h3) en el bloque <style>.",
+        "finding": "Se detectaron estilos globales directos sobre etiquetas HTML (input) en el bloque <style>.",
         "recommendation": "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM."
       },
       {
         "dimension": "Portabilidad",
         "subdimension": "Adaptabilidad",
         "severity": "Alta",
-        "finding": "Se detectaron 5 reglas de ancho rígido en píxeles (width: >400px) en la estructura.",
+        "finding": "Se detectaron 3 reglas de ancho rígido en píxeles (width: >400px) en la estructura.",
         "recommendation": "Reemplazar anchos fijos en píxeles por unidades de diseño flexible (%, vw, rem, flex) para facilitar la portabilidad en diversos dispositivos."
       }
     ],

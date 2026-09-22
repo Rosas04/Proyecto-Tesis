@@ -1,0 +1,9 @@
+13:17:24 [INFO] === FLUJO AUTENTICADO para https://frontmind-frontend.onrender.com/ ===
+13:17:31 [INFO] Rutas públicas descubiertas ANTES del login: ['https://frontmind-frontend.onrender.com/register', 'https://frontmind-frontend.onrender.com/login']
+13:17:31 [INFO] Ejecutando login en https://frontmind-frontend.onrender.com/...
+13:18:05 [INFO] URL después del login: https://frontmind-frontend.onrender.com/register
+13:18:05 [WARNING] \u26a0\ufe0f El login pudo haber fallado — sigo en la página de auth: https://frontmind-frontend.onrender.com/register
+13:18:05 [INFO] Storage state guardado en: playwright/.auth/session_20260922_181722.json
+13:18:05 [INFO] Total de rutas a capturar: 2 — Internas: 0, Públicas: 2
+13:18:05 [INFO] Capturando [1/2] https://frontmind-frontend.onrender.com/register (PÚBLICA)...
+13:18:12 [INFO] Capturando [2/2] https://frontmind-frontend.onrender.com/login (PÚBLICA)...
