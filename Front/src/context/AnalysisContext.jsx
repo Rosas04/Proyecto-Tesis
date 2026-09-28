@@ -92,11 +92,11 @@ export function AnalysisProvider({ children }) {
       }
     } catch (err) {
       if (err.name === 'AbortError') {
-        console.log("Análisis cancelado.");
+        
         // We already set error in cancelAnalysis, so we do nothing here.
       } else {
         setError(err?.message || "Ocurrió un error. Verifique que el backend esté encendido.");
-        console.error(err);
+        
       }
     } finally {
       if (abortControllerRef.current && abortControllerRef.current.signal === signal) {

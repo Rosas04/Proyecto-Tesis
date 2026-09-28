@@ -2,7 +2,8 @@ import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import "./Sidebar.css";
 import { useAuth } from "../context/AuthContext";
 import { useAnalysis } from "../context/AnalysisContext";
-import logoImg from "../assets/logo.png";
+import logoImgWebp from "../assets/logo.webp";
+import logoImgPng from "../assets/logo.png";
 
 const steps = [
   {
@@ -71,7 +72,7 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
-        <img src={logoImg} alt="FrontMind AI" className="brand-icon" />
+        <picture><source srcSet={logoImgWebp} type="image/webp" /><img src={logoImgPng} alt="FrontMind AI" className="brand-icon"  /></picture>
 
         <div>
           <h1>FrontMind AI</h1>

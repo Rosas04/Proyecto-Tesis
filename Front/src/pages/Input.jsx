@@ -293,9 +293,7 @@ export default function Input() {
             {activeTab === "zip" && (
               <div className="input-panel">
                 <label className={`upload-box ${loading ? 'disabled' : ''}`}>
-                  <input
-                    type="file"
-                    accept=".zip"
+                  <input type="file" aria-label="Archivo ZIP del proyecto" required accept=".zip"
                     onChange={handleZipChange}
                     hidden
                     disabled={loading}

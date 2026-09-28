@@ -45,13 +45,7 @@ const EyeIcon = () => (
     <circle cx="12" cy="12" r="3"></circle>
   </svg>
 );
-const MoreIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="1"></circle>
-    <circle cx="19" cy="12" r="1"></circle>
-    <circle cx="5" cy="12" r="1"></circle>
-  </svg>
-);
+const DownloadIcon = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>);
 const CheckCircleIcon = () => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="20 6 9 17 4 12"></polyline>
@@ -146,7 +140,7 @@ export default function History() {
       const data = await fetchUserRuns(user.id);
       setRuns(data);
     } catch (err) {
-      console.error(err);
+      
       setError("No se pudo cargar el historial de análisis.");
     } finally {
       setLoadingHistory(false);
@@ -161,7 +155,7 @@ export default function History() {
       const data = await fetchRunFindings(run.id);
       setFindings(data);
     } catch (err) {
-      console.error(err);
+      
       setError("No se pudieron cargar los hallazgos de este análisis.");
     } finally {
       setLoadingFindings(false);
@@ -200,7 +194,7 @@ export default function History() {
       };
       setDownloadData({ reportResult: mockReportResult, sourceLabel: projectName });
     } catch (err) {
-      console.error(err);
+      
       setError("No se pudo preparar el reporte para descarga.");
       setGeneratingPdfId(null);
     }
@@ -224,7 +218,7 @@ export default function History() {
           const fileSafeSource = downloadData.sourceLabel.replace(/^https?:\/\//, "").replace(/[^a-zA-Z0-9]/g, "_").slice(0, 40);
           doc.save(`Reporte_${fileSafeSource || "Historial"}.pdf`);
         } catch (err) {
-          console.error(err);
+          
           setError("No se pudo generar el reporte PDF.");
         } finally {
           setGeneratingPdfId(null);
@@ -428,8 +422,8 @@ export default function History() {
                               <button className="btn-details" onClick={() => handleSelectRun(run)}>
                                 <EyeIcon /> Ver detalles
                               </button>
-                              <button className="btn-more" onClick={(e) => handleDownloadReport(run, e)} title="Descargar PDF">
-                                <MoreIcon />
+                              <button className="btn-more" aria-label="Descargar PDF" onClick={(e) => handleDownloadReport(run, e)} title="Descargar PDF">
+                                <DownloadIcon />
                               </button>
                             </div>
                           </td>

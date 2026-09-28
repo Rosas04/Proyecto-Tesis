@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import logoImg from "../assets/logo.png";
+import logoImgWebp from "../assets/logo.webp";
+import logoImgPng from "../assets/logo.png";
 import "./Login.css";
 
 export default function ResetPassword() {
@@ -45,7 +46,7 @@ export default function ResetPassword() {
       navigate("/input");
     } catch (err) {
       setError("No se pudo actualizar la contraseña.");
-      console.error(err);
+      
     } finally {
       setLoading(false);
     }
@@ -55,7 +56,7 @@ export default function ResetPassword() {
     <main className="auth-page">
       <section className="auth-card">
         <div className="auth-brand">
-          <img src={logoImg} alt="FrontMind AI" className="auth-logo" />
+          <picture><source srcSet={logoImgWebp} type="image/webp" /><img src={logoImgPng} alt="FrontMind AI" className="auth-logo"  /></picture>
           <h1>FrontMind AI</h1>
           <p>Nueva contraseña</p>
         </div>

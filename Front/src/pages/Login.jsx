@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import logoImg from "../assets/logo.png";
+import logoImgWebp from "../assets/logo.webp";
+import logoImgPng from "../assets/logo.png";
 import "./Login.css";
 
 export default function Login() {
@@ -36,7 +37,7 @@ export default function Login() {
       navigate("/");
     } catch (err) {
       setError("No se pudo iniciar sesión.");
-      console.error(err);
+      
     } finally {
       setLoading(false);
     }
@@ -46,7 +47,7 @@ export default function Login() {
     <main className="auth-page">
       <section className="auth-card">
         <div className="auth-brand">
-          <img src={logoImg} alt="FrontMind AI" className="auth-logo" />
+          <picture><source srcSet={logoImgWebp} type="image/webp" /><img src={logoImgPng} alt="FrontMind AI" className="auth-logo"  /></picture>
           <h1>FrontMind AI</h1>
           <p>Framework agéntico de evaluación frontend</p>
         </div>
@@ -55,16 +56,14 @@ export default function Login() {
           <h2>Iniciar sesión</h2>
 
           <label>Correo electrónico</label>
-          <input
-            type="email"
+          <input type="email" aria-label="Correo electrónico"
             placeholder="correo@ejemplo.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
 
           <label>Contraseña</label>
-          <input
-            type="password"
+          <input type="password" aria-label="Contraseña"
             placeholder="Ingrese su contraseña"
             value={password}
             onChange={(e) => setPassword(e.target.value)}

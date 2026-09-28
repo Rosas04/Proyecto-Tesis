@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import logoImg from "../assets/logo.png";
+import logoImgWebp from "../assets/logo.webp";
+import logoImgPng from "../assets/logo.png";
 import "./Register.css";
 
 export default function Register() {
@@ -61,7 +62,7 @@ export default function Register() {
           return;
         }
       } catch (apiErr) {
-        console.error("Fallo al verificar el correo mediante el backend:", apiErr);
+        
         setError("Error al verificar el correo. Intente más tarde.");
         setLoading(false);
         return;
@@ -99,7 +100,7 @@ export default function Register() {
       setConfirmPassword("");
     } catch (err) {
       setError("No se pudo crear la cuenta. Intente nuevamente.");
-      console.error(err);
+      
     } finally {
       setLoading(false);
     }
@@ -109,7 +110,7 @@ export default function Register() {
     <main className="auth-page">
       <section className="auth-card">
         <div className="auth-brand">
-          <img src={logoImg} alt="FrontMind AI" className="auth-logo" />
+          <picture><source srcSet={logoImgWebp} type="image/webp" /><img src={logoImgPng} alt="FrontMind AI" className="auth-logo"  /></picture>
           <h1>FrontMind AI</h1>
           <p>Crear una nueva cuenta</p>
         </div>
@@ -118,24 +119,21 @@ export default function Register() {
           <h2>Crear cuenta</h2>
 
           <label>Correo electrónico</label>
-          <input
-            type="email"
+          <input type="email" aria-label="Correo electrónico"
             placeholder="correo@ejemplo.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
 
           <label>Contraseña</label>
-          <input
-            type="password"
+          <input type="password" aria-label="Contraseña"
             placeholder="Mínimo 6 caracteres"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
 
           <label>Confirmar contraseña</label>
-          <input
-            type="password"
+          <input type="password" aria-label="Contraseña"
             placeholder="Repita su contraseña"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}

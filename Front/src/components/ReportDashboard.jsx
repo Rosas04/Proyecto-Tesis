@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import './ReportDashboard.css';
-import logoImg from '../assets/logo.png';
+import logoImgWebp from "../assets/logo.webp";
+import logoImgPng from "../assets/logo.png";
 
 export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, inputType }, ref) => {
   const summary = reportResult?.summary || {};
@@ -80,7 +81,7 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
   const header = (
     <div className="pdf-header">
       <div className="pdf-header-left">
-        <img src={logoImg} alt="Logo" className="pdf-logo" />
+        <picture><source srcSet={logoImgWebp} type="image/webp" /><img src={logoImgPng} alt="Logo" className="pdf-logo"  /></picture>
         <div>
           <h2>FrontMind AI</h2>
           <p>Análisis inteligente de código frontend</p>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { ReportWebDashboard } from "../components/ReportWebDashboard";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import Sidebar from "../components/Sidebar";
@@ -36,7 +37,7 @@ export default function Report() {
         setReportResult(JSON.parse(savedReport));
         return;
       } catch (err) {
-        console.error(err);
+        
       }
     }
 
@@ -63,7 +64,7 @@ export default function Report() {
       generateTechnicalReport(evaluationData);
     } catch (err) {
       setError("No se pudo leer la evaluación almacenada.");
-      console.error(err);
+      
     }
   }, []);
 
@@ -119,7 +120,7 @@ export default function Report() {
               }
               localProjectName = hostname || localInputUrl;
             } catch (e) {
-              console.error("Error al extraer el dominio de la URL:", e);
+              
               localProjectName = localInputUrl;
             }
           }
@@ -134,16 +135,16 @@ export default function Report() {
             inputHash: localInputHash,
             projectName: localProjectName,
           });
-          console.log("Análisis guardado en historial de Supabase exitosamente.");
+          
         } catch (dbErr) {
-          console.error("Error al persistir el análisis en Supabase:", dbErr);
+          
         }
       }
     } catch (err) {
       setError(
         "No se pudo generar el reporte técnico. Verifique que el backend esté encendido."
       );
-      console.error(err);
+      
     } finally {
       setLoading(false);
     }
@@ -250,7 +251,7 @@ export default function Report() {
       doc.save(`reporte-frontmind-${fileSafeSource || "evaluacion"}.pdf`);
     } catch (err) {
       setError("No se pudo generar el archivo PDF del reporte.");
-      console.error(err);
+      
     } finally {
       setGeneratingPdf(false);
     }

@@ -75,7 +75,7 @@ export default function Home() {
           setLatestFindings(findingsData || []);
         }
       } catch (err) {
-        console.error("Error loading dashboard data:", err);
+        
       } finally {
         setLoading(false);
       }

@@ -114,7 +114,7 @@ app = FastAPI(
 
 _raw_origins = os.environ.get(
     "ALLOWED_ORIGINS",
-    "http://localhost:5173",   # fallback: solo desarrollo local
+    "http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5200",   # fallback: solo desarrollo local
 )
 ALLOWED_ORIGINS = [o.strip() for o in _raw_origins.split(",") if o.strip()]
 

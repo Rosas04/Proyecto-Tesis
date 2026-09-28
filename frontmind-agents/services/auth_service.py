@@ -230,6 +230,7 @@ def perform_form_login(
 
         # 3. Enviar el formulario (Submit)
         # Buscar y clickear el botón explícitamente
+        clicked = False
         try:
             submit_btn = None
             if auth.get("submit_selector"):
@@ -244,10 +245,11 @@ def perform_form_login(
                     
             if submit_btn is None:
                 loc1 = page.locator("button[type='submit'], input[type='submit']")
-                loc2 = page.locator("button:has-text('login'), button:has-text('ingresar'), button:has-text('iniciar')")
-                loc3 = page.locator("button")
+                loc2 = page.locator("button:has-text('login'), button:has-text('ingresar'), button:has-text('iniciar'), button:has-text('acceder'), button:has-text('entrar')")
+                loc3 = page.locator("a:has-text('login'), a:has-text('ingresar'), a:has-text('iniciar'), a:has-text('acceder'), a:has-text('entrar')")
+                loc4 = page.locator("[role='button']:has-text('login'), [role='button']:has-text('ingresar'), [role='button']:has-text('iniciar'), [role='button']:has-text('acceder'), [role='button']:has-text('entrar')")
                 
-                for loc in [loc1, loc2, loc3]:
+                for loc in [loc1, loc2, loc3, loc4]:
                     for element in loc.all():
                         if element.is_visible():
                             submit_btn = element
@@ -257,8 +259,18 @@ def perform_form_login(
                         
             if submit_btn and submit_btn.is_visible():
                 submit_btn.click(timeout=3000)
+                clicked = True
         except Exception:
             pass
+            
+        if not clicked:
+            try:
+                # Fallback: press Enter on the password field
+                logger.info("Botón de submit no clickeado, intentando presionar Enter en el campo de contraseña...")
+                password_field.press("Enter")
+            except Exception as e:
+                logger.debug("Error pressing Enter on password field: %s", e)
+
 
         # 4. Esperar a que pase el login (Redirección o cambio de DOM)
         success_selector = auth.get("success_selector")

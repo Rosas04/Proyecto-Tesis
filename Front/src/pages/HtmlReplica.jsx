@@ -80,7 +80,7 @@ export default function HtmlReplica() {
       }
     } catch (err) {
       setError("No se pudo leer la información almacenada.");
-      console.error(err);
+      
     }
   }, []);
 
@@ -116,7 +116,7 @@ export default function HtmlReplica() {
       // storageService.setHtmlReplicaResult(result);
     } catch (err) {
       setError("No se pudo generar la réplica HTML. Verifique que el backend esté encendido.");
-      console.error(err);
+      
     } finally {
       setLoading(false);
     }
@@ -171,7 +171,7 @@ export default function HtmlReplica() {
       }));
     } catch (err) {
       setError("No se pudo generar la réplica HTML para esta interfaz.");
-      console.error(err);
+      
     } finally {
       setLoading(false);
     }
@@ -223,7 +223,7 @@ export default function HtmlReplica() {
     try {
       if (!storageService.setHtmlToEvaluate(htmlPreview)) {
         // Fallback for quota limit
-        console.warn("Quota exceeded, cleaning older storage...");
+        
         storageService.removeItem("zipResult");
         storageService.removeItem("captureResult");
         storageService.removeItem("htmlReplicaResult");
@@ -235,7 +235,7 @@ export default function HtmlReplica() {
       }
       navigate("/evaluation");
     } catch (e) {
-      console.error(e);
+      
     }
   };
 

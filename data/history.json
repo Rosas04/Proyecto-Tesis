@@ -396,5 +396,1588 @@
   },
   {
     "test": "success"
+  },
+  {
+    "timestamp": "2026-09-22T02:18:55.305461Z",
+    "user_id": "43b26d92-4355-4e5e-9673-35611260bda0",
+    "evaluation": [
+      {
+        "agent": "ISOEvaluationAgent",
+        "status": "completed",
+        "standard": "ISO/IEC 25010",
+        "scope": "Frontend",
+        "evaluation": {
+          "global_score": 84,
+          "quality_level": "Alto",
+          "scores": {
+            "adecuacion_funcional": 65,
+            "eficiencia_desempeno": 92,
+            "usabilidad": 51,
+            "accesibilidad": 87,
+            "mantenibilidad": 100,
+            "compatibilidad": 90,
+            "seguridad": 100,
+            "portabilidad": 90
+          },
+          "total_findings": 11,
+          "findings": [
+            {
+              "dimension": "Adecuación funcional",
+              "subdimension": "Completitud funcional",
+              "severity": "Alta",
+              "finding": "No se detectó la etiqueta <main> para delimitar el contenido principal.",
+              "recommendation": "Agregar una etiqueta <main> para estructurar el contenido principal de la interfaz."
+            },
+            {
+              "dimension": "Adecuación funcional",
+              "subdimension": "Pertinencia funcional",
+              "severity": "Media",
+              "finding": "No se detectó una estructura de navegación principal (<nav>).",
+              "recommendation": "Incorporar una etiqueta <nav> o una estructura equivalente para mejorar la orientación del usuario."
+            },
+            {
+              "dimension": "Adecuación funcional",
+              "subdimension": "Comprensibilidad",
+              "severity": "Alta",
+              "finding": "No se detectó un encabezado principal <h1>.",
+              "recommendation": "Agregar un <h1> claro y único que indique el propósito principal de la interfaz."
+            },
+            {
+              "dimension": "Adecuación funcional",
+              "subdimension": "Completitud funcional",
+              "severity": "Alta",
+              "finding": "No se detectaron elementos visuales para el manejo de estados de carga (spinners/skeletons), errores o estados vacíos.",
+              "recommendation": "Implementar estados visuales de carga, control de excepciones (Error Boundaries/alertas) y estados vacíos en el ciclo de vida asíncrono."
+            },
+            {
+              "dimension": "Accesibilidad",
+              "subdimension": "Texto alternativo",
+              "severity": "Alta",
+              "finding": "Se detectaron 1 imágenes sin atributo alt. (Ejemplo: <img src=\"/img/upao_login.png\">)",
+              "recommendation": "Agregar texto alternativo descriptivo en imágenes informativas y alt vacío (alt='') en imágenes decorativas."
+            },
+            {
+              "dimension": "Usabilidad",
+              "subdimension": "Protección contra errores de usuario",
+              "severity": "Media",
+              "finding": "Se detectaron 2 campos de entrada de datos sin atributos de validación nativos (required, pattern, etc.). (Ejemplo: <input class=\"input-field\">, <input class=\"input-field\">)",
+              "recommendation": "Agregar validación nativa del navegador mediante atributos como 'required', 'pattern' o tipos específicos (type='email')."
+            },
+            {
+              "dimension": "Accesibilidad",
+              "subdimension": "Contraste mínimo",
+              "severity": "Media",
+              "finding": "Se detectaron 1 elementos con contraste de color bajo (< 4.5:1), dificultando la legibilidad. (Ejemplo: <input class=\"submit-w3\">)",
+              "recommendation": "Asegurar una relación de contraste mínima de 4.5:1 para texto normal y de 3:1 para texto grande según la WCAG AA."
+            },
+            {
+              "dimension": "Usabilidad",
+              "subdimension": "Consistencia estética",
+              "severity": "Media",
+              "finding": "Se detectó una paleta de colores demasiado amplia (26 colores), afectando la sobriedad estética.",
+              "recommendation": "Establecer una paleta de colores unificada y consistente en el archivo de diseño global."
+            },
+            {
+              "dimension": "Usabilidad",
+              "subdimension": "Estética de la interfaz",
+              "severity": "Media",
+              "finding": "Se detectaron 1 elementos multimedia (imágenes/iframes) sin dimensiones explícitas, propiciando saltos de diseño (CLS). (Ejemplo: <img src=\"/img/upao_login.png\">)",
+              "recommendation": "Definir siempre atributos width/height en etiquetas de imágenes o configurar relaciones de aspecto en CSS (aspect-ratio)."
+            },
+            {
+              "dimension": "Compatibilidad",
+              "subdimension": "Coexistencia",
+              "severity": "Alta",
+              "finding": "Se detectaron estilos globales directos sobre etiquetas HTML (h3, h1, p, body, span, a, div, h2, input) en el bloque <style>.",
+              "recommendation": "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM."
+            },
+            {
+              "dimension": "Portabilidad",
+              "subdimension": "Adaptabilidad",
+              "severity": "Alta",
+              "finding": "Se detectaron 20 reglas de ancho rígido en píxeles (width: >400px) en la estructura.",
+              "recommendation": "Reemplazar anchos fijos en píxeles por unidades de diseño flexible (%, vw, rem, flex) para facilitar la portabilidad en diversos dispositivos."
+            }
+          ],
+          "engineering_tips": [
+            "Optimizar el marcado HTML y refactorizar dependencias para lograr la conformidad."
+          ],
+          "strict_mode": true,
+          "name": "combined"
+        }
+      }
+    ],
+    "report": {
+      "agent": "ReportAgent",
+      "status": "completed",
+      "standard": "ISO/IEC 25010",
+      "scope": "Frontend (Consolidado)",
+      "generated_at": "2026-09-21 21:18:55",
+      "summary": {
+        "total_interfaces": 1,
+        "global_score": 84,
+        "quality_level": "Alto",
+        "total_findings": 11,
+        "best_interface": "combined",
+        "worst_interface": "combined",
+        "severity_summary": {
+          "Crítica": 0,
+          "Alta": 6,
+          "Media": 5,
+          "Baja": 0
+        },
+        "dimension_summary": {
+          "Adecuación funcional": 4,
+          "Accesibilidad": 2,
+          "Usabilidad": 3,
+          "Compatibilidad": 1,
+          "Portabilidad": 1
+        }
+      },
+      "scores": {
+        "adecuacion_funcional": 65,
+        "eficiencia_desempeno": 92,
+        "usabilidad": 51,
+        "accesibilidad": 87,
+        "mantenibilidad": 100,
+        "compatibilidad": 90,
+        "seguridad": 100,
+        "portabilidad": 90
+      },
+      "findings": [
+        {
+          "dimension": "Adecuación funcional",
+          "subdimension": "Completitud funcional",
+          "severity": "Alta",
+          "finding": "No se detectó la etiqueta <main> para delimitar el contenido principal.",
+          "recommendation": "Agregar una etiqueta <main> para estructurar el contenido principal de la interfaz."
+        },
+        {
+          "dimension": "Adecuación funcional",
+          "subdimension": "Pertinencia funcional",
+          "severity": "Media",
+          "finding": "No se detectó una estructura de navegación principal (<nav>).",
+          "recommendation": "Incorporar una etiqueta <nav> o una estructura equivalente para mejorar la orientación del usuario."
+        },
+        {
+          "dimension": "Adecuación funcional",
+          "subdimension": "Comprensibilidad",
+          "severity": "Alta",
+          "finding": "No se detectó un encabezado principal <h1>.",
+          "recommendation": "Agregar un <h1> claro y único que indique el propósito principal de la interfaz."
+        },
+        {
+          "dimension": "Adecuación funcional",
+          "subdimension": "Completitud funcional",
+          "severity": "Alta",
+          "finding": "No se detectaron elementos visuales para el manejo de estados de carga (spinners/skeletons), errores o estados vacíos.",
+          "recommendation": "Implementar estados visuales de carga, control de excepciones (Error Boundaries/alertas) y estados vacíos en el ciclo de vida asíncrono."
+        },
+        {
+          "dimension": "Accesibilidad",
+          "subdimension": "Texto alternativo",
+          "severity": "Alta",
+          "finding": "Se detectaron 1 imágenes sin atributo alt. (Ejemplo: <img src=\"/img/upao_login.png\">)",
+          "recommendation": "Agregar texto alternativo descriptivo en imágenes informativas y alt vacío (alt='') en imágenes decorativas."
+        },
+        {
+          "dimension": "Usabilidad",
+          "subdimension": "Protección contra errores de usuario",
+          "severity": "Media",
+          "finding": "Se detectaron 2 campos de entrada de datos sin atributos de validación nativos (required, pattern, etc.). (Ejemplo: <input class=\"input-field\">, <input class=\"input-field\">)",
+          "recommendation": "Agregar validación nativa del navegador mediante atributos como 'required', 'pattern' o tipos específicos (type='email')."
+        },
+        {
+          "dimension": "Accesibilidad",
+          "subdimension": "Contraste mínimo",
+          "severity": "Media",
+          "finding": "Se detectaron 1 elementos con contraste de color bajo (< 4.5:1), dificultando la legibilidad. (Ejemplo: <input class=\"submit-w3\">)",
+          "recommendation": "Asegurar una relación de contraste mínima de 4.5:1 para texto normal y de 3:1 para texto grande según la WCAG AA."
+        },
+        {
+          "dimension": "Usabilidad",
+          "subdimension": "Consistencia estética",
+          "severity": "Media",
+          "finding": "Se detectó una paleta de colores demasiado amplia (26 colores), afectando la sobriedad estética.",
+          "recommendation": "Establecer una paleta de colores unificada y consistente en el archivo de diseño global."
+        },
+        {
+          "dimension": "Usabilidad",
+          "subdimension": "Estética de la interfaz",
+          "severity": "Media",
+          "finding": "Se detectaron 1 elementos multimedia (imágenes/iframes) sin dimensiones explícitas, propiciando saltos de diseño (CLS). (Ejemplo: <img src=\"/img/upao_login.png\">)",
+          "recommendation": "Definir siempre atributos width/height en etiquetas de imágenes o configurar relaciones de aspecto en CSS (aspect-ratio)."
+        },
+        {
+          "dimension": "Compatibilidad",
+          "subdimension": "Coexistencia",
+          "severity": "Alta",
+          "finding": "Se detectaron estilos globales directos sobre etiquetas HTML (h3, h1, p, body, span, a, div, h2, input) en el bloque <style>.",
+          "recommendation": "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM."
+        },
+        {
+          "dimension": "Portabilidad",
+          "subdimension": "Adaptabilidad",
+          "severity": "Alta",
+          "finding": "Se detectaron 20 reglas de ancho rígido en píxeles (width: >400px) en la estructura.",
+          "recommendation": "Reemplazar anchos fijos en píxeles por unidades de diseño flexible (%, vw, rem, flex) para facilitar la portabilidad en diversos dispositivos."
+        }
+      ],
+      "main_recommendations": [
+        "Agregar una etiqueta <main> para estructurar el contenido principal de la interfaz.",
+        "Incorporar una etiqueta <nav> o una estructura equivalente para mejorar la orientación del usuario.",
+        "Agregar un <h1> claro y único que indique el propósito principal de la interfaz.",
+        "Implementar estados visuales de carga, control de excepciones (Error Boundaries/alertas) y estados vacíos en el ciclo de vida asíncrono.",
+        "Agregar texto alternativo descriptivo en imágenes informativas y alt vacío (alt='') en imágenes decorativas.",
+        "Agregar validación nativa del navegador mediante atributos como 'required', 'pattern' o tipos específicos (type='email').",
+        "Asegurar una relación de contraste mínima de 4.5:1 para texto normal y de 3:1 para texto grande según la WCAG AA.",
+        "Establecer una paleta de colores unificada y consistente en el archivo de diseño global.",
+        "Definir siempre atributos width/height en etiquetas de imágenes o configurar relaciones de aspecto en CSS (aspect-ratio).",
+        "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM."
+      ],
+      "technical_conclusion": "La interfaz frontend presenta un nivel de calidad alto. Se recomienda atender los hallazgos identificados para fortalecer el cumplimiento de las características de calidad de la norma ISO/IEC 25010."
+    }
+  },
+  {
+    "timestamp": "2026-09-22T08:25:41.671371Z",
+    "user_id": "43b26d92-4355-4e5e-9673-35611260bda0",
+    "evaluation": [
+      {
+        "agent": "ISOEvaluationAgent",
+        "status": "completed",
+        "standard": "ISO/IEC 25010",
+        "scope": "Frontend",
+        "evaluation": {
+          "global_score": 83,
+          "quality_level": "Alto",
+          "scores": {
+            "adecuacion_funcional": 85,
+            "eficiencia_desempeno": 82,
+            "usabilidad": 62,
+            "accesibilidad": 80,
+            "mantenibilidad": 75,
+            "compatibilidad": 90,
+            "seguridad": 100,
+            "portabilidad": 90
+          },
+          "total_findings": 10,
+          "findings": [
+            {
+              "dimension": "Adecuación funcional",
+              "subdimension": "Completitud funcional",
+              "severity": "Alta",
+              "finding": "No se detectó la etiqueta <main> para delimitar el contenido principal.",
+              "recommendation": "Agregar una etiqueta <main> para estructurar el contenido principal de la interfaz."
+            },
+            {
+              "dimension": "Adecuación funcional",
+              "subdimension": "Jerarquía de información",
+              "severity": "Media",
+              "finding": "Se detectaron 2 encabezados <h1> en la interfaz. (Ejemplo: <h1 class=\"course-title\">, <h1 class=\"page-title\">)",
+              "recommendation": "Mantener un solo encabezado <h1> principal y organizar el resto con <h2>, <h3> y niveles posteriores."
+            },
+            {
+              "dimension": "Accesibilidad",
+              "subdimension": "Contraste mínimo",
+              "severity": "Media",
+              "finding": "Se detectaron 4 elementos con contraste de color bajo (< 4.5:1), dificultando la legibilidad. (Ejemplo: <div>, <div class=\"d-flex justify-content-center mb-4\">, <div>...)",
+              "recommendation": "Asegurar una relación de contraste mínima de 4.5:1 para texto normal y de 3:1 para texto grande según la WCAG AA."
+            },
+            {
+              "dimension": "Accesibilidad",
+              "subdimension": "Flujo de enfoque",
+              "severity": "Alta",
+              "finding": "Se detectaron 1 elementos con 'tabindex' mayor a 0, alterando la navegación natural. (Ejemplo: <div>)",
+              "recommendation": "Evitar el uso de tabindex > 0. Utilizar tabindex='0' para elementos interactivos personalizados y estructurar el DOM lógicamente."
+            },
+            {
+              "dimension": "Usabilidad",
+              "subdimension": "Consistencia estética",
+              "severity": "Media",
+              "finding": "Se detectó una paleta de colores demasiado amplia (347 colores), afectando la sobriedad estética.",
+              "recommendation": "Establecer una paleta de colores unificada y consistente en el archivo de diseño global."
+            },
+            {
+              "dimension": "Usabilidad",
+              "subdimension": "Estética de la interfaz",
+              "severity": "Media",
+              "finding": "Se detectaron 1 elementos multimedia (imágenes/iframes) sin dimensiones explícitas, propiciando saltos de diseño (CLS). (Ejemplo: <img src=\"https://upao.instructure.com/images/thumbnails/328\">)",
+              "recommendation": "Definir siempre atributos width/height en etiquetas de imágenes o configurar relaciones de aspecto en CSS (aspect-ratio)."
+            },
+            {
+              "dimension": "Eficiencia de desempeño",
+              "subdimension": "Tamaño del documento",
+              "severity": "Media",
+              "finding": "El tamaño del archivo HTML supera los 80KB.",
+              "recommendation": "Dividir el HTML, remover scripts embebidos pesados e implementar renderizado dinámico o compresión Gzip/Brotli."
+            },
+            {
+              "dimension": "Compatibilidad",
+              "subdimension": "Coexistencia",
+              "severity": "Alta",
+              "finding": "Se detectaron estilos globales directos sobre etiquetas HTML (h2, span, p, button, h3, a, div, input, body) en el bloque <style>.",
+              "recommendation": "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM."
+            },
+            {
+              "dimension": "Mantenibilidad",
+              "subdimension": "Modificabilidad",
+              "severity": "Media",
+              "finding": "Se detectaron 55 elementos con estilos inline directos. (Ejemplo: <span id=\"mobileHeaderInboxUnreadBadge\" class=\"menu-item__badge\">, <svg class=\"css-1uh2md0-inlineSVG-svgIcon\">...)",
+              "recommendation": "Migrar estilos inline hacia clases en hojas de estilo CSS reutilizables para facilitar la mantenibilidad."
+            },
+            {
+              "dimension": "Portabilidad",
+              "subdimension": "Adaptabilidad",
+              "severity": "Alta",
+              "finding": "Se detectaron 502 reglas de ancho rígido en píxeles (width: >400px) en la estructura.",
+              "recommendation": "Reemplazar anchos fijos en píxeles por unidades de diseño flexible (%, vw, rem, flex) para facilitar la portabilidad en diversos dispositivos."
+            }
+          ],
+          "engineering_tips": [
+            "Optimizar el marcado HTML y refactorizar dependencias para lograr la conformidad."
+          ],
+          "strict_mode": true,
+          "name": "combined"
+        }
+      }
+    ],
+    "report": {
+      "agent": "ReportAgent",
+      "status": "completed",
+      "standard": "ISO/IEC 25010",
+      "scope": "Frontend (Consolidado)",
+      "generated_at": "2026-09-22 03:25:41",
+      "summary": {
+        "total_interfaces": 1,
+        "global_score": 83,
+        "quality_level": "Alto",
+        "total_findings": 10,
+        "best_interface": "combined",
+        "worst_interface": "combined",
+        "severity_summary": {
+          "Crítica": 0,
+          "Alta": 4,
+          "Media": 6,
+          "Baja": 0
+        },
+        "dimension_summary": {
+          "Adecuación funcional": 2,
+          "Accesibilidad": 2,
+          "Usabilidad": 2,
+          "Eficiencia de desempeño": 1,
+          "Compatibilidad": 1,
+          "Mantenibilidad": 1,
+          "Portabilidad": 1
+        }
+      },
+      "scores": {
+        "adecuacion_funcional": 85,
+        "eficiencia_desempeno": 82,
+        "usabilidad": 62,
+        "accesibilidad": 80,
+        "mantenibilidad": 75,
+        "compatibilidad": 90,
+        "seguridad": 100,
+        "portabilidad": 90
+      },
+      "findings": [
+        {
+          "dimension": "Adecuación funcional",
+          "subdimension": "Completitud funcional",
+          "severity": "Alta",
+          "finding": "No se detectó la etiqueta <main> para delimitar el contenido principal.",
+          "recommendation": "Agregar una etiqueta <main> para estructurar el contenido principal de la interfaz."
+        },
+        {
+          "dimension": "Adecuación funcional",
+          "subdimension": "Jerarquía de información",
+          "severity": "Media",
+          "finding": "Se detectaron 2 encabezados <h1> en la interfaz. (Ejemplo: <h1 class=\"course-title\">, <h1 class=\"page-title\">)",
+          "recommendation": "Mantener un solo encabezado <h1> principal y organizar el resto con <h2>, <h3> y niveles posteriores."
+        },
+        {
+          "dimension": "Accesibilidad",
+          "subdimension": "Contraste mínimo",
+          "severity": "Media",
+          "finding": "Se detectaron 4 elementos con contraste de color bajo (< 4.5:1), dificultando la legibilidad. (Ejemplo: <div>, <div class=\"d-flex justify-content-center mb-4\">, <div>...)",
+          "recommendation": "Asegurar una relación de contraste mínima de 4.5:1 para texto normal y de 3:1 para texto grande según la WCAG AA."
+        },
+        {
+          "dimension": "Accesibilidad",
+          "subdimension": "Flujo de enfoque",
+          "severity": "Alta",
+          "finding": "Se detectaron 1 elementos con 'tabindex' mayor a 0, alterando la navegación natural. (Ejemplo: <div>)",
+          "recommendation": "Evitar el uso de tabindex > 0. Utilizar tabindex='0' para elementos interactivos personalizados y estructurar el DOM lógicamente."
+        },
+        {
+          "dimension": "Usabilidad",
+          "subdimension": "Consistencia estética",
+          "severity": "Media",
+          "finding": "Se detectó una paleta de colores demasiado amplia (347 colores), afectando la sobriedad estética.",
+          "recommendation": "Establecer una paleta de colores unificada y consistente en el archivo de diseño global."
+        },
+        {
+          "dimension": "Usabilidad",
+          "subdimension": "Estética de la interfaz",
+          "severity": "Media",
+          "finding": "Se detectaron 1 elementos multimedia (imágenes/iframes) sin dimensiones explícitas, propiciando saltos de diseño (CLS). (Ejemplo: <img src=\"https://upao.instructure.com/images/thumbnails/328\">)",
+          "recommendation": "Definir siempre atributos width/height en etiquetas de imágenes o configurar relaciones de aspecto en CSS (aspect-ratio)."
+        },
+        {
+          "dimension": "Eficiencia de desempeño",
+          "subdimension": "Tamaño del documento",
+          "severity": "Media",
+          "finding": "El tamaño del archivo HTML supera los 80KB.",
+          "recommendation": "Dividir el HTML, remover scripts embebidos pesados e implementar renderizado dinámico o compresión Gzip/Brotli."
+        },
+        {
+          "dimension": "Compatibilidad",
+          "subdimension": "Coexistencia",
+          "severity": "Alta",
+          "finding": "Se detectaron estilos globales directos sobre etiquetas HTML (h2, span, p, button, h3, a, div, input, body) en el bloque <style>.",
+          "recommendation": "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM."
+        },
+        {
+          "dimension": "Mantenibilidad",
+          "subdimension": "Modificabilidad",
+          "severity": "Media",
+          "finding": "Se detectaron 55 elementos con estilos inline directos. (Ejemplo: <span id=\"mobileHeaderInboxUnreadBadge\" class=\"menu-item__badge\">, <svg class=\"css-1uh2md0-inlineSVG-svgIcon\">...)",
+          "recommendation": "Migrar estilos inline hacia clases en hojas de estilo CSS reutilizables para facilitar la mantenibilidad."
+        },
+        {
+          "dimension": "Portabilidad",
+          "subdimension": "Adaptabilidad",
+          "severity": "Alta",
+          "finding": "Se detectaron 502 reglas de ancho rígido en píxeles (width: >400px) en la estructura.",
+          "recommendation": "Reemplazar anchos fijos en píxeles por unidades de diseño flexible (%, vw, rem, flex) para facilitar la portabilidad en diversos dispositivos."
+        }
+      ],
+      "main_recommendations": [
+        "Agregar una etiqueta <main> para estructurar el contenido principal de la interfaz.",
+        "Mantener un solo encabezado <h1> principal y organizar el resto con <h2>, <h3> y niveles posteriores.",
+        "Asegurar una relación de contraste mínima de 4.5:1 para texto normal y de 3:1 para texto grande según la WCAG AA.",
+        "Evitar el uso de tabindex > 0. Utilizar tabindex='0' para elementos interactivos personalizados y estructurar el DOM lógicamente.",
+        "Establecer una paleta de colores unificada y consistente en el archivo de diseño global.",
+        "Definir siempre atributos width/height en etiquetas de imágenes o configurar relaciones de aspecto en CSS (aspect-ratio).",
+        "Dividir el HTML, remover scripts embebidos pesados e implementar renderizado dinámico o compresión Gzip/Brotli.",
+        "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM.",
+        "Migrar estilos inline hacia clases en hojas de estilo CSS reutilizables para facilitar la mantenibilidad.",
+        "Reemplazar anchos fijos en píxeles por unidades de diseño flexible (%, vw, rem, flex) para facilitar la portabilidad en diversos dispositivos."
+      ],
+      "technical_conclusion": "La interfaz frontend presenta un nivel de calidad alto. Se recomienda atender los hallazgos identificados para fortalecer el cumplimiento de las características de calidad de la norma ISO/IEC 25010."
+    }
+  },
+  {
+    "timestamp": "2026-09-22T09:06:16.578567Z",
+    "user_id": "43b26d92-4355-4e5e-9673-35611260bda0",
+    "evaluation": [
+      {
+        "agent": "ISOEvaluationAgent",
+        "status": "completed",
+        "standard": "ISO/IEC 25010",
+        "scope": "Frontend",
+        "evaluation": {
+          "global_score": 83,
+          "quality_level": "Alto",
+          "scores": {
+            "adecuacion_funcional": 90,
+            "eficiencia_desempeno": 82,
+            "usabilidad": 67,
+            "accesibilidad": 80,
+            "mantenibilidad": 65,
+            "compatibilidad": 90,
+            "seguridad": 100,
+            "portabilidad": 90
+          },
+          "total_findings": 10,
+          "findings": [
+            {
+              "dimension": "Adecuación funcional",
+              "subdimension": "Completitud funcional",
+              "severity": "Alta",
+              "finding": "No se detectó la etiqueta <main> para delimitar el contenido principal.",
+              "recommendation": "Agregar una etiqueta <main> para estructurar el contenido principal de la interfaz."
+            },
+            {
+              "dimension": "Accesibilidad",
+              "subdimension": "Contraste mínimo",
+              "severity": "Media",
+              "finding": "Se detectaron 1 elementos con contraste de color bajo (< 4.5:1), dificultando la legibilidad. (Ejemplo: <div>)",
+              "recommendation": "Asegurar una relación de contraste mínima de 4.5:1 para texto normal y de 3:1 para texto grande según la WCAG AA."
+            },
+            {
+              "dimension": "Accesibilidad",
+              "subdimension": "Flujo de enfoque",
+              "severity": "Alta",
+              "finding": "Se detectaron 1 elementos con 'tabindex' mayor a 0, alterando la navegación natural. (Ejemplo: <div>)",
+              "recommendation": "Evitar el uso de tabindex > 0. Utilizar tabindex='0' para elementos interactivos personalizados y estructurar el DOM lógicamente."
+            },
+            {
+              "dimension": "Usabilidad",
+              "subdimension": "Consistencia estética",
+              "severity": "Media",
+              "finding": "Se detectó una paleta de colores demasiado amplia (357 colores), afectando la sobriedad estética.",
+              "recommendation": "Establecer una paleta de colores unificada y consistente en el archivo de diseño global."
+            },
+            {
+              "dimension": "Usabilidad",
+              "subdimension": "Estética de la interfaz",
+              "severity": "Media",
+              "finding": "Se detectaron 1 elementos multimedia (imágenes/iframes) sin dimensiones explícitas, propiciando saltos de diseño (CLS). (Ejemplo: <img src=\"https://upao.instructure.com/images/thumbnails/328\">)",
+              "recommendation": "Definir siempre atributos width/height en etiquetas de imágenes o configurar relaciones de aspecto en CSS (aspect-ratio)."
+            },
+            {
+              "dimension": "Eficiencia de desempeño",
+              "subdimension": "Tamaño del documento",
+              "severity": "Media",
+              "finding": "El tamaño del archivo HTML supera los 80KB.",
+              "recommendation": "Dividir el HTML, remover scripts embebidos pesados e implementar renderizado dinámico o compresión Gzip/Brotli."
+            },
+            {
+              "dimension": "Compatibilidad",
+              "subdimension": "Coexistencia",
+              "severity": "Alta",
+              "finding": "Se detectaron estilos globales directos sobre etiquetas HTML (h2, span, p, button, h3, a, div, input, body) en el bloque <style>.",
+              "recommendation": "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM."
+            },
+            {
+              "dimension": "Mantenibilidad",
+              "subdimension": "Modularidad y semántica",
+              "severity": "Media",
+              "finding": "Se detectó duplicación de estructuras complejas en el DOM que no están modularizadas.",
+              "recommendation": "Identificar patrones repetitivos en el marcado y modularizarlos en componentes de UI reutilizables."
+            },
+            {
+              "dimension": "Mantenibilidad",
+              "subdimension": "Modificabilidad",
+              "severity": "Media",
+              "finding": "Se detectaron 33 elementos con estilos inline directos. (Ejemplo: <span id=\"mobileHeaderInboxUnreadBadge\" class=\"menu-item__badge\">, <div>...)",
+              "recommendation": "Migrar estilos inline hacia clases en hojas de estilo CSS reutilizables para facilitar la mantenibilidad."
+            },
+            {
+              "dimension": "Portabilidad",
+              "subdimension": "Adaptabilidad",
+              "severity": "Alta",
+              "finding": "Se detectaron 517 reglas de ancho rígido en píxeles (width: >400px) en la estructura.",
+              "recommendation": "Reemplazar anchos fijos en píxeles por unidades de diseño flexible (%, vw, rem, flex) para facilitar la portabilidad en diversos dispositivos."
+            }
+          ],
+          "engineering_tips": [
+            "Optimizar el marcado HTML y refactorizar dependencias para lograr la conformidad."
+          ],
+          "strict_mode": true,
+          "name": "combined"
+        }
+      }
+    ],
+    "report": {
+      "agent": "ReportAgent",
+      "status": "completed",
+      "standard": "ISO/IEC 25010",
+      "scope": "Frontend (Consolidado)",
+      "generated_at": "2026-09-22 04:06:16",
+      "summary": {
+        "total_interfaces": 1,
+        "global_score": 83,
+        "quality_level": "Alto",
+        "total_findings": 10,
+        "best_interface": "combined",
+        "worst_interface": "combined",
+        "severity_summary": {
+          "Crítica": 0,
+          "Alta": 4,
+          "Media": 6,
+          "Baja": 0
+        },
+        "dimension_summary": {
+          "Adecuación funcional": 1,
+          "Accesibilidad": 2,
+          "Usabilidad": 2,
+          "Eficiencia de desempeño": 1,
+          "Compatibilidad": 1,
+          "Mantenibilidad": 2,
+          "Portabilidad": 1
+        }
+      },
+      "scores": {
+        "adecuacion_funcional": 90,
+        "eficiencia_desempeno": 82,
+        "usabilidad": 67,
+        "accesibilidad": 80,
+        "mantenibilidad": 65,
+        "compatibilidad": 90,
+        "seguridad": 100,
+        "portabilidad": 90
+      },
+      "findings": [
+        {
+          "dimension": "Adecuación funcional",
+          "subdimension": "Completitud funcional",
+          "severity": "Alta",
+          "finding": "No se detectó la etiqueta <main> para delimitar el contenido principal.",
+          "recommendation": "Agregar una etiqueta <main> para estructurar el contenido principal de la interfaz."
+        },
+        {
+          "dimension": "Accesibilidad",
+          "subdimension": "Contraste mínimo",
+          "severity": "Media",
+          "finding": "Se detectaron 1 elementos con contraste de color bajo (< 4.5:1), dificultando la legibilidad. (Ejemplo: <div>)",
+          "recommendation": "Asegurar una relación de contraste mínima de 4.5:1 para texto normal y de 3:1 para texto grande según la WCAG AA."
+        },
+        {
+          "dimension": "Accesibilidad",
+          "subdimension": "Flujo de enfoque",
+          "severity": "Alta",
+          "finding": "Se detectaron 1 elementos con 'tabindex' mayor a 0, alterando la navegación natural. (Ejemplo: <div>)",
+          "recommendation": "Evitar el uso de tabindex > 0. Utilizar tabindex='0' para elementos interactivos personalizados y estructurar el DOM lógicamente."
+        },
+        {
+          "dimension": "Usabilidad",
+          "subdimension": "Consistencia estética",
+          "severity": "Media",
+          "finding": "Se detectó una paleta de colores demasiado amplia (357 colores), afectando la sobriedad estética.",
+          "recommendation": "Establecer una paleta de colores unificada y consistente en el archivo de diseño global."
+        },
+        {
+          "dimension": "Usabilidad",
+          "subdimension": "Estética de la interfaz",
+          "severity": "Media",
+          "finding": "Se detectaron 1 elementos multimedia (imágenes/iframes) sin dimensiones explícitas, propiciando saltos de diseño (CLS). (Ejemplo: <img src=\"https://upao.instructure.com/images/thumbnails/328\">)",
+          "recommendation": "Definir siempre atributos width/height en etiquetas de imágenes o configurar relaciones de aspecto en CSS (aspect-ratio)."
+        },
+        {
+          "dimension": "Eficiencia de desempeño",
+          "subdimension": "Tamaño del documento",
+          "severity": "Media",
+          "finding": "El tamaño del archivo HTML supera los 80KB.",
+          "recommendation": "Dividir el HTML, remover scripts embebidos pesados e implementar renderizado dinámico o compresión Gzip/Brotli."
+        },
+        {
+          "dimension": "Compatibilidad",
+          "subdimension": "Coexistencia",
+          "severity": "Alta",
+          "finding": "Se detectaron estilos globales directos sobre etiquetas HTML (h2, span, p, button, h3, a, div, input, body) en el bloque <style>.",
+          "recommendation": "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM."
+        },
+        {
+          "dimension": "Mantenibilidad",
+          "subdimension": "Modularidad y semántica",
+          "severity": "Media",
+          "finding": "Se detectó duplicación de estructuras complejas en el DOM que no están modularizadas.",
+          "recommendation": "Identificar patrones repetitivos en el marcado y modularizarlos en componentes de UI reutilizables."
+        },
+        {
+          "dimension": "Mantenibilidad",
+          "subdimension": "Modificabilidad",
+          "severity": "Media",
+          "finding": "Se detectaron 33 elementos con estilos inline directos. (Ejemplo: <span id=\"mobileHeaderInboxUnreadBadge\" class=\"menu-item__badge\">, <div>...)",
+          "recommendation": "Migrar estilos inline hacia clases en hojas de estilo CSS reutilizables para facilitar la mantenibilidad."
+        },
+        {
+          "dimension": "Portabilidad",
+          "subdimension": "Adaptabilidad",
+          "severity": "Alta",
+          "finding": "Se detectaron 517 reglas de ancho rígido en píxeles (width: >400px) en la estructura.",
+          "recommendation": "Reemplazar anchos fijos en píxeles por unidades de diseño flexible (%, vw, rem, flex) para facilitar la portabilidad en diversos dispositivos."
+        }
+      ],
+      "main_recommendations": [
+        "Agregar una etiqueta <main> para estructurar el contenido principal de la interfaz.",
+        "Asegurar una relación de contraste mínima de 4.5:1 para texto normal y de 3:1 para texto grande según la WCAG AA.",
+        "Evitar el uso de tabindex > 0. Utilizar tabindex='0' para elementos interactivos personalizados y estructurar el DOM lógicamente.",
+        "Establecer una paleta de colores unificada y consistente en el archivo de diseño global.",
+        "Definir siempre atributos width/height en etiquetas de imágenes o configurar relaciones de aspecto en CSS (aspect-ratio).",
+        "Dividir el HTML, remover scripts embebidos pesados e implementar renderizado dinámico o compresión Gzip/Brotli.",
+        "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM.",
+        "Identificar patrones repetitivos en el marcado y modularizarlos en componentes de UI reutilizables.",
+        "Migrar estilos inline hacia clases en hojas de estilo CSS reutilizables para facilitar la mantenibilidad.",
+        "Reemplazar anchos fijos en píxeles por unidades de diseño flexible (%, vw, rem, flex) para facilitar la portabilidad en diversos dispositivos."
+      ],
+      "technical_conclusion": "La interfaz frontend presenta un nivel de calidad alto. Se recomienda atender los hallazgos identificados para fortalecer el cumplimiento de las características de calidad de la norma ISO/IEC 25010."
+    }
+  },
+  {
+    "timestamp": "2026-09-22T15:30:56.895919Z",
+    "user_id": "43b26d92-4355-4e5e-9673-35611260bda0",
+    "evaluation": [
+      {
+        "agent": "ISOEvaluationAgent",
+        "status": "completed",
+        "standard": "ISO/IEC 25010",
+        "scope": "Frontend",
+        "evaluation": {
+          "global_score": 81,
+          "quality_level": "Alto",
+          "scores": {
+            "adecuacion_funcional": 85,
+            "eficiencia_desempeno": 82,
+            "usabilidad": 67,
+            "accesibilidad": 80,
+            "mantenibilidad": 55,
+            "compatibilidad": 90,
+            "seguridad": 100,
+            "portabilidad": 90
+          },
+          "total_findings": 11,
+          "findings": [
+            {
+              "dimension": "Adecuación funcional",
+              "subdimension": "Completitud funcional",
+              "severity": "Alta",
+              "finding": "No se detectó la etiqueta <main> para delimitar el contenido principal.",
+              "recommendation": "Agregar una etiqueta <main> para estructurar el contenido principal de la interfaz."
+            },
+            {
+              "dimension": "Accesibilidad",
+              "subdimension": "Contraste mínimo",
+              "severity": "Media",
+              "finding": "Se detectaron 1 elementos con contraste de color bajo (< 4.5:1), dificultando la legibilidad. (Ejemplo: <div>)",
+              "recommendation": "Asegurar una relación de contraste mínima de 4.5:1 para texto normal y de 3:1 para texto grande según la WCAG AA."
+            },
+            {
+              "dimension": "Accesibilidad",
+              "subdimension": "Flujo de enfoque",
+              "severity": "Alta",
+              "finding": "Se detectaron 1 elementos con 'tabindex' mayor a 0, alterando la navegación natural. (Ejemplo: <div>)",
+              "recommendation": "Evitar el uso de tabindex > 0. Utilizar tabindex='0' para elementos interactivos personalizados y estructurar el DOM lógicamente."
+            },
+            {
+              "dimension": "Usabilidad",
+              "subdimension": "Consistencia estética",
+              "severity": "Media",
+              "finding": "Se detectó una paleta de colores demasiado amplia (361 colores), afectando la sobriedad estética.",
+              "recommendation": "Establecer una paleta de colores unificada y consistente en el archivo de diseño global."
+            },
+            {
+              "dimension": "Usabilidad",
+              "subdimension": "Estética de la interfaz",
+              "severity": "Media",
+              "finding": "Se detectaron 1 elementos multimedia (imágenes/iframes) sin dimensiones explícitas, propiciando saltos de diseño (CLS). (Ejemplo: <img src=\"https://upao.instructure.com/images/thumbnails/328\">)",
+              "recommendation": "Definir siempre atributos width/height en etiquetas de imágenes o configurar relaciones de aspecto en CSS (aspect-ratio)."
+            },
+            {
+              "dimension": "Eficiencia de desempeño",
+              "subdimension": "Tamaño del documento",
+              "severity": "Media",
+              "finding": "El tamaño del archivo HTML supera los 80KB.",
+              "recommendation": "Dividir el HTML, remover scripts embebidos pesados e implementar renderizado dinámico o compresión Gzip/Brotli."
+            },
+            {
+              "dimension": "Compatibilidad",
+              "subdimension": "Coexistencia",
+              "severity": "Alta",
+              "finding": "Se detectaron estilos globales directos sobre etiquetas HTML (h2, span, p, button, h3, a, div, input, body) en el bloque <style>.",
+              "recommendation": "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM."
+            },
+            {
+              "dimension": "Mantenibilidad",
+              "subdimension": "Modularidad y semántica",
+              "severity": "Media",
+              "finding": "Se detectó duplicación de estructuras complejas en el DOM que no están modularizadas.",
+              "recommendation": "Identificar patrones repetitivos en el marcado y modularizarlos en componentes de UI reutilizables."
+            },
+            {
+              "dimension": "Mantenibilidad",
+              "subdimension": "Modularidad y semántica",
+              "severity": "Media",
+              "finding": "Se detectó un uso excesivo de etiquetas <div> (60) en relación a etiquetas semánticas (4).",
+              "recommendation": "Reemplazar contenedores genéricos <div> por etiquetas semánticas de HTML5 (section, article, header, footer) para mejorar la legibilidad del DOM."
+            },
+            {
+              "dimension": "Mantenibilidad",
+              "subdimension": "Modificabilidad",
+              "severity": "Media",
+              "finding": "Se detectaron 63 elementos con estilos inline directos. (Ejemplo: <span id=\"mobileHeaderInboxUnreadBadge\" class=\"menu-item__badge\">, <div>...)",
+              "recommendation": "Migrar estilos inline hacia clases en hojas de estilo CSS reutilizables para facilitar la mantenibilidad."
+            },
+            {
+              "dimension": "Portabilidad",
+              "subdimension": "Adaptabilidad",
+              "severity": "Alta",
+              "finding": "Se detectaron 501 reglas de ancho rígido en píxeles (width: >400px) en la estructura.",
+              "recommendation": "Reemplazar anchos fijos en píxeles por unidades de diseño flexible (%, vw, rem, flex) para facilitar la portabilidad en diversos dispositivos."
+            }
+          ],
+          "engineering_tips": [
+            "Optimizar el marcado HTML y refactorizar dependencias para lograr la conformidad."
+          ],
+          "strict_mode": true,
+          "name": "combined"
+        }
+      }
+    ],
+    "report": {
+      "agent": "ReportAgent",
+      "status": "completed",
+      "standard": "ISO/IEC 25010",
+      "scope": "Frontend (Consolidado)",
+      "generated_at": "2026-09-22 10:30:56",
+      "summary": {
+        "total_interfaces": 1,
+        "global_score": 81,
+        "quality_level": "Alto",
+        "total_findings": 11,
+        "best_interface": "combined",
+        "worst_interface": "combined",
+        "severity_summary": {
+          "Crítica": 0,
+          "Alta": 4,
+          "Media": 7,
+          "Baja": 0
+        },
+        "dimension_summary": {
+          "Adecuación funcional": 1,
+          "Accesibilidad": 2,
+          "Usabilidad": 2,
+          "Eficiencia de desempeño": 1,
+          "Compatibilidad": 1,
+          "Mantenibilidad": 3,
+          "Portabilidad": 1
+        }
+      },
+      "scores": {
+        "adecuacion_funcional": 85,
+        "eficiencia_desempeno": 82,
+        "usabilidad": 67,
+        "accesibilidad": 80,
+        "mantenibilidad": 55,
+        "compatibilidad": 90,
+        "seguridad": 100,
+        "portabilidad": 90
+      },
+      "findings": [
+        {
+          "dimension": "Adecuación funcional",
+          "subdimension": "Completitud funcional",
+          "severity": "Alta",
+          "finding": "No se detectó la etiqueta <main> para delimitar el contenido principal.",
+          "recommendation": "Agregar una etiqueta <main> para estructurar el contenido principal de la interfaz."
+        },
+        {
+          "dimension": "Accesibilidad",
+          "subdimension": "Contraste mínimo",
+          "severity": "Media",
+          "finding": "Se detectaron 1 elementos con contraste de color bajo (< 4.5:1), dificultando la legibilidad. (Ejemplo: <div>)",
+          "recommendation": "Asegurar una relación de contraste mínima de 4.5:1 para texto normal y de 3:1 para texto grande según la WCAG AA."
+        },
+        {
+          "dimension": "Accesibilidad",
+          "subdimension": "Flujo de enfoque",
+          "severity": "Alta",
+          "finding": "Se detectaron 1 elementos con 'tabindex' mayor a 0, alterando la navegación natural. (Ejemplo: <div>)",
+          "recommendation": "Evitar el uso de tabindex > 0. Utilizar tabindex='0' para elementos interactivos personalizados y estructurar el DOM lógicamente."
+        },
+        {
+          "dimension": "Usabilidad",
+          "subdimension": "Consistencia estética",
+          "severity": "Media",
+          "finding": "Se detectó una paleta de colores demasiado amplia (361 colores), afectando la sobriedad estética.",
+          "recommendation": "Establecer una paleta de colores unificada y consistente en el archivo de diseño global."
+        },
+        {
+          "dimension": "Usabilidad",
+          "subdimension": "Estética de la interfaz",
+          "severity": "Media",
+          "finding": "Se detectaron 1 elementos multimedia (imágenes/iframes) sin dimensiones explícitas, propiciando saltos de diseño (CLS). (Ejemplo: <img src=\"https://upao.instructure.com/images/thumbnails/328\">)",
+          "recommendation": "Definir siempre atributos width/height en etiquetas de imágenes o configurar relaciones de aspecto en CSS (aspect-ratio)."
+        },
+        {
+          "dimension": "Eficiencia de desempeño",
+          "subdimension": "Tamaño del documento",
+          "severity": "Media",
+          "finding": "El tamaño del archivo HTML supera los 80KB.",
+          "recommendation": "Dividir el HTML, remover scripts embebidos pesados e implementar renderizado dinámico o compresión Gzip/Brotli."
+        },
+        {
+          "dimension": "Compatibilidad",
+          "subdimension": "Coexistencia",
+          "severity": "Alta",
+          "finding": "Se detectaron estilos globales directos sobre etiquetas HTML (h2, span, p, button, h3, a, div, input, body) en el bloque <style>.",
+          "recommendation": "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM."
+        },
+        {
+          "dimension": "Mantenibilidad",
+          "subdimension": "Modularidad y semántica",
+          "severity": "Media",
+          "finding": "Se detectó duplicación de estructuras complejas en el DOM que no están modularizadas.",
+          "recommendation": "Identificar patrones repetitivos en el marcado y modularizarlos en componentes de UI reutilizables."
+        },
+        {
+          "dimension": "Mantenibilidad",
+          "subdimension": "Modularidad y semántica",
+          "severity": "Media",
+          "finding": "Se detectó un uso excesivo de etiquetas <div> (60) en relación a etiquetas semánticas (4).",
+          "recommendation": "Reemplazar contenedores genéricos <div> por etiquetas semánticas de HTML5 (section, article, header, footer) para mejorar la legibilidad del DOM."
+        },
+        {
+          "dimension": "Mantenibilidad",
+          "subdimension": "Modificabilidad",
+          "severity": "Media",
+          "finding": "Se detectaron 63 elementos con estilos inline directos. (Ejemplo: <span id=\"mobileHeaderInboxUnreadBadge\" class=\"menu-item__badge\">, <div>...)",
+          "recommendation": "Migrar estilos inline hacia clases en hojas de estilo CSS reutilizables para facilitar la mantenibilidad."
+        },
+        {
+          "dimension": "Portabilidad",
+          "subdimension": "Adaptabilidad",
+          "severity": "Alta",
+          "finding": "Se detectaron 501 reglas de ancho rígido en píxeles (width: >400px) en la estructura.",
+          "recommendation": "Reemplazar anchos fijos en píxeles por unidades de diseño flexible (%, vw, rem, flex) para facilitar la portabilidad en diversos dispositivos."
+        }
+      ],
+      "main_recommendations": [
+        "Agregar una etiqueta <main> para estructurar el contenido principal de la interfaz.",
+        "Asegurar una relación de contraste mínima de 4.5:1 para texto normal y de 3:1 para texto grande según la WCAG AA.",
+        "Evitar el uso de tabindex > 0. Utilizar tabindex='0' para elementos interactivos personalizados y estructurar el DOM lógicamente.",
+        "Establecer una paleta de colores unificada y consistente en el archivo de diseño global.",
+        "Definir siempre atributos width/height en etiquetas de imágenes o configurar relaciones de aspecto en CSS (aspect-ratio).",
+        "Dividir el HTML, remover scripts embebidos pesados e implementar renderizado dinámico o compresión Gzip/Brotli.",
+        "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM.",
+        "Identificar patrones repetitivos en el marcado y modularizarlos en componentes de UI reutilizables.",
+        "Reemplazar contenedores genéricos <div> por etiquetas semánticas de HTML5 (section, article, header, footer) para mejorar la legibilidad del DOM.",
+        "Migrar estilos inline hacia clases en hojas de estilo CSS reutilizables para facilitar la mantenibilidad."
+      ],
+      "technical_conclusion": "La interfaz frontend presenta un nivel de calidad alto. Se recomienda atender los hallazgos identificados para fortalecer el cumplimiento de las características de calidad de la norma ISO/IEC 25010."
+    }
+  },
+  {
+    "timestamp": "2026-09-22T21:05:24.024780Z",
+    "user_id": "43b26d92-4355-4e5e-9673-35611260bda0",
+    "evaluation": [
+      {
+        "agent": "ISOEvaluationAgent",
+        "status": "completed",
+        "standard": "ISO/IEC 25010",
+        "scope": "Frontend",
+        "evaluation": {
+          "global_score": 90,
+          "quality_level": "Excelente",
+          "scores": {
+            "adecuacion_funcional": 95,
+            "eficiencia_desempeno": 82,
+            "usabilidad": 73,
+            "accesibilidad": 97,
+            "mantenibilidad": 90,
+            "compatibilidad": 90,
+            "seguridad": 100,
+            "portabilidad": 90
+          },
+          "total_findings": 9,
+          "findings": [
+            {
+              "dimension": "Adecuación funcional",
+              "subdimension": "Jerarquía de información",
+              "severity": "Media",
+              "finding": "Se detectaron 2 encabezados <h1> en la interfaz. (Ejemplo: <h1>, <h1 class=\"page-title\">)",
+              "recommendation": "Mantener un solo encabezado <h1> principal y organizar el resto con <h2>, <h3> y niveles posteriores."
+            },
+            {
+              "dimension": "Accesibilidad",
+              "subdimension": "Identificación de formularios",
+              "severity": "Alta",
+              "finding": "Se detectaron 1 campos de formulario sin etiqueta accesible (label, aria-label o placeholder). (Ejemplo: <input>)",
+              "recommendation": "Asociar cada campo con una etiqueta <label> mediante el atributo 'for', o implementar atributos 'aria-label' / 'placeholder'."
+            },
+            {
+              "dimension": "Usabilidad",
+              "subdimension": "Protección contra errores de usuario",
+              "severity": "Media",
+              "finding": "Se detectaron 1 campos de entrada de datos sin atributos de validación nativos (required, pattern, etc.). (Ejemplo: <input class=\"form-input has-icon\">)",
+              "recommendation": "Agregar validación nativa del navegador mediante atributos como 'required', 'pattern' o tipos específicos (type='email')."
+            },
+            {
+              "dimension": "Usabilidad",
+              "subdimension": "Consistencia estética",
+              "severity": "Media",
+              "finding": "Se detectó una paleta de colores demasiado amplia (158 colores), afectando la sobriedad estética.",
+              "recommendation": "Establecer una paleta de colores unificada y consistente en el archivo de diseño global."
+            },
+            {
+              "dimension": "Usabilidad",
+              "subdimension": "Estética de la interfaz",
+              "severity": "Media",
+              "finding": "Se detectaron 1 elementos multimedia (imágenes/iframes) sin dimensiones explícitas, propiciando saltos de diseño (CLS). (Ejemplo: <img class=\"brand-icon\" src=\"/assets/logo-CBXa1xp4.png\">)",
+              "recommendation": "Definir siempre atributos width/height en etiquetas de imágenes o configurar relaciones de aspecto en CSS (aspect-ratio)."
+            },
+            {
+              "dimension": "Eficiencia de desempeño",
+              "subdimension": "Tamaño del documento",
+              "severity": "Media",
+              "finding": "El tamaño del archivo HTML supera los 80KB.",
+              "recommendation": "Dividir el HTML, remover scripts embebidos pesados e implementar renderizado dinámico o compresión Gzip/Brotli."
+            },
+            {
+              "dimension": "Compatibilidad",
+              "subdimension": "Coexistencia",
+              "severity": "Alta",
+              "finding": "Se detectaron estilos globales directos sobre etiquetas HTML (body, button, p, div, span, h2, h1, input, h3, a) en el bloque <style>.",
+              "recommendation": "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM."
+            },
+            {
+              "dimension": "Fiabilidad",
+              "subdimension": "Tolerancia a fallos",
+              "severity": "Alta",
+              "finding": "No se detectaron Error Boundaries ni manejadores de excepciones globales en el frontend de tipo Single Page Application (SPA).",
+              "recommendation": "Incorporar Error Boundaries en componentes jerárquicos clave de React para aislar y recuperar errores visuales."
+            },
+            {
+              "dimension": "Portabilidad",
+              "subdimension": "Adaptabilidad",
+              "severity": "Alta",
+              "finding": "Se detectaron 30 reglas de ancho rígido en píxeles (width: >400px) en la estructura.",
+              "recommendation": "Reemplazar anchos fijos en píxeles por unidades de diseño flexible (%, vw, rem, flex) para facilitar la portabilidad en diversos dispositivos."
+            }
+          ],
+          "engineering_tips": [
+            "Optimizar el marcado HTML y refactorizar dependencias para lograr la conformidad."
+          ],
+          "strict_mode": true,
+          "name": "combined"
+        }
+      }
+    ],
+    "report": {
+      "agent": "ReportAgent",
+      "status": "completed",
+      "standard": "ISO/IEC 25010",
+      "scope": "Frontend (Consolidado)",
+      "generated_at": "2026-09-22 16:05:24",
+      "summary": {
+        "total_interfaces": 1,
+        "global_score": 90,
+        "quality_level": "Excelente",
+        "total_findings": 9,
+        "best_interface": "combined",
+        "worst_interface": "combined",
+        "severity_summary": {
+          "Crítica": 0,
+          "Alta": 4,
+          "Media": 5,
+          "Baja": 0
+        },
+        "dimension_summary": {
+          "Adecuación funcional": 1,
+          "Accesibilidad": 1,
+          "Usabilidad": 3,
+          "Eficiencia de desempeño": 1,
+          "Compatibilidad": 1,
+          "Fiabilidad": 1,
+          "Portabilidad": 1
+        }
+      },
+      "scores": {
+        "adecuacion_funcional": 95,
+        "eficiencia_desempeno": 82,
+        "usabilidad": 73,
+        "accesibilidad": 97,
+        "mantenibilidad": 90,
+        "compatibilidad": 90,
+        "seguridad": 100,
+        "portabilidad": 90
+      },
+      "findings": [
+        {
+          "dimension": "Adecuación funcional",
+          "subdimension": "Jerarquía de información",
+          "severity": "Media",
+          "finding": "Se detectaron 2 encabezados <h1> en la interfaz. (Ejemplo: <h1>, <h1 class=\"page-title\">)",
+          "recommendation": "Mantener un solo encabezado <h1> principal y organizar el resto con <h2>, <h3> y niveles posteriores."
+        },
+        {
+          "dimension": "Accesibilidad",
+          "subdimension": "Identificación de formularios",
+          "severity": "Alta",
+          "finding": "Se detectaron 1 campos de formulario sin etiqueta accesible (label, aria-label o placeholder). (Ejemplo: <input>)",
+          "recommendation": "Asociar cada campo con una etiqueta <label> mediante el atributo 'for', o implementar atributos 'aria-label' / 'placeholder'."
+        },
+        {
+          "dimension": "Usabilidad",
+          "subdimension": "Protección contra errores de usuario",
+          "severity": "Media",
+          "finding": "Se detectaron 1 campos de entrada de datos sin atributos de validación nativos (required, pattern, etc.). (Ejemplo: <input class=\"form-input has-icon\">)",
+          "recommendation": "Agregar validación nativa del navegador mediante atributos como 'required', 'pattern' o tipos específicos (type='email')."
+        },
+        {
+          "dimension": "Usabilidad",
+          "subdimension": "Consistencia estética",
+          "severity": "Media",
+          "finding": "Se detectó una paleta de colores demasiado amplia (158 colores), afectando la sobriedad estética.",
+          "recommendation": "Establecer una paleta de colores unificada y consistente en el archivo de diseño global."
+        },
+        {
+          "dimension": "Usabilidad",
+          "subdimension": "Estética de la interfaz",
+          "severity": "Media",
+          "finding": "Se detectaron 1 elementos multimedia (imágenes/iframes) sin dimensiones explícitas, propiciando saltos de diseño (CLS). (Ejemplo: <img class=\"brand-icon\" src=\"/assets/logo-CBXa1xp4.png\">)",
+          "recommendation": "Definir siempre atributos width/height en etiquetas de imágenes o configurar relaciones de aspecto en CSS (aspect-ratio)."
+        },
+        {
+          "dimension": "Eficiencia de desempeño",
+          "subdimension": "Tamaño del documento",
+          "severity": "Media",
+          "finding": "El tamaño del archivo HTML supera los 80KB.",
+          "recommendation": "Dividir el HTML, remover scripts embebidos pesados e implementar renderizado dinámico o compresión Gzip/Brotli."
+        },
+        {
+          "dimension": "Compatibilidad",
+          "subdimension": "Coexistencia",
+          "severity": "Alta",
+          "finding": "Se detectaron estilos globales directos sobre etiquetas HTML (body, button, p, div, span, h2, h1, input, h3, a) en el bloque <style>.",
+          "recommendation": "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM."
+        },
+        {
+          "dimension": "Fiabilidad",
+          "subdimension": "Tolerancia a fallos",
+          "severity": "Alta",
+          "finding": "No se detectaron Error Boundaries ni manejadores de excepciones globales en el frontend de tipo Single Page Application (SPA).",
+          "recommendation": "Incorporar Error Boundaries en componentes jerárquicos clave de React para aislar y recuperar errores visuales."
+        },
+        {
+          "dimension": "Portabilidad",
+          "subdimension": "Adaptabilidad",
+          "severity": "Alta",
+          "finding": "Se detectaron 30 reglas de ancho rígido en píxeles (width: >400px) en la estructura.",
+          "recommendation": "Reemplazar anchos fijos en píxeles por unidades de diseño flexible (%, vw, rem, flex) para facilitar la portabilidad en diversos dispositivos."
+        }
+      ],
+      "main_recommendations": [
+        "Mantener un solo encabezado <h1> principal y organizar el resto con <h2>, <h3> y niveles posteriores.",
+        "Asociar cada campo con una etiqueta <label> mediante el atributo 'for', o implementar atributos 'aria-label' / 'placeholder'.",
+        "Agregar validación nativa del navegador mediante atributos como 'required', 'pattern' o tipos específicos (type='email').",
+        "Establecer una paleta de colores unificada y consistente en el archivo de diseño global.",
+        "Definir siempre atributos width/height en etiquetas de imágenes o configurar relaciones de aspecto en CSS (aspect-ratio).",
+        "Dividir el HTML, remover scripts embebidos pesados e implementar renderizado dinámico o compresión Gzip/Brotli.",
+        "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM.",
+        "Incorporar Error Boundaries en componentes jerárquicos clave de React para aislar y recuperar errores visuales.",
+        "Reemplazar anchos fijos en píxeles por unidades de diseño flexible (%, vw, rem, flex) para facilitar la portabilidad en diversos dispositivos."
+      ],
+      "technical_conclusion": "La interfaz frontend presenta un nivel de calidad alto. Se recomienda atender los hallazgos identificados para fortalecer el cumplimiento de las características de calidad de la norma ISO/IEC 25010."
+    }
+  },
+  {
+    "timestamp": "2026-09-23T03:12:25.263047Z",
+    "user_id": "43b26d92-4355-4e5e-9673-35611260bda0",
+    "evaluation": [
+      {
+        "agent": "ISOEvaluationAgent",
+        "status": "completed",
+        "standard": "ISO/IEC 25010",
+        "scope": "Frontend",
+        "evaluation": {
+          "global_score": 86,
+          "quality_level": "Alto",
+          "scores": {
+            "adecuacion_funcional": 90,
+            "eficiencia_desempeno": 82,
+            "usabilidad": 77,
+            "accesibilidad": 100,
+            "mantenibilidad": 55,
+            "compatibilidad": 90,
+            "seguridad": 100,
+            "portabilidad": 90
+          },
+          "total_findings": 10,
+          "findings": [
+            {
+              "dimension": "Adecuación funcional",
+              "subdimension": "Jerarquía de información",
+              "severity": "Media",
+              "finding": "Se detectaron 2 encabezados <h1> en la interfaz. (Ejemplo: <h1>, <h1>)",
+              "recommendation": "Mantener un solo encabezado <h1> principal y organizar el resto con <h2>, <h3> y niveles posteriores."
+            },
+            {
+              "dimension": "Usabilidad",
+              "subdimension": "Consistencia estética",
+              "severity": "Media",
+              "finding": "Se detectó una paleta de colores demasiado amplia (158 colores), afectando la sobriedad estética.",
+              "recommendation": "Establecer una paleta de colores unificada y consistente en el archivo de diseño global."
+            },
+            {
+              "dimension": "Usabilidad",
+              "subdimension": "Estética de la interfaz",
+              "severity": "Media",
+              "finding": "Se detectaron 1 elementos multimedia (imágenes/iframes) sin dimensiones explícitas, propiciando saltos de diseño (CLS). (Ejemplo: <img class=\"brand-icon\" src=\"/assets/logo-CBXa1xp4.png\">)",
+              "recommendation": "Definir siempre atributos width/height en etiquetas de imágenes o configurar relaciones de aspecto en CSS (aspect-ratio)."
+            },
+            {
+              "dimension": "Eficiencia de desempeño",
+              "subdimension": "Tamaño del documento",
+              "severity": "Media",
+              "finding": "El tamaño del archivo HTML supera los 80KB.",
+              "recommendation": "Dividir el HTML, remover scripts embebidos pesados e implementar renderizado dinámico o compresión Gzip/Brotli."
+            },
+            {
+              "dimension": "Compatibilidad",
+              "subdimension": "Coexistencia",
+              "severity": "Alta",
+              "finding": "Se detectaron estilos globales directos sobre etiquetas HTML (body, button, p, div, span, h2, h1, input, h3, a) en el bloque <style>.",
+              "recommendation": "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM."
+            },
+            {
+              "dimension": "Fiabilidad",
+              "subdimension": "Tolerancia a fallos",
+              "severity": "Alta",
+              "finding": "No se detectaron Error Boundaries ni manejadores de excepciones globales en el frontend de tipo Single Page Application (SPA).",
+              "recommendation": "Incorporar Error Boundaries en componentes jerárquicos clave de React para aislar y recuperar errores visuales."
+            },
+            {
+              "dimension": "Mantenibilidad",
+              "subdimension": "Modularidad y semántica",
+              "severity": "Media",
+              "finding": "Se detectó duplicación de estructuras complejas en el DOM que no están modularizadas.",
+              "recommendation": "Identificar patrones repetitivos en el marcado y modularizarlos en componentes de UI reutilizables."
+            },
+            {
+              "dimension": "Mantenibilidad",
+              "subdimension": "Modularidad y semántica",
+              "severity": "Media",
+              "finding": "Se detectó un uso excesivo de etiquetas <div> (123) en relación a etiquetas semánticas (4).",
+              "recommendation": "Reemplazar contenedores genéricos <div> por etiquetas semánticas de HTML5 (section, article, header, footer) para mejorar la legibilidad del DOM."
+            },
+            {
+              "dimension": "Mantenibilidad",
+              "subdimension": "Modificabilidad",
+              "severity": "Media",
+              "finding": "Se detectaron 36 elementos con estilos inline directos. (Ejemplo: <div class=\"flow-item\">, <div class=\"flow-item\">...)",
+              "recommendation": "Migrar estilos inline hacia clases en hojas de estilo CSS reutilizables para facilitar la mantenibilidad."
+            },
+            {
+              "dimension": "Portabilidad",
+              "subdimension": "Adaptabilidad",
+              "severity": "Alta",
+              "finding": "Se detectaron 31 reglas de ancho rígido en píxeles (width: >400px) en la estructura.",
+              "recommendation": "Reemplazar anchos fijos en píxeles por unidades de diseño flexible (%, vw, rem, flex) para facilitar la portabilidad en diversos dispositivos."
+            }
+          ],
+          "engineering_tips": [
+            "Optimizar el marcado HTML y refactorizar dependencias para lograr la conformidad."
+          ],
+          "strict_mode": true,
+          "name": "combined"
+        }
+      }
+    ],
+    "report": {
+      "agent": "ReportAgent",
+      "status": "completed",
+      "standard": "ISO/IEC 25010",
+      "scope": "Frontend (Consolidado)",
+      "generated_at": "2026-09-22 22:12:25",
+      "summary": {
+        "total_interfaces": 1,
+        "global_score": 86,
+        "quality_level": "Alto",
+        "total_findings": 10,
+        "best_interface": "combined",
+        "worst_interface": "combined",
+        "severity_summary": {
+          "Crítica": 0,
+          "Alta": 3,
+          "Media": 7,
+          "Baja": 0
+        },
+        "dimension_summary": {
+          "Adecuación funcional": 1,
+          "Usabilidad": 2,
+          "Eficiencia de desempeño": 1,
+          "Compatibilidad": 1,
+          "Fiabilidad": 1,
+          "Mantenibilidad": 3,
+          "Portabilidad": 1
+        }
+      },
+      "scores": {
+        "adecuacion_funcional": 90,
+        "eficiencia_desempeno": 82,
+        "usabilidad": 77,
+        "accesibilidad": 100,
+        "mantenibilidad": 55,
+        "compatibilidad": 90,
+        "seguridad": 100,
+        "portabilidad": 90
+      },
+      "findings": [
+        {
+          "dimension": "Adecuación funcional",
+          "subdimension": "Jerarquía de información",
+          "severity": "Media",
+          "finding": "Se detectaron 2 encabezados <h1> en la interfaz. (Ejemplo: <h1>, <h1>)",
+          "recommendation": "Mantener un solo encabezado <h1> principal y organizar el resto con <h2>, <h3> y niveles posteriores."
+        },
+        {
+          "dimension": "Usabilidad",
+          "subdimension": "Consistencia estética",
+          "severity": "Media",
+          "finding": "Se detectó una paleta de colores demasiado amplia (158 colores), afectando la sobriedad estética.",
+          "recommendation": "Establecer una paleta de colores unificada y consistente en el archivo de diseño global."
+        },
+        {
+          "dimension": "Usabilidad",
+          "subdimension": "Estética de la interfaz",
+          "severity": "Media",
+          "finding": "Se detectaron 1 elementos multimedia (imágenes/iframes) sin dimensiones explícitas, propiciando saltos de diseño (CLS). (Ejemplo: <img class=\"brand-icon\" src=\"/assets/logo-CBXa1xp4.png\">)",
+          "recommendation": "Definir siempre atributos width/height en etiquetas de imágenes o configurar relaciones de aspecto en CSS (aspect-ratio)."
+        },
+        {
+          "dimension": "Eficiencia de desempeño",
+          "subdimension": "Tamaño del documento",
+          "severity": "Media",
+          "finding": "El tamaño del archivo HTML supera los 80KB.",
+          "recommendation": "Dividir el HTML, remover scripts embebidos pesados e implementar renderizado dinámico o compresión Gzip/Brotli."
+        },
+        {
+          "dimension": "Compatibilidad",
+          "subdimension": "Coexistencia",
+          "severity": "Alta",
+          "finding": "Se detectaron estilos globales directos sobre etiquetas HTML (body, button, p, div, span, h2, h1, input, h3, a) en el bloque <style>.",
+          "recommendation": "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM."
+        },
+        {
+          "dimension": "Fiabilidad",
+          "subdimension": "Tolerancia a fallos",
+          "severity": "Alta",
+          "finding": "No se detectaron Error Boundaries ni manejadores de excepciones globales en el frontend de tipo Single Page Application (SPA).",
+          "recommendation": "Incorporar Error Boundaries en componentes jerárquicos clave de React para aislar y recuperar errores visuales."
+        },
+        {
+          "dimension": "Mantenibilidad",
+          "subdimension": "Modularidad y semántica",
+          "severity": "Media",
+          "finding": "Se detectó duplicación de estructuras complejas en el DOM que no están modularizadas.",
+          "recommendation": "Identificar patrones repetitivos en el marcado y modularizarlos en componentes de UI reutilizables."
+        },
+        {
+          "dimension": "Mantenibilidad",
+          "subdimension": "Modularidad y semántica",
+          "severity": "Media",
+          "finding": "Se detectó un uso excesivo de etiquetas <div> (123) en relación a etiquetas semánticas (4).",
+          "recommendation": "Reemplazar contenedores genéricos <div> por etiquetas semánticas de HTML5 (section, article, header, footer) para mejorar la legibilidad del DOM."
+        },
+        {
+          "dimension": "Mantenibilidad",
+          "subdimension": "Modificabilidad",
+          "severity": "Media",
+          "finding": "Se detectaron 36 elementos con estilos inline directos. (Ejemplo: <div class=\"flow-item\">, <div class=\"flow-item\">...)",
+          "recommendation": "Migrar estilos inline hacia clases en hojas de estilo CSS reutilizables para facilitar la mantenibilidad."
+        },
+        {
+          "dimension": "Portabilidad",
+          "subdimension": "Adaptabilidad",
+          "severity": "Alta",
+          "finding": "Se detectaron 31 reglas de ancho rígido en píxeles (width: >400px) en la estructura.",
+          "recommendation": "Reemplazar anchos fijos en píxeles por unidades de diseño flexible (%, vw, rem, flex) para facilitar la portabilidad en diversos dispositivos."
+        }
+      ],
+      "main_recommendations": [
+        "Mantener un solo encabezado <h1> principal y organizar el resto con <h2>, <h3> y niveles posteriores.",
+        "Establecer una paleta de colores unificada y consistente en el archivo de diseño global.",
+        "Definir siempre atributos width/height en etiquetas de imágenes o configurar relaciones de aspecto en CSS (aspect-ratio).",
+        "Dividir el HTML, remover scripts embebidos pesados e implementar renderizado dinámico o compresión Gzip/Brotli.",
+        "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM.",
+        "Incorporar Error Boundaries en componentes jerárquicos clave de React para aislar y recuperar errores visuales.",
+        "Identificar patrones repetitivos en el marcado y modularizarlos en componentes de UI reutilizables.",
+        "Reemplazar contenedores genéricos <div> por etiquetas semánticas de HTML5 (section, article, header, footer) para mejorar la legibilidad del DOM.",
+        "Migrar estilos inline hacia clases en hojas de estilo CSS reutilizables para facilitar la mantenibilidad.",
+        "Reemplazar anchos fijos en píxeles por unidades de diseño flexible (%, vw, rem, flex) para facilitar la portabilidad en diversos dispositivos."
+      ],
+      "technical_conclusion": "La interfaz frontend presenta un nivel de calidad alto. Se recomienda atender los hallazgos identificados para fortalecer el cumplimiento de las características de calidad de la norma ISO/IEC 25010."
+    }
+  },
+  {
+    "timestamp": "2026-09-28T06:06:50.225219Z",
+    "user_id": "43b26d92-4355-4e5e-9673-35611260bda0",
+    "evaluation": [
+      {
+        "agent": "ISOEvaluationAgent",
+        "status": "completed",
+        "standard": "ISO/IEC 25010",
+        "scope": "Frontend",
+        "evaluation": {
+          "global_score": 90,
+          "quality_level": "Excelente",
+          "scores": {
+            "adecuacion_funcional": 100,
+            "eficiencia_desempeno": 90,
+            "usabilidad": 76,
+            "accesibilidad": 84,
+            "mantenibilidad": 90,
+            "compatibilidad": 90,
+            "seguridad": 100,
+            "portabilidad": 90
+          },
+          "total_findings": 8,
+          "findings": [
+            {
+              "dimension": "Accesibilidad",
+              "subdimension": "Nombre accesible de controles",
+              "severity": "Alta",
+              "finding": "Se detectaron 1 botones sin texto visible ni nombre accesible. (Ejemplo: <button class=\"icon-button\">)",
+              "recommendation": "Agregar texto visible, atributo 'title' o 'aria-label' a cada botón para lectores de pantalla."
+            },
+            {
+              "dimension": "Accesibilidad",
+              "subdimension": "Identificación de formularios",
+              "severity": "Alta",
+              "finding": "Se detectaron 4 campos de formulario sin etiqueta accesible (label, aria-label o placeholder). (Ejemplo: <select>, <select>, <input>...)",
+              "recommendation": "Asociar cada campo con una etiqueta <label> mediante el atributo 'for', o implementar atributos 'aria-label' / 'placeholder'."
+            },
+            {
+              "dimension": "Usabilidad",
+              "subdimension": "Protección contra errores de usuario",
+              "severity": "Media",
+              "finding": "Se detectaron 2 campos de entrada de datos sin atributos de validación nativos (required, pattern, etc.). (Ejemplo: <select>, <select>)",
+              "recommendation": "Agregar validación nativa del navegador mediante atributos como 'required', 'pattern' o tipos específicos (type='email')."
+            },
+            {
+              "dimension": "Usabilidad",
+              "subdimension": "Consistencia estética",
+              "severity": "Media",
+              "finding": "Se detectó una paleta de colores demasiado amplia (729 colores), afectando la sobriedad estética.",
+              "recommendation": "Establecer una paleta de colores unificada y consistente en el archivo de diseño global."
+            },
+            {
+              "dimension": "Eficiencia de desempeño",
+              "subdimension": "Tamaño del documento",
+              "severity": "Media",
+              "finding": "El tamaño del archivo HTML supera los 80KB.",
+              "recommendation": "Dividir el HTML, remover scripts embebidos pesados e implementar renderizado dinámico o compresión Gzip/Brotli."
+            },
+            {
+              "dimension": "Compatibilidad",
+              "subdimension": "Coexistencia",
+              "severity": "Alta",
+              "finding": "Se detectaron estilos globales directos sobre etiquetas HTML (h3, h2, body, a, p, span, input, h1, button, div) en el bloque <style>.",
+              "recommendation": "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM."
+            },
+            {
+              "dimension": "Fiabilidad",
+              "subdimension": "Tolerancia a fallos",
+              "severity": "Alta",
+              "finding": "No se detectaron Error Boundaries ni manejadores de excepciones globales en el frontend de tipo Single Page Application (SPA).",
+              "recommendation": "Incorporar Error Boundaries en componentes jerárquicos clave de React para aislar y recuperar errores visuales."
+            },
+            {
+              "dimension": "Portabilidad",
+              "subdimension": "Adaptabilidad",
+              "severity": "Alta",
+              "finding": "Se detectaron 28 reglas de ancho rígido en píxeles (width: >400px) en la estructura.",
+              "recommendation": "Reemplazar anchos fijos en píxeles por unidades de diseño flexible (%, vw, rem, flex) para facilitar la portabilidad en diversos dispositivos."
+            }
+          ],
+          "engineering_tips": [
+            "Optimizar el marcado HTML y refactorizar dependencias para lograr la conformidad."
+          ],
+          "strict_mode": true,
+          "name": "combined"
+        }
+      }
+    ],
+    "report": {
+      "agent": "ReportAgent",
+      "status": "completed",
+      "standard": "ISO/IEC 25010",
+      "scope": "Frontend (Consolidado)",
+      "generated_at": "2026-09-28 01:06:50",
+      "summary": {
+        "total_interfaces": 1,
+        "global_score": 90,
+        "quality_level": "Excelente",
+        "total_findings": 8,
+        "best_interface": "combined",
+        "worst_interface": "combined",
+        "severity_summary": {
+          "Crítica": 0,
+          "Alta": 5,
+          "Media": 3,
+          "Baja": 0
+        },
+        "dimension_summary": {
+          "Accesibilidad": 2,
+          "Usabilidad": 2,
+          "Eficiencia de desempeño": 1,
+          "Compatibilidad": 1,
+          "Fiabilidad": 1,
+          "Portabilidad": 1
+        }
+      },
+      "scores": {
+        "adecuacion_funcional": 100,
+        "eficiencia_desempeno": 90,
+        "usabilidad": 76,
+        "accesibilidad": 84,
+        "mantenibilidad": 90,
+        "compatibilidad": 90,
+        "seguridad": 100,
+        "portabilidad": 90
+      },
+      "findings": [
+        {
+          "dimension": "Accesibilidad",
+          "subdimension": "Nombre accesible de controles",
+          "severity": "Alta",
+          "finding": "Se detectaron 1 botones sin texto visible ni nombre accesible. (Ejemplo: <button class=\"icon-button\">)",
+          "recommendation": "Agregar texto visible, atributo 'title' o 'aria-label' a cada botón para lectores de pantalla."
+        },
+        {
+          "dimension": "Accesibilidad",
+          "subdimension": "Identificación de formularios",
+          "severity": "Alta",
+          "finding": "Se detectaron 4 campos de formulario sin etiqueta accesible (label, aria-label o placeholder). (Ejemplo: <select>, <select>, <input>...)",
+          "recommendation": "Asociar cada campo con una etiqueta <label> mediante el atributo 'for', o implementar atributos 'aria-label' / 'placeholder'."
+        },
+        {
+          "dimension": "Usabilidad",
+          "subdimension": "Protección contra errores de usuario",
+          "severity": "Media",
+          "finding": "Se detectaron 2 campos de entrada de datos sin atributos de validación nativos (required, pattern, etc.). (Ejemplo: <select>, <select>)",
+          "recommendation": "Agregar validación nativa del navegador mediante atributos como 'required', 'pattern' o tipos específicos (type='email')."
+        },
+        {
+          "dimension": "Usabilidad",
+          "subdimension": "Consistencia estética",
+          "severity": "Media",
+          "finding": "Se detectó una paleta de colores demasiado amplia (729 colores), afectando la sobriedad estética.",
+          "recommendation": "Establecer una paleta de colores unificada y consistente en el archivo de diseño global."
+        },
+        {
+          "dimension": "Eficiencia de desempeño",
+          "subdimension": "Tamaño del documento",
+          "severity": "Media",
+          "finding": "El tamaño del archivo HTML supera los 80KB.",
+          "recommendation": "Dividir el HTML, remover scripts embebidos pesados e implementar renderizado dinámico o compresión Gzip/Brotli."
+        },
+        {
+          "dimension": "Compatibilidad",
+          "subdimension": "Coexistencia",
+          "severity": "Alta",
+          "finding": "Se detectaron estilos globales directos sobre etiquetas HTML (h3, h2, body, a, p, span, input, h1, button, div) en el bloque <style>.",
+          "recommendation": "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM."
+        },
+        {
+          "dimension": "Fiabilidad",
+          "subdimension": "Tolerancia a fallos",
+          "severity": "Alta",
+          "finding": "No se detectaron Error Boundaries ni manejadores de excepciones globales en el frontend de tipo Single Page Application (SPA).",
+          "recommendation": "Incorporar Error Boundaries en componentes jerárquicos clave de React para aislar y recuperar errores visuales."
+        },
+        {
+          "dimension": "Portabilidad",
+          "subdimension": "Adaptabilidad",
+          "severity": "Alta",
+          "finding": "Se detectaron 28 reglas de ancho rígido en píxeles (width: >400px) en la estructura.",
+          "recommendation": "Reemplazar anchos fijos en píxeles por unidades de diseño flexible (%, vw, rem, flex) para facilitar la portabilidad en diversos dispositivos."
+        }
+      ],
+      "main_recommendations": [
+        "Agregar texto visible, atributo 'title' o 'aria-label' a cada botón para lectores de pantalla.",
+        "Asociar cada campo con una etiqueta <label> mediante el atributo 'for', o implementar atributos 'aria-label' / 'placeholder'.",
+        "Agregar validación nativa del navegador mediante atributos como 'required', 'pattern' o tipos específicos (type='email').",
+        "Establecer una paleta de colores unificada y consistente en el archivo de diseño global.",
+        "Dividir el HTML, remover scripts embebidos pesados e implementar renderizado dinámico o compresión Gzip/Brotli.",
+        "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM.",
+        "Incorporar Error Boundaries en componentes jerárquicos clave de React para aislar y recuperar errores visuales.",
+        "Reemplazar anchos fijos en píxeles por unidades de diseño flexible (%, vw, rem, flex) para facilitar la portabilidad en diversos dispositivos."
+      ],
+      "technical_conclusion": "La interfaz frontend presenta un nivel de calidad alto. Se recomienda atender los hallazgos identificados para fortalecer el cumplimiento de las características de calidad de la norma ISO/IEC 25010."
+    }
   }
 ]

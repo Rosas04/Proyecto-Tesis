@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import logoImg from "../assets/logo.png";
+import logoImgWebp from "../assets/logo.webp";
+import logoImgPng from "../assets/logo.png";
 import "./Login.css"; // Reuse the same styles
 
 export default function ForgotPassword() {
@@ -35,7 +36,7 @@ export default function ForgotPassword() {
       setMessage("Se ha enviado un enlace de recuperación a su correo.");
     } catch (err) {
       setError("No se pudo solicitar la recuperación.");
-      console.error(err);
+      
     } finally {
       setLoading(false);
     }
@@ -45,7 +46,7 @@ export default function ForgotPassword() {
     <main className="auth-page">
       <section className="auth-card">
         <div className="auth-brand">
-          <img src={logoImg} alt="FrontMind AI" className="auth-logo" />
+          <picture><source srcSet={logoImgWebp} type="image/webp" /><img src={logoImgPng} alt="FrontMind AI" className="auth-logo"  /></picture>
           <h1>Recuperar Contraseña</h1>
           <p>Te enviaremos un enlace para restablecerla</p>
         </div>

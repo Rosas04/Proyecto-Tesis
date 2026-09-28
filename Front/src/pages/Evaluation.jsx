@@ -105,7 +105,7 @@ export default function Evaluation() {
       setError(
         "No se pudo ejecutar la evaluación ISO/IEC 25010. Verifique que el backend esté encendido."
       );
-      console.error(err);
+      
     } finally {
       setLoading(false);
     }
