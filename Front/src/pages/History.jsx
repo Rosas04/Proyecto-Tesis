@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
 import Sidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
 import { useAnalysis } from "../context/AnalysisContext";
 import { fetchUserRuns, fetchRunFindings } from "../historyService";
+import { storageService } from "../services/storageService";
 import html2canvas from "html2canvas";
 import { ReportDashboard } from "../components/ReportDashboard";
 import "./History.css";
@@ -60,13 +60,13 @@ const CrossCircleIcon = () => (
 
 export default function History() {
   const { user, loadingAuth } = useAuth();
-  const { loading: analysisLoading, currentTaskName, cancelAnalysis } = useAnalysis();
+  const { loading: analysisLoading, cancelAnalysis } = useAnalysis();
   const navigate = useNavigate();
   
   const [runs, setRuns] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [error, setError] = useState("");
-  const [generatingPdfId, setGeneratingPdfId] = useState(null);
+  const [, setGeneratingPdfId] = useState(null);
   
   // Detalle del análisis seleccionado
   const [selectedRun, setSelectedRun] = useState(null);
@@ -139,7 +139,7 @@ export default function History() {
       setError("");
       const data = await fetchUserRuns(user.id);
       setRuns(data);
-    } catch (err) {
+    } catch {
       
       setError("No se pudo cargar el historial de análisis.");
     } finally {
@@ -154,7 +154,7 @@ export default function History() {
       setLoadingFindings(true);
       const data = await fetchRunFindings(run.id);
       setFindings(data);
-    } catch (err) {
+    } catch {
       
       setError("No se pudieron cargar los hallazgos de este análisis.");
     } finally {
@@ -193,7 +193,7 @@ export default function History() {
         main_recommendations: recommendations
       };
       setDownloadData({ reportResult: mockReportResult, sourceLabel: projectName });
-    } catch (err) {
+    } catch {
       
       setError("No se pudo preparar el reporte para descarga.");
       setGeneratingPdfId(null);
@@ -217,7 +217,7 @@ export default function History() {
           }
           const fileSafeSource = downloadData.sourceLabel.replace(/^https?:\/\//, "").replace(/[^a-zA-Z0-9]/g, "_").slice(0, 40);
           doc.save(`Reporte_${fileSafeSource || "Historial"}.pdf`);
-        } catch (err) {
+        } catch {
           
           setError("No se pudo generar el reporte PDF.");
         } finally {
@@ -285,10 +285,7 @@ export default function History() {
             className="new-analysis-btn" 
             onClick={() => {
               if (analysisLoading) cancelAnalysis();
-              localStorage.removeItem("zipResult");
-              localStorage.removeItem("captureResult");
-              localStorage.removeItem("htmlReplicaResult");
-              localStorage.removeItem("htmlToEvaluate");
+              storageService.clearAnalysisFlow();
               navigate("/input");
             }}
           >

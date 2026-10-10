@@ -34,7 +34,7 @@ export default function ForgotPassword() {
       }
 
       setMessage("Se ha enviado un enlace de recuperación a su correo.");
-    } catch (err) {
+    } catch {
       setError("No se pudo solicitar la recuperación.");
       
     } finally {

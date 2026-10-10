@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import { storageService } from "../services/storageService";
 
 const AuthContext = createContext(null);
 
@@ -28,7 +29,10 @@ export function AuthProvider({ children }) {
     loadSession();
 
     const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, currentSession) => {
+      (event, currentSession) => {
+        // Al cerrar sesión (o expirar el refresh token) se borran los datos
+        // del análisis guardados en el navegador.
+        if (event === "SIGNED_OUT") storageService.clearAll();
         setSession(currentSession);
         setUser(currentSession?.user || null);
       }
@@ -59,7 +63,9 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     if (!supabase) return;
-    await supabase.auth.signOut();
+    // scope "global": revoca los refresh tokens de todas las sesiones del usuario
+    await supabase.auth.signOut({ scope: "global" });
+    storageService.clearAll();
     setUser(null);
     setSession(null);
   };

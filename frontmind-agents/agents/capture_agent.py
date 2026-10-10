@@ -2,7 +2,9 @@
 agents/capture_agent.py
 
 Cambios aplicados:
-  HIGH-05 : Validación SSRF con validate_url() antes de llamar a Playwright.
+  HIGH-05 : Validación SSRF con validate_url() antes de llamar a Playwright
+            (URL objetivo y URL de login). Las rutas descubiertas y
+            redirecciones se filtran dentro del worker de capturas.
 """
 from __future__ import annotations
 
@@ -15,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class CaptureAgent:
-    def run(self, url: str, auth: dict = None, max_pages: int = 10):
+    def run(self, url: str, auth: dict = None, max_pages: int = 10, job_id: str = None):
         if not url:
             return {
                 "agent": "CaptureAgent",
@@ -30,7 +32,12 @@ class CaptureAgent:
             url = f"https://{url}"
 
         # ── Validación SSRF ───────────────────────────────────────────────
-        if not validate_url(url):
+        login_url = (auth or {}).get("login_url")
+        if login_url and not login_url.startswith(("http://", "https://")):
+            login_url = f"https://{login_url}"
+            auth = {**auth, "login_url": login_url}
+
+        if not validate_url(url) or (login_url and not validate_url(login_url)):
             logger.warning("CaptureAgent: URL bloqueada por políticas de seguridad: %s", url)
             return {
                 "agent": "CaptureAgent",
@@ -45,7 +52,7 @@ class CaptureAgent:
             }
 
         try:
-            result = take_screenshots(url=url, auth=auth, max_pages=max_pages)
+            result = take_screenshots(url=url, auth=auth, max_pages=max_pages, job_id=job_id)
             return {
                 "agent": "CaptureAgent",
                 **result,

@@ -101,14 +101,14 @@ export function ReportWebDashboard({ reportResult, summary, findings, scores, so
             <h3 className="card-title">Resultados ISO/IEC 25010</h3>
             <div className="chars-list">
               {Object.entries(scoreLabels).map(([key, label], idx) => {
-                 const score = scores[key] ?? Math.floor(Math.random() * 20 + 75);
+                 const score = typeof scores[key] === "number" ? scores[key] : null;
                  return (
                 <div className="char-item" key={idx}>
                   <div className="char-name">{label}</div>
                   <div className="char-bar-bg">
-                    <div className="char-bar-fill" style={{ width: `${score}%` }}></div>
+                    <div className="char-bar-fill" style={{ width: `${score ?? 0}%` }}></div>
                   </div>
-                  <div className="char-score">{score}/100</div>
+                  <div className="char-score">{score === null ? "N/D" : `${score}/100`}</div>
                 </div>
               )})}
             </div>

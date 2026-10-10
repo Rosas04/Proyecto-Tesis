@@ -12,7 +12,7 @@ export default function HtmlReplica() {
   const tabsRef = useRef(null);
 
   const [captureResult, setCaptureResult] = useState(null);
-  const [replicaResult, setReplicaResult] = useState(null);
+  const [, setReplicaResult] = useState(null);
   const [htmlPreview, setHtmlPreview] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -30,19 +30,14 @@ export default function HtmlReplica() {
   }, [captureResult]);
 
   useEffect(() => {
-    const savedCapture = localStorage.getItem("captureResult");
+    const parsedCapture = storageService.getCaptureResult();
 
-    if (!savedCapture) {
-      if (window.globalCaptureResult) {
-        setCaptureResult(window.globalCaptureResult);
-        return;
-      }
+    if (!parsedCapture) {
       setError("No se encontró una captura previa. Vuelve al inicio.");
       return;
     }
 
     try {
-      const parsedCapture = JSON.parse(savedCapture);
       setCaptureResult(parsedCapture);
 
       let initialIface = null;
@@ -78,7 +73,7 @@ export default function HtmlReplica() {
       if (targetHtmlContent.trim()) {
         initialGenerate(targetHtmlContent, initialIface, parsedCapture);
       }
-    } catch (err) {
+    } catch {
       setError("No se pudo leer la información almacenada.");
       
     }
@@ -114,7 +109,7 @@ export default function HtmlReplica() {
       });
       // Bypass localStorage for massive HTML replicas to avoid QuotaExceededError
       // storageService.setHtmlReplicaResult(result);
-    } catch (err) {
+    } catch {
       setError("No se pudo generar la réplica HTML. Verifique que el backend esté encendido.");
       
     } finally {
@@ -169,7 +164,7 @@ export default function HtmlReplica() {
         ...prev,
         [cacheKey]: { result, html: replicatedHtml }
       }));
-    } catch (err) {
+    } catch {
       setError("No se pudo generar la réplica HTML para esta interfaz.");
       
     } finally {
@@ -220,23 +215,9 @@ export default function HtmlReplica() {
       return;
     }
 
-    try {
-      if (!storageService.setHtmlToEvaluate(htmlPreview)) {
-        // Fallback for quota limit
-        
-        storageService.removeItem("zipResult");
-        storageService.removeItem("captureResult");
-        storageService.removeItem("htmlReplicaResult");
-        
-        if (!storageService.setHtmlToEvaluate(htmlPreview)) {
-          setError("El HTML es demasiado grande para guardarse en el almacenamiento.");
-          return;
-        }
-      }
-      navigate("/evaluation");
-    } catch (e) {
-      
-    }
+    // storageService conserva el HTML en memoria si excede la cuota de localStorage
+    storageService.setHtmlToEvaluate(htmlPreview);
+    navigate("/evaluation");
   };
 
   const goBack = () => {
@@ -475,7 +456,8 @@ export default function HtmlReplica() {
                         title="Vista previa HTML"
                         className="preview-frame"
                         srcDoc={previewHtmlWithBase}
-                        sandbox="allow-same-origin"
+                        sandbox=""
+                        referrerPolicy="no-referrer"
                       />
                     ) : (
                       <div className="empty-preview">No existe HTML para mostrar.</div>

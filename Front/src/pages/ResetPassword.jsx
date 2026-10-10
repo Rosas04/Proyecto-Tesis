@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import logoImgWebp from "../assets/logo.webp";
@@ -28,8 +28,8 @@ export default function ResetPassword() {
       return;
     }
     
-    if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres.");
+    if (password.length < 8) {
+      setError("La contraseña debe tener al menos 8 caracteres.");
       return;
     }
 
@@ -44,7 +44,7 @@ export default function ResetPassword() {
 
       // Si tiene éxito, redirigimos a la página de inicio (o login)
       navigate("/input");
-    } catch (err) {
+    } catch {
       setError("No se pudo actualizar la contraseña.");
       
     } finally {
@@ -67,7 +67,7 @@ export default function ResetPassword() {
           <label>Nueva contraseña</label>
           <input
             type="password"
-            placeholder="Mínimo 6 caracteres"
+            placeholder="Mínimo 8 caracteres"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />

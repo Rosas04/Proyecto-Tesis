@@ -1,3 +1,0 @@
-13:19:06 [INFO] === FLUJO PÚBLICO para https://apaeclab.org.pe/ ===
-13:20:57 [INFO] Total de rutas a capturar: 1 — Internas: 0, Públicas: 1
-13:20:57 [INFO] Capturando [1/1] https://apaeclab.org.pe/ (PÚBLICA)...

@@ -41,9 +41,7 @@ def test_execute_login():
     # Verify navigation
     mock_page.goto.assert_called_with("https://example.com/login", wait_until="domcontentloaded", timeout=60000)
     
-    # Verify credentials filled
-    mock_locator.fill.assert_any_call("testuser@example.com", force=True)
-    
-    # The password field might be filled with timeout=5000 according to code
-    # We just ensure fill was called twice
+    # Verify credentials typed (el login limpia el campo y teclea con eventos)
+    mock_locator.type.assert_any_call("testuser@example.com", delay=10)
+    mock_locator.type.assert_any_call("password123", delay=10)
     assert mock_locator.fill.call_count >= 2

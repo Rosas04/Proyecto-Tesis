@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { loginBlockedFor, registerLoginFailure, registerLoginSuccess } from "../utils/loginThrottle";
 import logoImgWebp from "../assets/logo.webp";
 import logoImgPng from "../assets/logo.png";
 import "./Login.css";
@@ -24,20 +25,31 @@ export default function Login() {
       return;
     }
 
+    const blockedFor = loginBlockedFor();
+    if (blockedFor > 0) {
+      setError(`Demasiados intentos fallidos. Espere ${blockedFor} segundos e intente nuevamente.`);
+      return;
+    }
+
     try {
       setLoading(true);
 
       const { error } = await login(email, password);
 
       if (error) {
-        setError("Correo o contraseña incorrectos.");
+        registerLoginFailure();
+        setError(
+          error.status === 429
+            ? "Demasiados intentos. Intente nuevamente en unos minutos."
+            : "Correo o contraseña incorrectos."
+        );
         return;
       }
 
+      registerLoginSuccess();
       navigate("/");
-    } catch (err) {
+    } catch {
       setError("No se pudo iniciar sesión.");
-      
     } finally {
       setLoading(false);
     }

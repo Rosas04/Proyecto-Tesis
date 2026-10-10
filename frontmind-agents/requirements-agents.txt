@@ -1,0 +1,7 @@
+# Opcional: orquestador LLM experimental (agents/orchestrator.py, services/llm_service.py).
+# No se usa en la API de producción; se instala aparte para no ampliar la superficie de ataque.
+-r requirements.txt
+openai>=1.40,<4
+langchain>=0.3,<0.4
+langchain-core>=0.3,<0.4
+langchain-openai>=0.2,<0.4

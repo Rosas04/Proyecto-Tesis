@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
 import { fetchUserRuns, fetchRunFindings } from "../historyService";
@@ -57,7 +57,6 @@ const EyeIcon = () => (
 
 export default function Home() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [runs, setRuns] = useState([]);
   const [latestFindings, setLatestFindings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -75,7 +74,7 @@ export default function Home() {
           setLatestFindings(findingsData || []);
         }
       } catch (err) {
-        
+        console.error("No se pudo cargar el historial de análisis:", err);
       } finally {
         setLoading(false);
       }
@@ -87,7 +86,7 @@ export default function Home() {
   const stats = useMemo(() => {
     const evaluaciones = runs.length;
     const urls = new Set(runs.map(r => r.projects?.project_name)).size;
-    const interfaces = runs.reduce((acc, r) => acc + (r.total_interfaces || 3), 0); // Mock interface count if not present
+    const interfaces = runs.reduce((acc, r) => acc + (r.total_interfaces ?? 1), 0); // Cada análisis evalúa al menos una interfaz (cota inferior; el total exacto no se persiste)
     const avgScore = evaluaciones > 0 
       ? Math.round(runs.reduce((acc, r) => acc + r.global_score, 0) / evaluaciones)
       : 0;
@@ -137,17 +136,6 @@ export default function Home() {
     return "low";
   };
 
-  // Mock Criteria Data based on global avg for demonstration
-  const criteriaData = [
-    { label: "Adecuación funcional", score: Math.min(100, stats.avgScore + Math.floor(Math.random() * 5)) },
-    { label: "Eficiencia de desempeño", score: Math.max(0, stats.avgScore - Math.floor(Math.random() * 5)) },
-    { label: "Usabilidad", score: Math.min(100, stats.avgScore + Math.floor(Math.random() * 2)) },
-    { label: "Accesibilidad", score: Math.max(0, stats.avgScore - 10) },
-    { label: "Mantenibilidad", score: Math.min(100, stats.avgScore + 2) },
-    { label: "Compatibilidad", score: Math.max(0, stats.avgScore - 3) },
-    { label: "Seguridad", score: Math.max(0, stats.avgScore - 6) },
-    { label: "Portabilidad", score: Math.min(100, stats.avgScore + 1) }
-  ];
 
   return (
     <div className="home-layout">
@@ -348,15 +336,18 @@ export default function Home() {
                     <h3>Desempeño por criterio</h3>
                   </div>
                   <div className="criteria-list">
-                    {criteriaData.map((c, i) => (
-                      <div className="criteria-item" key={i}>
-                        <div className="criteria-label">{c.label}</div>
-                        <div className="criteria-bar-bg">
-                          <div className="criteria-bar-fill" style={{ width: `${c.score}%` }}></div>
-                        </div>
-                        <div className="criteria-score">{c.score}<span>/100</span></div>
+                    {/* El historial sólo persiste el puntaje global de cada análisis;
+                        no se muestran puntajes por criterio estimados. */}
+                    <div className="criteria-item">
+                      <div className="criteria-label">Promedio global</div>
+                      <div className="criteria-bar-bg">
+                        <div className="criteria-bar-fill" style={{ width: `${stats.avgScore}%` }}></div>
                       </div>
-                    ))}
+                      <div className="criteria-score">{stats.avgScore}<span>/100</span></div>
+                    </div>
+                    <p style={{ fontSize: "12px", color: "#64748b", margin: "8px 0 0" }}>
+                      El detalle por característica ISO/IEC 25010 está disponible en el reporte de cada análisis.
+                    </p>
                   </div>
                 </div>
 

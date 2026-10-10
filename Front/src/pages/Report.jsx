@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ReportWebDashboard } from "../components/ReportWebDashboard";
 import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
 import Sidebar from "../components/Sidebar";
 import { generateReport } from "../services/api";
+import { storageService } from "../services/storageService";
 import { useAuth } from "../context/AuthContext";
 import { addAnalysisRun } from "../historyService";
 import html2canvas from "html2canvas";
@@ -36,8 +35,8 @@ export default function Report() {
       try {
         setReportResult(JSON.parse(savedReport));
         return;
-      } catch (err) {
-        
+      } catch {
+        // Reporte guardado corrupto: se regenera a partir de la evaluación
       }
     }
 
@@ -62,7 +61,7 @@ export default function Report() {
           evaluationData = parsedEvaluation?.evaluation || parsedEvaluation;
       }
       generateTechnicalReport(evaluationData);
-    } catch (err) {
+    } catch {
       setError("No se pudo leer la evaluación almacenada.");
       
     }
@@ -73,8 +72,7 @@ export default function Report() {
       setLoading(true);
       setError("");
 
-      const userId = user?.id || null;
-      const result = await generateReport(evaluation, userId);
+      const result = await generateReport(evaluation);
 
       setReportResult(result);
       localStorage.setItem("technicalReport", JSON.stringify(result));
@@ -97,7 +95,7 @@ export default function Report() {
             return Math.abs(hash).toString(16);
           };
           
-          const savedHtml = localStorage.getItem("htmlToEvaluate") || "";
+          const savedHtml = storageService.getHtmlToEvaluate() || "";
           const localInputHash = savedHtml ? generateSimpleHash(savedHtml) : `hash_${Date.now()}`;
 
           // Calcular el nombre del proyecto real basado en la URL o archivo ZIP
@@ -119,8 +117,7 @@ export default function Report() {
                 hostname = hostname.substring(4);
               }
               localProjectName = hostname || localInputUrl;
-            } catch (e) {
-              
+            } catch {
               localProjectName = localInputUrl;
             }
           }
@@ -135,12 +132,12 @@ export default function Report() {
             inputHash: localInputHash,
             projectName: localProjectName,
           });
-          
         } catch (dbErr) {
-          
+          console.error("No se pudo guardar el análisis en el historial:", dbErr);
+          setError("El reporte se generó, pero no se pudo guardar en el historial.");
         }
       }
-    } catch (err) {
+    } catch {
       setError(
         "No se pudo generar el reporte técnico. Verifique que el backend esté encendido."
       );
@@ -156,14 +153,6 @@ export default function Report() {
     () => (Array.isArray(reportResult?.findings) ? reportResult.findings : []),
     [reportResult]
   );
-  const recommendations = useMemo(
-    () =>
-      Array.isArray(reportResult?.main_recommendations)
-        ? reportResult.main_recommendations
-        : [],
-    [reportResult]
-  );
-
   const sourceLabel =
     inputType === "zip"
       ? inputZip || "Proyecto ZIP"
@@ -180,28 +169,12 @@ export default function Report() {
     portabilidad: "Portabilidad",
   };
 
-  const getScoreClass = (score) => {
-    if (score >= 90) return "excellent";
-    if (score >= 80) return "high";
-    if (score >= 60) return "medium";
-    if (score >= 40) return "low";
-    return "critical";
-  };
-
   const goBack = () => {
     navigate("/evaluation");
   };
 
   const startNewAnalysis = () => {
-    localStorage.removeItem("inputType");
-    localStorage.removeItem("inputUrl");
-    localStorage.removeItem("inputZip");
-    localStorage.removeItem("captureResult");
-    localStorage.removeItem("zipResult");
-    localStorage.removeItem("htmlReplicaResult");
-    localStorage.removeItem("htmlToEvaluate");
-    localStorage.removeItem("isoEvaluation");
-    localStorage.removeItem("technicalReport");
+    storageService.clearAll();
     navigate("/input");
   };
 
@@ -249,7 +222,7 @@ export default function Report() {
         .slice(0, 40);
 
       doc.save(`reporte-frontmind-${fileSafeSource || "evaluacion"}.pdf`);
-    } catch (err) {
+    } catch {
       setError("No se pudo generar el archivo PDF del reporte.");
       
     } finally {
@@ -396,14 +369,14 @@ export default function Report() {
                   <h3 className="card-title" style={{ margin: '0 0 20px 0', fontSize: '16px', color: '#0f172a', fontWeight: '700' }}>Resultados ISO/IEC 25010</h3>
                   <div className="chars-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     {Object.entries(scoreLabels).map(([key, label], idx) => {
-                       const score = scores[key] ?? Math.floor(Math.random() * 20 + 75);
+                       const score = typeof scores[key] === "number" ? scores[key] : null;
                        return (
                       <div className="char-item" key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <div className="char-name" style={{ width: '150px', fontSize: '12px', color: '#475569', fontWeight: '500' }}>{label}</div>
                         <div className="char-bar-bg" style={{ flex: 1, height: '8px', background: '#e2e8f0', borderRadius: '99px', overflow: 'hidden' }}>
-                          <div className="char-bar-fill" style={{ height: '100%', borderRadius: '99px', width: `${score}%`, backgroundColor: '#334155' }}></div>
+                          <div className="char-bar-fill" style={{ height: '100%', borderRadius: '99px', width: `${score ?? 0}%`, backgroundColor: '#334155' }}></div>
                         </div>
-                        <div className="char-score" style={{ width: '40px', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: '#64748b' }}>{score}/100</div>
+                        <div className="char-score" style={{ width: '40px', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: '#64748b' }}>{score === null ? "N/D" : `${score}/100`}</div>
                       </div>
                     )})}
                   </div>

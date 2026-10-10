@@ -2,6 +2,9 @@ import re
 import zipfile
 from pathlib import Path
 import shutil
+import uuid
+
+EXTRACT_BASE_DIR = Path("extracted_projects_temp")
 
 # ────────────────────────────────────────────────────────────────
 #  EXTENSION CONFIGURATION
@@ -85,11 +88,17 @@ SCRIPT_EXTENSIONS = {".ts", ".js", ".mjs"}
 # ────────────────────────────────────────────────────────────────
 
 def extract_zip_project(zip_file_path: str):
-    extract_dir = Path("extracted_projects_temp").resolve()
-    if extract_dir.exists():
-        shutil.rmtree(extract_dir)
-    extract_dir.mkdir(exist_ok=True)
+    # Directorio único por solicitud: evita que dos subidas simultáneas
+    # se borren mutuamente los archivos, y se elimina siempre al terminar.
+    extract_dir = (EXTRACT_BASE_DIR / uuid.uuid4().hex).resolve()
+    extract_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        return _extract_zip_project(zip_file_path, extract_dir)
+    finally:
+        shutil.rmtree(extract_dir, ignore_errors=True)
 
+
+def _extract_zip_project(zip_file_path: str, extract_dir: Path):
     try:
         # HIGH-04: Extracción segura — protección contra Zip Slip y Zip Bomb
         from core.security import safe_extract_zip

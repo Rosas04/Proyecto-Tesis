@@ -21,7 +21,7 @@ function formatFileSize(bytes) {
 }
 
 export default function Input() {
-  const { loading, error, setError, startAnalysis, cancelAnalysis } = useAnalysis();
+  const { loading, currentJobId, error, setError, startAnalysis, cancelAnalysis } = useAnalysis();
 
   const [activeTab, setActiveTab] = useState(() => localStorage.getItem("inputType") || "url");
   const [url, setUrl] = useState(() => localStorage.getItem("inputUrl") || "");
@@ -36,7 +36,7 @@ export default function Input() {
 
   // Real-time logs polling
   useEffect(() => {
-    if (!loading) {
+    if (!loading || !currentJobId) {
       setLogs([{ time: new Date().toLocaleTimeString(), type: "INFO", message: "Agente listo. Esperando inicio de análisis..." }]);
       return;
     }
@@ -45,20 +45,20 @@ export default function Input() {
     
     const interval = setInterval(async () => {
       try {
-        const data = await getCaptureProgress();
+        const data = await getCaptureProgress(currentJobId);
         if (data && data.logs && data.logs.length > 0) {
           setLogs([
             { time: new Date().toLocaleTimeString(), type: "INFO", message: "Agente iniciado." },
             ...data.logs
           ]);
         }
-      } catch (err) {
+      } catch {
         // Ignorar errores de red para no interrumpir el polling
       }
-    }, 1500);
+    }, 3000);
 
     return () => clearInterval(interval);
-  }, [loading]);
+  }, [loading, currentJobId]);
 
   // Credentials state
   const [useCredentials, setUseCredentials] = useState(false);

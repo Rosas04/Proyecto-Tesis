@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import JSZip from 'jszip';
 
 export default function InterfaceTabs() {

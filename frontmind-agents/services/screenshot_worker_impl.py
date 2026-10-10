@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import os
 import re
+import secrets
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -22,10 +23,16 @@ from services.route_discovery_service import (
     is_auth_page_url,
 )
 from services.spa_helpers import wait_for_spa
+from core.security import is_host_allowed, validate_url
 
 logger = logging.getLogger(__name__)
 
 CAPTURES_DIR = Path("captures")
+DEFAULT_API_BASE_URL = "http://127.0.0.1:8001"
+
+# Límites del cache de CSS capturado (evita respuestas gigantes al frontend)
+_MAX_CSS_SHEET_CHARS = 2_000_000
+_MAX_CSS_CACHE_CHARS = 10_000_000
 
 # Única definición de VIEWPORTS — reutilizada en todas las funciones del módulo
 VIEWPORTS: list[dict[str, Any]] = [
@@ -137,6 +144,43 @@ def _is_on_login_page(page) -> bool:
         pass
 
     return False
+
+
+def _run_token() -> str:
+    """
+    Identificador único por ejecución: timestamp + 128 bits aleatorios.
+    Evita colisiones entre capturas concurrentes y hace que las URLs públicas
+    de /captures no sean adivinables (pueden contener vistas autenticadas).
+    """
+    return f"{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{secrets.token_hex(16)}"
+
+
+def _install_ssrf_guard(target) -> None:
+    """
+    Bloquea cualquier request (navegación, redirección o subrecurso) hacia
+    hosts internos/privados o esquemas no http(s). `target` puede ser un
+    BrowserContext o una Page.
+    """
+    def guard(route):
+        try:
+            parsed = urlparse(route.request.url)
+            scheme = parsed.scheme.lower()
+            if scheme in ("http", "https", "ws", "wss"):
+                if not is_host_allowed(parsed.hostname or ""):
+                    logger.warning("Request bloqueado por política SSRF: %s", parsed.hostname)
+                    route.abort("blockedbyclient")
+                    return
+            elif scheme not in ("data", "blob", "about"):
+                route.abort("blockedbyclient")
+                return
+            route.fallback()
+        except Exception:
+            try:
+                route.abort()
+            except Exception:
+                pass
+
+    target.route("**/*", guard)
 
 
 def _block_trackers(page) -> None:
@@ -316,13 +360,13 @@ def take_screenshots(
       2. Descubrir rutas con BFS
       3. Capturar cada ruta
     """
-    api_base_url = os.getenv("API_BASE_URL", "http://127.0.0.1:8000")
+    api_base_url = os.getenv("API_BASE_URL", DEFAULT_API_BASE_URL)
     CAPTURES_DIR.mkdir(parents=True, exist_ok=True)
 
     auth_config = normalize_auth_config(auth)
     is_authenticated = auth_config["mode"] != "none"
 
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    timestamp = _run_token()
 
     results: list[dict[str, Any]] = []
     global_css_cache: dict[str, str] = {}
@@ -333,367 +377,381 @@ def take_screenshots(
             if response.request.resource_type == "stylesheet":
                 url_str = response.url
                 if url_str not in global_css_cache:
-                    global_css_cache[url_str] = response.text()
+                    used = sum(len(v) for v in global_css_cache.values())
+                    if used >= _MAX_CSS_CACHE_CHARS:
+                        return
+                    text = response.text()
+                    if len(text) <= _MAX_CSS_SHEET_CHARS:
+                        global_css_cache[url_str] = text
         except Exception:
             pass
 
-    with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(
-            headless=True,
-            args=["--no-sandbox", "--disable-dev-shm-usage"],
-        )
-
-        base_context_args: dict[str, Any] = {
-            "ignore_https_errors": True,
-            "user_agent": (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/120.0.0.0 Safari/537.36"
-            ),
-        }
-
-        storage_state_for_capture: str | None = auth_config.get("storage_state_path")
-
-        # Si ya tenemos un storage_state existente, usarlo para el contexto inicial
-        initial_context_args = {**base_context_args}
-        if (
-            auth_config["mode"] == "storage_state"
-            and storage_state_for_capture
-            and Path(storage_state_for_capture).exists()
-        ):
-            initial_context_args["storage_state"] = storage_state_for_capture
-
-        # ════════════════════════════════════════════════════════════════════
-        # FASE 1: DESCUBRIMIENTO DE RUTAS
-        # ════════════════════════════════════════════════════════════════════
-
-        pre_login_routes: list[str] = []   # Páginas públicas (login, register, etc.)
-        post_login_routes: list[str] = []  # Páginas internas (dashboard, etc.)
-        login_succeeded = False
-
-        if is_authenticated:
-            logger.info("=== FLUJO AUTENTICADO para %s ===", url)
-
-            # ── Paso 1: Abrir la página de login y extraer enlaces públicos ──
-            login_url = auth_config.get("login_url") or url
-
-            discovery_context = browser.new_context(**initial_context_args)
-            discovery_page = discovery_context.new_page()
-            _block_trackers(discovery_page)
-            discovery_page.on("dialog", lambda dialog: dialog.dismiss())
-
+    try:
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch(
+                headless=True,
+                args=["--no-sandbox", "--disable-dev-shm-usage"],
+            )
             try:
-                discovery_page.goto(
-                    login_url,
-                    wait_until="domcontentloaded",
-                    timeout=20_000,
-                )
-                wait_for_spa(discovery_page)
 
-                # Extraer enlaces públicos de la página de login
-                public_links = extract_internal_links(discovery_page, login_url)
-                pre_login_routes.append(discovery_page.url)  # la propia página de login
+                base_context_args: dict[str, Any] = {
+                    "ignore_https_errors": True,
+                    "user_agent": (
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                        "AppleWebKit/537.36 (KHTML, like Gecko) "
+                        "Chrome/120.0.0.0 Safari/537.36"
+                    ),
+                }
 
-                for link in public_links:
-                    if link not in pre_login_routes and len(pre_login_routes) < 5:
-                        pre_login_routes.append(link)
+                # El storage_state sólo se genera internamente tras el login; nunca se
+                # acepta una ruta enviada por el cliente.
+                storage_state_for_capture: str | None = None
+                initial_context_args = {**base_context_args}
 
-                logger.info(
-                    "Rutas públicas descubiertas ANTES del login: %s",
-                    pre_login_routes,
-                )
+                # ════════════════════════════════════════════════════════════════════
+                # FASE 1: DESCUBRIMIENTO DE RUTAS
+                # ════════════════════════════════════════════════════════════════════
 
-            except Exception as exc:
-                logger.warning("Error extrayendo rutas públicas: %s", exc)
-                pre_login_routes = [login_url]
+                pre_login_routes: list[str] = []   # Páginas públicas (login, register, etc.)
+                post_login_routes: list[str] = []  # Páginas internas (dashboard, etc.)
+                login_succeeded = False
 
-            # ── Paso 2: Iniciar sesión ──
-            try:
-                logger.info("Ejecutando login en %s...", login_url)
-                perform_form_login(
-                    discovery_page,
-                    auth_config,
-                    url=url,
-                )
+                if is_authenticated:
+                    logger.info("=== FLUJO AUTENTICADO para %s ===", url)
 
-                # Verificar que el login fue exitoso
-                current_url_after_login = discovery_page.url
-                logger.info(
-                    "URL después del login: %s", current_url_after_login
-                )
+                    # ── Paso 1: Abrir la página de login y extraer enlaces públicos ──
+                    login_url = auth_config.get("login_url") or url
 
-                if _is_on_login_page(discovery_page):
-                    logger.warning(
-                        "⚠️ El login pudo haber fallado — sigo en la página de auth: %s",
-                        current_url_after_login,
-                    )
+                    discovery_context = browser.new_context(**initial_context_args)
+                    _install_ssrf_guard(discovery_context)
+                    discovery_page = discovery_context.new_page()
+                    _block_trackers(discovery_page)
+                    discovery_page.on("dialog", lambda dialog: dialog.dismiss())
+
+                    try:
+                        discovery_page.goto(
+                            login_url,
+                            wait_until="domcontentloaded",
+                            timeout=20_000,
+                        )
+                        wait_for_spa(discovery_page)
+
+                        # Extraer enlaces públicos de la página de login
+                        public_links = extract_internal_links(discovery_page, login_url)
+                        pre_login_routes.append(discovery_page.url)  # la propia página de login
+
+                        for link in public_links:
+                            if link not in pre_login_routes and len(pre_login_routes) < 5:
+                                pre_login_routes.append(link)
+
+                        logger.info(
+                            "Rutas públicas descubiertas ANTES del login: %s",
+                            pre_login_routes,
+                        )
+
+                    except Exception as exc:
+                        logger.warning("Error extrayendo rutas públicas: %s", exc)
+                        pre_login_routes = [login_url]
+
+                    # ── Paso 2: Iniciar sesión ──
+                    try:
+                        logger.info("Ejecutando login en %s...", login_url)
+                        perform_form_login(
+                            discovery_page,
+                            auth_config,
+                            url=url,
+                        )
+
+                        # Verificar que el login fue exitoso
+                        current_url_after_login = discovery_page.url
+                        logger.info(
+                            "URL después del login: %s", current_url_after_login
+                        )
+
+                        if _is_on_login_page(discovery_page):
+                            logger.warning(
+                                "⚠️ El login pudo haber fallado — sigo en la página de auth: %s",
+                                current_url_after_login,
+                            )
+                        else:
+                            login_succeeded = True
+                            logger.info("✅ Login exitoso — ahora en: %s", current_url_after_login)
+
+                        # Guardar storage_state SIEMPRE (incluso si el login pudo fallar,
+                        # porque puede tener cookies válidas)
+                        generated_state_path = f"playwright/.auth/session_{timestamp}.json"
+                        save_storage_state(discovery_context, generated_state_path)
+                        storage_state_for_capture = generated_state_path
+                        logger.info("Storage state guardado en: %s", generated_state_path)
+
+                    except Exception as exc:
+                        logger.exception("Error durante el login: %s", exc)
+
+                    # ── Paso 3: Descubrir rutas internas post-login ──
+                    if login_succeeded:
+                        try:
+                            # Si la URL objetivo es distinta, y actualmente seguimos en login o la url tiene un path específico
+                            # Mejor: Si current_url no es auth, ya estamos dentro, quedarse ahí.
+                            if is_auth_page_url(discovery_page.url) and url != login_url and not is_auth_page_url(url):
+                                discovery_page.goto(
+                                    url,
+                                    wait_until="domcontentloaded",
+                                    timeout=15_000,
+                                )
+
+                            wait_for_spa(discovery_page)
+
+                            # Usar descubrimiento seguro para apps autenticadas:
+                            # extrae enlaces SIN navegar (no rompe la sesión SPA)
+                            post_login_routes = discover_routes_authenticated(
+                                discovery_page,
+                                start_url=discovery_page.url,
+                                max_pages=max_pages,
+                            )
+
+                            logger.info(
+                                "Rutas internas descubiertas DESPUÉS del login: %s",
+                                post_login_routes,
+                            )
+                        except Exception as exc:
+                            logger.exception(
+                                "Error descubriendo rutas internas: %s", exc
+                            )
+
+                    # discovery_context.close()  # NO LO CERRAMOS PARA REUTILIZAR EL SESSIONSTORAGE
+
                 else:
-                    login_succeeded = True
-                    logger.info("✅ Login exitoso — ahora en: %s", current_url_after_login)
+                    # ── Flujo público (sin autenticación) ──
+                    logger.info("=== FLUJO PÚBLICO para %s ===", url)
 
-                # Guardar storage_state SIEMPRE (incluso si el login pudo fallar,
-                # porque puede tener cookies válidas)
-                generated_state_path = f"playwright/.auth/session_{timestamp}.json"
-                save_storage_state(discovery_context, generated_state_path)
-                storage_state_for_capture = generated_state_path
-                logger.info("Storage state guardado en: %s", generated_state_path)
+                    discovery_context = browser.new_context(**initial_context_args)
+                    _install_ssrf_guard(discovery_context)
+                    discovery_page = discovery_context.new_page()
+                    _block_trackers(discovery_page)
+                    discovery_page.on("dialog", lambda dialog: dialog.dismiss())
 
-            except Exception as exc:
-                logger.exception("Error durante el login: %s", exc)
-
-            # ── Paso 3: Descubrir rutas internas post-login ──
-            if login_succeeded:
-                try:
-                    # Si la URL objetivo es distinta, y actualmente seguimos en login o la url tiene un path específico
-                    # Mejor: Si current_url no es auth, ya estamos dentro, quedarse ahí.
-                    if is_auth_page_url(discovery_page.url) and url != login_url_used and not is_auth_page_url(url):
+                    try:
                         discovery_page.goto(
                             url,
                             wait_until="domcontentloaded",
                             timeout=15_000,
                         )
+                        wait_for_spa(discovery_page)
 
-                    wait_for_spa(discovery_page)
-
-                    # Usar descubrimiento seguro para apps autenticadas:
-                    # extrae enlaces SIN navegar (no rompe la sesión SPA)
-                    post_login_routes = discover_routes_authenticated(
-                        discovery_page,
-                        start_url=discovery_page.url,
-                        max_pages=max_pages,
-                    )
-
-                    logger.info(
-                        "Rutas internas descubiertas DESPUÉS del login: %s",
-                        post_login_routes,
-                    )
-                except Exception as exc:
-                    logger.exception(
-                        "Error descubriendo rutas internas: %s", exc
-                    )
-
-            # discovery_context.close()  # NO LO CERRAMOS PARA REUTILIZAR EL SESSIONSTORAGE
-
-        else:
-            # ── Flujo público (sin autenticación) ──
-            logger.info("=== FLUJO PÚBLICO para %s ===", url)
-
-            discovery_context = browser.new_context(**initial_context_args)
-            discovery_page = discovery_context.new_page()
-            _block_trackers(discovery_page)
-            discovery_page.on("dialog", lambda dialog: dialog.dismiss())
-
-            try:
-                discovery_page.goto(
-                    url,
-                    wait_until="domcontentloaded",
-                    timeout=15_000,
-                )
-                wait_for_spa(discovery_page)
-
-                # Bloquear assets pesados para descubrimiento rápido (no hay sesión que romper)
-                def safe_abort_assets(route):
-                    try:
-                        route.abort()
-                    except Exception:
-                        pass
+                        # Bloquear assets pesados para descubrimiento rápido (no hay sesión que romper)
+                        def safe_abort_assets(route):
+                            try:
+                                route.abort()
+                            except Exception:
+                                pass
                 
-                discovery_page.route(
-                    "**/*.{png,jpg,jpeg,gif,svg,mp4,webm,woff,woff2,ico}",
-                    safe_abort_assets,
-                )
+                        discovery_page.route(
+                            "**/*.{png,jpg,jpeg,gif,svg,mp4,webm,woff,woff2,ico}",
+                            safe_abort_assets,
+                        )
 
-                pre_login_routes = discover_routes(
-                    discovery_page,
-                    start_url=discovery_page.url,
-                    max_pages=max_pages,
-                )
-            except Exception as exc:
-                logger.exception("Error descubriendo rutas públicas: %s", exc)
-                pre_login_routes = [url]
+                        pre_login_routes = discover_routes(
+                            discovery_page,
+                            start_url=discovery_page.url,
+                            max_pages=max_pages,
+                        )
+                    except Exception as exc:
+                        logger.exception("Error descubriendo rutas públicas: %s", exc)
+                        pre_login_routes = [url]
 
-            discovery_context.close()
+                    discovery_context.close()
 
-        # ════════════════════════════════════════════════════════════════════
-        # FASE 2: COMBINAR RUTAS (eliminar duplicados)
-        # ════════════════════════════════════════════════════════════════════
+                # ════════════════════════════════════════════════════════════════════
+                # FASE 2: COMBINAR RUTAS (eliminar duplicados)
+                # ════════════════════════════════════════════════════════════════════
 
-        all_routes: list[str] = []
-        internal_route_set: set[str] = set()
+                all_routes: list[str] = []
+                internal_route_set: set[str] = set()
 
-        # Primero las rutas internas (son las más importantes)
-        for route in post_login_routes:
-            normalized = route.rstrip("/")
-            if normalized not in {r.rstrip("/") for r in all_routes}:
-                all_routes.append(route)
-                internal_route_set.add(normalized)
+                # Primero las rutas internas (son las más importantes)
+                for route in post_login_routes:
+                    normalized = route.rstrip("/")
+                    if normalized not in {r.rstrip("/") for r in all_routes}:
+                        all_routes.append(route)
+                        internal_route_set.add(normalized)
 
-        # Luego las rutas públicas (si no se solapan con las internas)
-        for route in pre_login_routes:
-            normalized = route.rstrip("/")
-            if normalized not in {r.rstrip("/") for r in all_routes}:
-                all_routes.append(route)
+                # Luego las rutas públicas (si no se solapan con las internas)
+                for route in pre_login_routes:
+                    normalized = route.rstrip("/")
+                    if normalized not in {r.rstrip("/") for r in all_routes}:
+                        all_routes.append(route)
 
-        if not all_routes:
-            all_routes = [url]
+                if not all_routes:
+                    all_routes = [url]
 
-        logger.info(
-            "Total de rutas a capturar: %d — Internas: %d, Públicas: %d",
-            len(all_routes),
-            len(internal_route_set),
-            len(all_routes) - len(internal_route_set),
-        )
-
-        # ════════════════════════════════════════════════════════════════════
-        # FASE 3: CAPTURA DE CADA RUTA
-        # ════════════════════════════════════════════════════════════════════
-
-        # Para rutas internas: usar contexto con storage_state
-        # Para rutas públicas: usar contexto limpio
-        # Usamos un contexto por tipo para eficiencia
-
-        auth_capture_context = None
-        auth_capture_page = None
-        public_capture_context = None
-        public_capture_page = None
-
-        try:
-            for route_index, route_url in enumerate(all_routes, start=1):
-                is_internal = route_url.rstrip("/") in internal_route_set
+                # SSRF: descartar rutas descubiertas que apunten a hosts internos
+                safe_routes = [r for r in all_routes if validate_url(r)]
+                if len(safe_routes) != len(all_routes):
+                    logger.warning(
+                        "Se descartaron %d rutas por política de seguridad.",
+                        len(all_routes) - len(safe_routes),
+                    )
+                all_routes = safe_routes
 
                 logger.info(
-                    "Capturando [%d/%d] %s (%s)...",
-                    route_index, len(all_routes), route_url,
-                    "INTERNA" if is_internal else "PÚBLICA",
+                    "Total de rutas a capturar: %d — Internas: %d, Públicas: %d",
+                    len(all_routes),
+                    len(internal_route_set),
+                    len(all_routes) - len(internal_route_set),
                 )
 
-                if is_internal:
-                    # ── Captura con sesión autenticada ──
-                    if auth_capture_context is None:
-                        auth_capture_context = discovery_context
-                        auth_capture_page = discovery_page
-                        _block_trackers(auth_capture_page)
-                        auth_capture_page.on("response", handle_response)
-                        auth_capture_page.on("dialog", lambda d: d.dismiss())
+                # ════════════════════════════════════════════════════════════════════
+                # FASE 3: CAPTURA DE CADA RUTA
+                # ════════════════════════════════════════════════════════════════════
 
-                    page = auth_capture_page
-                else:
-                    # ── Captura sin autenticación ──
-                    if public_capture_context is None:
-                        public_capture_context = browser.new_context(**base_context_args)
-                        public_capture_page = public_capture_context.new_page()
-                        _block_trackers(public_capture_page)
-                        public_capture_page.on("response", handle_response)
-                        public_capture_page.on("dialog", lambda d: d.dismiss())
+                # Para rutas internas: usar contexto con storage_state
+                # Para rutas públicas: usar contexto limpio
+                # Usamos un contexto por tipo para eficiencia
 
-                    page = public_capture_page
+                auth_capture_context = None
+                auth_capture_page = None
+                public_capture_context = None
+                public_capture_page = None
 
                 try:
-                    page.goto(
-                        route_url,
-                        wait_until="domcontentloaded",
-                        timeout=20_000,
-                    )
-                    wait_for_spa(page)
+                    for route_index, route_url in enumerate(all_routes, start=1):
+                        is_internal = route_url.rstrip("/") in internal_route_set
 
-                    # Verificar que la sesión no se perdió para rutas internas
-                    if is_internal and _is_on_login_page(page):
-                        actual_url = page.url
-                        logger.warning(
-                            "⚠️ Sesión perdida al navegar a %s (redirigido a %s). "
-                            "Recreando contexto...",
-                            route_url, actual_url,
+                        logger.info(
+                            "Capturando [%d/%d] %s (%s)...",
+                            route_index, len(all_routes), route_url,
+                            "INTERNA" if is_internal else "PÚBLICA",
                         )
-                        # Recrear el contexto con storage_state fresco
+
+                        if is_internal:
+                            # ── Captura con sesión autenticada ──
+                            if auth_capture_context is None:
+                                auth_capture_context = discovery_context
+                                auth_capture_page = discovery_page
+                                _block_trackers(auth_capture_page)
+                                auth_capture_page.on("response", handle_response)
+                                auth_capture_page.on("dialog", lambda d: d.dismiss())
+
+                            page = auth_capture_page
+                        else:
+                            # ── Captura sin autenticación ──
+                            if public_capture_context is None:
+                                public_capture_context = browser.new_context(**base_context_args)
+                                _install_ssrf_guard(public_capture_context)
+                                public_capture_page = public_capture_context.new_page()
+                                _block_trackers(public_capture_page)
+                                public_capture_page.on("response", handle_response)
+                                public_capture_page.on("dialog", lambda d: d.dismiss())
+
+                            page = public_capture_page
+
                         try:
-                            auth_capture_context.close()
-                        except Exception:
-                            pass
-
-                        auth_context_args = {
-                            **base_context_args,
-                            "storage_state": storage_state_for_capture,
-                        }
-                        auth_capture_context = browser.new_context(**auth_context_args)
-                        auth_capture_page = auth_capture_context.new_page()
-                        _block_trackers(auth_capture_page)
-                        auth_capture_page.on("response", handle_response)
-                        auth_capture_page.on("dialog", lambda d: d.dismiss())
-                        page = auth_capture_page
-
-                        page.goto(
-                            route_url,
-                            wait_until="domcontentloaded",
-                            timeout=20_000,
-                        )
-                        wait_for_spa(page)
-
-                        # Si sigue en login, marcar como error y continuar
-                        if _is_on_login_page(page):
-                            logger.error(
-                                "❌ No se pudo restaurar la sesión para %s. Saltando.",
+                            page.goto(
                                 route_url,
+                                wait_until="domcontentloaded",
+                                timeout=20_000,
                             )
+                            wait_for_spa(page)
+
+                            # Verificar que la sesión no se perdió para rutas internas
+                            if is_internal and _is_on_login_page(page):
+                                actual_url = page.url
+                                logger.warning(
+                                    "⚠️ Sesión perdida al navegar a %s (redirigido a %s). "
+                                    "Recreando contexto...",
+                                    route_url, actual_url,
+                                )
+                                # Recrear el contexto con storage_state fresco
+                                try:
+                                    auth_capture_context.close()
+                                except Exception:
+                                    pass
+
+                                auth_context_args = {
+                                    **base_context_args,
+                                    "storage_state": storage_state_for_capture,
+                                }
+                                auth_capture_context = browser.new_context(**auth_context_args)
+                                _install_ssrf_guard(auth_capture_context)
+                                auth_capture_page = auth_capture_context.new_page()
+                                _block_trackers(auth_capture_page)
+                                auth_capture_page.on("response", handle_response)
+                                auth_capture_page.on("dialog", lambda d: d.dismiss())
+                                page = auth_capture_page
+
+                                page.goto(
+                                    route_url,
+                                    wait_until="domcontentloaded",
+                                    timeout=20_000,
+                                )
+                                wait_for_spa(page)
+
+                                # Si sigue en login, marcar como error y continuar
+                                if _is_on_login_page(page):
+                                    logger.error(
+                                        "❌ No se pudo restaurar la sesión para %s. Saltando.",
+                                        route_url,
+                                    )
+                                    display_name = _get_display_name(route_url)
+                                    error_result = _build_route_result(route_index, route_url, display_name)
+                                    error_result["status"] = "error"
+                                    error_result["errors"].append({
+                                        "device": "general",
+                                        "message": "Sesión perdida — la página redirige al login.",
+                                    })
+                                    results.append(error_result)
+                                    continue
+
+                            # Capturar la página
+                            result = _capture_single_page(
+                                page=page,
+                                route_url=route_url,
+                                route_index=route_index,
+                                timestamp=timestamp,
+                                api_base_url=api_base_url,
+                                global_css_cache=global_css_cache,
+                            )
+                            results.append(result)
+
+                        except Exception as exc:
+                            logger.exception("Error capturando %s: %s", route_url, exc)
                             display_name = _get_display_name(route_url)
                             error_result = _build_route_result(route_index, route_url, display_name)
                             error_result["status"] = "error"
                             error_result["errors"].append({
                                 "device": "general",
-                                "message": "Sesión perdida — la página redirige al login.",
+                                "message": str(exc),
                             })
                             results.append(error_result)
-                            continue
 
-                    # Capturar la página
-                    result = _capture_single_page(
-                        page=page,
-                        route_url=route_url,
-                        route_index=route_index,
-                        timestamp=timestamp,
-                        api_base_url=api_base_url,
-                        global_css_cache=global_css_cache,
-                    )
-                    results.append(result)
+                finally:
+                    # Cerrar contextos de captura
+                    if auth_capture_context:
+                        try:
+                            auth_capture_context.close()
+                        except Exception:
+                            pass
+                    if public_capture_context:
+                        try:
+                            public_capture_context.close()
+                        except Exception:
+                            pass
 
-                except Exception as exc:
-                    logger.exception("Error capturando %s: %s", route_url, exc)
-                    display_name = _get_display_name(route_url)
-                    error_result = _build_route_result(route_index, route_url, display_name)
-                    error_result["status"] = "error"
-                    error_result["errors"].append({
-                        "device": "general",
-                        "message": str(exc),
-                    })
-                    results.append(error_result)
-
-        finally:
-            # Cerrar contextos de captura
-            if auth_capture_context:
+            finally:
                 try:
-                    auth_capture_context.close()
+                    browser.close()
                 except Exception:
                     pass
-            if public_capture_context:
-                try:
-                    public_capture_context.close()
-                except Exception:
-                    pass
-
-        browser.close()
-
-    # ════════════════════════════════════════════════════════════════════
-    # LIMPIEZA: Eliminar storage_state SOLO DESPUÉS de todas las capturas
-    # ════════════════════════════════════════════════════════════════════
-
-    if generated_state_path and Path(generated_state_path).exists():
-        try:
-            os.remove(generated_state_path)
-            logger.debug("Sesión temporal eliminada: %s", generated_state_path)
-        except OSError as exc:
-            logger.warning(
-                "No se pudo eliminar sesión temporal: %s — %s",
-                generated_state_path, exc,
-            )
+    finally:
+        # ════════════════════════════════════════════════════════════════
+        # LIMPIEZA: eliminar storage_state SIEMPRE (también si hubo error)
+        # ════════════════════════════════════════════════════════════════
+        if generated_state_path and Path(generated_state_path).exists():
+            try:
+                os.remove(generated_state_path)
+                logger.debug("Sesión temporal eliminada.")
+            except OSError as exc:
+                logger.warning("No se pudo eliminar la sesión temporal: %s", exc)
 
     # ════════════════════════════════════════════════════════════════════
     # RESULTADO FINAL
@@ -732,11 +790,11 @@ def take_screenshots(
 
 def take_screenshots_from_html(html_content: str, label: str = "zip"):
     """Generate viewport screenshots from raw HTML using Playwright set_content()."""
-    api_base_url = os.getenv("API_BASE_URL", "http://127.0.0.1:8001")
+    api_base_url = os.getenv("API_BASE_URL", DEFAULT_API_BASE_URL)
     output_dir = Path("captures")
     output_dir.mkdir(exist_ok=True)
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = _run_token()
     captures = []
 
     with sync_playwright() as p:
@@ -753,6 +811,7 @@ def take_screenshots_from_html(html_content: str, label: str = "zip"):
             page = browser.new_page(
                 viewport={"width": item["width"], "height": item["height"]},
             )
+            _install_ssrf_guard(page)
 
             try:
                 page.set_content(html_content, wait_until="domcontentloaded", timeout=30000)
@@ -793,11 +852,11 @@ def take_screenshots_from_html(html_content: str, label: str = "zip"):
 
 def take_screenshots_for_multiple_htmls(htmls: dict, label_prefix: str = "zip"):
     """Generate viewport screenshots from multiple HTML contents using a single Playwright session."""
-    api_base_url = os.getenv("API_BASE_URL", "http://127.0.0.1:8001")
+    api_base_url = os.getenv("API_BASE_URL", DEFAULT_API_BASE_URL)
     output_dir = Path("captures")
     output_dir.mkdir(exist_ok=True)
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = _run_token()
     results = {}
 
     with sync_playwright() as p:
@@ -823,6 +882,7 @@ def take_screenshots_for_multiple_htmls(htmls: dict, label_prefix: str = "zip"):
                 page = browser.new_page(
                     viewport={"width": item["width"], "height": item["height"]},
                 )
+                _install_ssrf_guard(page)
 
                 try:
                     page.set_content(html_content, wait_until="domcontentloaded", timeout=30000)

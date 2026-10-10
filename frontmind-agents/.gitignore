@@ -20,3 +20,5 @@ cli_error_env.txt
 debug_*.png
 *.html
 !templates/
+progress/
+.pytest_cache/

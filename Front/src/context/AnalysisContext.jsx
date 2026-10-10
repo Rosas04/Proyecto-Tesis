@@ -10,14 +10,12 @@ export function AnalysisProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [currentTaskName, setCurrentTaskName] = useState("");
+  // Identificador de la tarea de captura: aísla el progreso entre usuarios
+  const [currentJobId, setCurrentJobId] = useState(null);
   const abortControllerRef = useRef(null);
 
   const cleanPreviousAnalysis = () => {
-    localStorage.removeItem("inputType");
-    localStorage.removeItem("inputUrl");
-    localStorage.removeItem("inputZip");
-    localStorage.removeItem("zipResult");
-    storageService.clearAnalysisFlow();
+    storageService.clearAll();
   };
 
   const cancelAnalysis = () => {
@@ -27,10 +25,11 @@ export function AnalysisProvider({ children }) {
     }
     setLoading(false);
     setCurrentTaskName("");
+    setCurrentJobId(null);
     setError("El análisis fue cancelado por el usuario.");
   };
 
-  const startAnalysis = async ({ activeTab, url, zipFile, zipName, useCredentials, credentials, maxPages }) => {
+  const startAnalysis = async ({ activeTab, url, zipFile, zipName, credentials, maxPages }) => {
     setError("");
     
     if (activeTab === "url" && !url.trim()) {
@@ -52,12 +51,20 @@ export function AnalysisProvider({ children }) {
 
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
+    const jobId = crypto.randomUUID();
+    setCurrentJobId(jobId);
 
     try {
       setLoading(true);
       
       if (activeTab === "url") {
-        const result = await captureInterfaceByUrl(url.trim(), credentials, maxPages, signal);
+        const result = await captureInterfaceByUrl(url.trim(), credentials, maxPages, signal, jobId);
+
+        if (result?.status === "error") {
+          setError(result?.message || "No se pudo capturar la URL indicada.");
+          return;
+        }
+
         storageService.setCaptureResult(result);
         navigate("/capture");
       } else if (activeTab === "zip") {
@@ -86,29 +93,27 @@ export function AnalysisProvider({ children }) {
           zip_result: result,
         };
 
-        localStorage.setItem("zipResult", JSON.stringify(result));
-        localStorage.setItem("captureResult", JSON.stringify(captureResult));
+        storageService.setZipResult(result);
+        storageService.setCaptureResult(captureResult);
         navigate("/capture");
       }
     } catch (err) {
-      if (err.name === 'AbortError') {
-        
-        // We already set error in cancelAnalysis, so we do nothing here.
-      } else {
+      // AbortError: el mensaje ya lo puso cancelAnalysis
+      if (err.name !== "AbortError") {
         setError(err?.message || "Ocurrió un error. Verifique que el backend esté encendido.");
-        
       }
     } finally {
       if (abortControllerRef.current && abortControllerRef.current.signal === signal) {
         setLoading(false);
         setCurrentTaskName("");
+        setCurrentJobId(null);
         abortControllerRef.current = null;
       }
     }
   };
 
   return (
-    <AnalysisContext.Provider value={{ loading, currentTaskName, error, setError, startAnalysis, cancelAnalysis }}>
+    <AnalysisContext.Provider value={{ loading, currentTaskName, currentJobId, error, setError, startAnalysis, cancelAnalysis }}>
       {children}
     </AnalysisContext.Provider>
   );

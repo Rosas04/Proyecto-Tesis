@@ -62,8 +62,7 @@ export default function Register() {
           return;
         }
       } catch (apiErr) {
-        
-        setError("Error al verificar el correo. Intente más tarde.");
+        setError(apiErr?.message || "Error al verificar el correo. Intente más tarde.");
         setLoading(false);
         return;
       }
@@ -98,7 +97,7 @@ export default function Register() {
       setEmail("");
       setPassword("");
       setConfirmPassword("");
-    } catch (err) {
+    } catch {
       setError("No se pudo crear la cuenta. Intente nuevamente.");
       
     } finally {
@@ -127,7 +126,7 @@ export default function Register() {
 
           <label>Contraseña</label>
           <input type="password" aria-label="Contraseña"
-            placeholder="Mínimo 6 caracteres"
+            placeholder="Mínimo 8 caracteres"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />

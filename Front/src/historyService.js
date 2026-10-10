@@ -1,5 +1,10 @@
 import { supabase } from './lib/supabase.js';
 
+// Los hallazgos de una ejecución no cambian: se cachean para no repetir la
+// consulta al expandir el detalle y al descargar el PDF del mismo análisis.
+const findingsCache = new Map();
+const MAX_RUNS = 500;
+
 /**
  * Agrega un nuevo análisis de auditoría técnica a Supabase.
  * Guarda el registro principal en `analysis_runs` y sus hallazgos asociados en `analysis_findings`.
@@ -63,7 +68,7 @@ export async function addAnalysisRun({
     }
   } catch (projErr) {
     console.error("Fallo al resolver project_id:", projErr);
-    throw new Error("No se pudo asociar o crear el proyecto para este análisis. Verifique políticas de la tabla 'projects'.");
+    throw new Error("No se pudo asociar o crear el proyecto para este análisis. Verifique políticas de la tabla 'projects'.", { cause: projErr });
   }
 
   // 2. Insertar el registro principal en `analysis_runs` vinculándolo a project_id
@@ -121,7 +126,8 @@ export async function fetchUserRuns(userId) {
     .from('analysis_runs')
     .select('*, projects(project_name)')
     .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(MAX_RUNS);
 
   if (error) {
     console.error("Error al recuperar analysis_runs:", error);
@@ -137,6 +143,7 @@ export async function fetchUserRuns(userId) {
 export async function fetchRunFindings(runId) {
   if (!supabase) return [];
   if (!runId) return [];
+  if (findingsCache.has(runId)) return findingsCache.get(runId);
 
   const { data, error } = await supabase
     .from('analysis_findings')
@@ -149,6 +156,7 @@ export async function fetchRunFindings(runId) {
     throw error;
   }
 
+  findingsCache.set(runId, data);
   return data;
 }
 

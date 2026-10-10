@@ -6,7 +6,6 @@ import logoImgPng from "../assets/logo.png";
 export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, inputType }, ref) => {
   const summary = reportResult?.summary || {};
   const findings = Array.isArray(reportResult?.findings) ? reportResult.findings : [];
-  const recommendations = Array.isArray(reportResult?.main_recommendations) ? reportResult.main_recommendations : [];
   
   const globalScore = summary.global_score ?? 84;
   const totalInterfaces = summary.total_interfaces ?? 3;

@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { evaluateHtml } from "../services/api";
 import { storageService } from "../services/storageService";
-import { getInterfaceLabel } from "../utils/interfaceLabel";
-import { TypeBadge } from "../components/TypeBadge";
 import "./Evaluation.css";
 
 export default function Evaluation() {
@@ -15,17 +13,11 @@ export default function Evaluation() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   
-  const [captureResult, setCaptureResult] = useState(null);
+  const [, setCaptureResult] = useState(null);
   const [selectedIface, setSelectedIface] = useState(null);
-  const [evaluationCache, setEvaluationCache] = useState({});
+  const [, setEvaluationCache] = useState({});
 
   const hasCalled = useRef(false);
-
-  const isZip = captureResult?.source_type === "zip";
-  const interfaces = useMemo(() => {
-    if (!captureResult?.interfaces || !Array.isArray(captureResult.interfaces)) return [];
-    return captureResult.interfaces;
-  }, [captureResult]);
 
   useEffect(() => {
     const savedEvaluation = storageService.getIsoEvaluation();
@@ -101,7 +93,7 @@ export default function Evaluation() {
         return updated;
       });
       storageService.setIsoEvaluation(result);
-    } catch (err) {
+    } catch {
       setError(
         "No se pudo ejecutar la evaluación ISO/IEC 25010. Verifique que el backend esté encendido."
       );
@@ -109,34 +101,6 @@ export default function Evaluation() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleTabChange = async (iface) => {
-    setSelectedIface(iface);
-    setError("");
-    setEvaluationResult(null);
-    localStorage.removeItem("technicalReport"); // Clear cached report for old tab
-
-    const targetHtmlContent = iface
-      ? iface.html_content
-      : captureResult?.html_content || "";
-
-    if (!targetHtmlContent.trim()) {
-      setError("No existe contenido HTML para evaluar en esta interfaz.");
-      return;
-    }
-
-    const cacheKey = iface ? iface.file_name : "combined";
-    if (evaluationCache[cacheKey]) {
-      const cached = evaluationCache[cacheKey];
-      setEvaluationResult(cached);
-      localStorage.setItem("isoEvaluation", JSON.stringify(cached));
-      // Just to ensure it's up to date
-      localStorage.setItem("isoEvaluations", JSON.stringify(evaluationCache));
-      return;
-    }
-
-    await runEvaluation(targetHtmlContent, cacheKey);
   };
 
   const evaluation = useMemo(() => {
@@ -222,14 +186,6 @@ export default function Evaluation() {
 
     return result;
   }, [findings]);
-
-  const getScoreClass = (score) => {
-    if (score >= 90) return "excellent";
-    if (score >= 80) return "high";
-    if (score >= 60) return "medium";
-    if (score >= 40) return "low";
-    return "critical";
-  };
 
   const getSeverityClass = (severity) => {
     if (severity === "Crítica") return "critical";
