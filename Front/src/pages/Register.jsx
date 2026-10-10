@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import logoImgWebp from "../assets/logo.webp";
 import logoImgPng from "../assets/logo.png";
+import "./Login.css"; // estilos base auth-* compartidos con Login
 import "./Register.css";
 
 export default function Register() {

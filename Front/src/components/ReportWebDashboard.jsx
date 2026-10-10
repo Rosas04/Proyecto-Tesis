@@ -1,6 +1,8 @@
 import './ReportWebDashboard.css';
+import { getQualityLevel, toScore } from '../utils/qualityLevel';
 
-export function ReportWebDashboard({ reportResult, summary, findings, scores, sourceLabel, inputType, getScoreColorUI, getScoreLabelUI, getBadgeClassUI }) {
+export function ReportWebDashboard({ reportResult, summary, findings, scores, sourceLabel, inputType, getBadgeClassUI }) {
+  const scoreValue = toScore(summary?.global_score);
   const scoreLabels = {
     adecuacion_funcional: "Adecuación funcional",
     eficiencia_desempeno: "Eficiencia de desempeño",
@@ -25,13 +27,13 @@ export function ReportWebDashboard({ reportResult, summary, findings, scores, so
               <div className="score-circle-container">
                 <svg width="120" height="120" viewBox="0 0 120 120">
                   <circle cx="60" cy="60" r="50" fill="none" stroke="#e2e8f0" strokeWidth="8" />
-                  <circle cx="60" cy="60" r="50" fill="none" stroke={getScoreColorUI(summary.global_score ?? 84)} strokeWidth="8" strokeDasharray={2 * Math.PI * 50} strokeDashoffset={(2 * Math.PI * 50) - ((summary.global_score ?? 84) / 100) * (2 * Math.PI * 50)} transform="rotate(-90 60 60)" strokeLinecap="round" />
-                  <text x="60" y="55" textAnchor="middle" fontSize="28" fontWeight="800" fill="#0f172a">{summary.global_score ?? 84}<tspan fontSize="14" fill="#64748b">/100</tspan></text>
+                  <circle cx="60" cy="60" r="50" fill="none" stroke={getQualityLevel(scoreValue).color} strokeWidth="8" strokeDasharray={2 * Math.PI * 50} strokeDashoffset={(2 * Math.PI * 50) - ((scoreValue ?? 0) / 100) * (2 * Math.PI * 50)} transform="rotate(-90 60 60)" strokeLinecap="round" />
+                  <text x="60" y="55" textAnchor="middle" fontSize="28" fontWeight="800" fill="#0f172a">{scoreValue ?? "N/D"}<tspan fontSize="14" fill="#64748b">/100</tspan></text>
                 </svg>
-                <div className="score-label-ui" style={{ backgroundColor: getScoreColorUI(summary.global_score ?? 84) }}>{getScoreLabelUI(summary.global_score ?? 84)}</div>
+                <div className="score-label-ui" style={{ backgroundColor: getQualityLevel(scoreValue).color }}>{(summary.quality_level || getQualityLevel(scoreValue).label)}</div>
               </div>
               <div className="exec-text">
-                <p>El proyecto presenta un nivel de calidad técnica adecuado, con un buen desempeño general en la mayoría de los aspectos evaluados.</p>
+                <p>{reportResult?.technical_conclusion || "No se pudo determinar una conclusión técnica para esta evaluación."}</p>
                 <h4>Alcance de la evaluación</h4>
                 <p className="last">Se evaluaron las interfaces frontend del proyecto según los criterios de la norma ISO/IEC 25010.</p>
               </div>

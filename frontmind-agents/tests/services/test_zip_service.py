@@ -57,3 +57,22 @@ def test_zip_bomb_ratio_rejected(tmp_path):
     zip_path = _make_zip(tmp_path / "bomb.zip", {"a.html": "A" * 5_000_000})
     with pytest.raises(ValueError):
         safe_extract_zip(str(zip_path), str(tmp_path / "out"))
+
+
+def test_static_site_pages_become_interfaces(tmp_path, monkeypatch):
+    """index.html y páginas cortas de un sitio estático son interfaces reales."""
+    monkeypatch.setattr(zip_service, "EXTRACT_BASE_DIR", tmp_path / "extract")
+    zip_path = _make_zip(tmp_path / "sitio.zip", {
+        "src/index.html": "<html><body><main><h1>Mi sitio</h1><a href='c.html'>Contacto</a></main></body></html>",
+        "src/contacto.html": "<html><body><form><input type='email'><button>Enviar</button></form></body></html>",
+        "src/styles.css": "body{color:#222}",
+    })
+    result = extract_zip_project(str(zip_path))
+    names = sorted(i["file_name"] for i in result["interfaces"])
+    assert names == ["contacto.html", "index.html"]
+
+
+def test_spa_shell_is_skipped():
+    shell = "<html><head><script src='main.js'></script></head><body><div id='root'></div></body></html>"
+    assert zip_service._is_empty_html_shell(shell) is True
+    assert zip_service._is_empty_html_shell("<html><body><form><input></form></body></html>") is False

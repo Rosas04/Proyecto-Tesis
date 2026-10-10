@@ -1,14 +1,15 @@
 import React, { useMemo } from 'react';
 import './ReportDashboard.css';
 import logoImgWebp from "../assets/logo.webp";
+import { getQualityLevel, toScore } from '../utils/qualityLevel';
 import logoImgPng from "../assets/logo.png";
 
 export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, inputType }, ref) => {
   const summary = reportResult?.summary || {};
   const findings = Array.isArray(reportResult?.findings) ? reportResult.findings : [];
   
-  const globalScore = summary.global_score ?? 84;
-  const totalInterfaces = summary.total_interfaces ?? 3;
+  const globalScore = toScore(summary.global_score);
+  const totalInterfaces = summary.total_interfaces ?? 1;
   const totalFindings = summary.total_findings ?? findings.length;
 
   const severityCounts = useMemo(() => {
@@ -39,19 +40,9 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
     "Portabilidad": 82
   };
 
-  const getScoreColor = (score) => {
-    if (score >= 90) return '#10b981'; // Green
-    if (score >= 70) return '#3b82f6'; // Blue
-    if (score >= 50) return '#f59e0b'; // Yellow
-    return '#ef4444'; // Red
-  };
+  const getScoreColor = (score) => getQualityLevel(score).color;
 
-  const getScoreLabel = (score) => {
-    if (score >= 90) return 'Excelente';
-    if (score >= 70) return 'Bueno';
-    if (score >= 50) return 'Regular';
-    return 'Deficiente';
-  };
+  const getScoreLabel = (score) => summary.quality_level || getQualityLevel(score).label;
 
   const scoreColor = getScoreColor(globalScore);
   const scoreLabel = getScoreLabel(globalScore);
@@ -75,7 +66,7 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
   // SVG circle calculation
   const radius = 50;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (globalScore / 100) * circumference;
+  const strokeDashoffset = circumference - ((globalScore ?? 0) / 100) * circumference;
 
   const header = (
     <div className="pdf-header">
@@ -129,12 +120,12 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
                   <svg width="120" height="120" viewBox="0 0 120 120">
                     <circle cx="60" cy="60" r="50" fill="none" stroke="#e2e8f0" strokeWidth="10" />
                     <circle cx="60" cy="60" r="50" fill="none" stroke={scoreColor} strokeWidth="10" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} transform="rotate(-90 60 60)" strokeLinecap="round" />
-                    <text x="60" y="55" textAnchor="middle" fontSize="28" fontWeight="800" fill="#0f172a">{globalScore}<tspan fontSize="14" fill="#64748b">/100</tspan></text>
+                    <text x="60" y="55" textAnchor="middle" fontSize="28" fontWeight="800" fill="#0f172a">{globalScore ?? "N/D"}<tspan fontSize="14" fill="#64748b">/100</tspan></text>
                   </svg>
                   <div className="score-label" style={{ backgroundColor: scoreColor }}>{scoreLabel}</div>
                 </div>
                 <div className="exec-text">
-                  <p>El proyecto presenta un nivel de calidad técnica adecuado, con un buen desempeño general en la mayoría de los aspectos evaluados. Se identificaron algunos hallazgos que requieren atención para optimizar la accesibilidad, la seguridad y la mantenibilidad del sistema.</p>
+                  <p>{reportResult?.technical_conclusion || "No se pudo determinar una conclusión técnica para esta evaluación."}</p>
                   <h4>Alcance de la evaluación</h4>
                   <p>Se evaluaron las interfaces frontend del proyecto según los criterios de la norma ISO/IEC 25010, considerando ocho características de calidad.</p>
                 </div>

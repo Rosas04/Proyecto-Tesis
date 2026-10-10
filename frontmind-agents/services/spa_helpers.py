@@ -26,16 +26,17 @@ def wait_for_spa(page: Page) -> None:
     except Exception:
         pass
 
-    # 2. Contenedor principal visible
+    # 2. Contenedor principal visible (sólo si la página lo tiene; en sitios
+    #    estáticos sin #root/main se evitaban 8 s de espera inútil por página)
     try:
-        page.locator("#root, main, [role='main']").first.wait_for(
-            state="visible", timeout=8_000
-        )
+        container = page.locator("#root, #app, main, [role='main']")
+        if container.count() > 0:
+            container.first.wait_for(state="visible", timeout=8_000)
     except Exception:
         pass
 
     # 3. Pausa para scripts diferidos
-    page.wait_for_timeout(2_000)
+    page.wait_for_timeout(1_000)
 
     # 4. Limpiar elementos dinámicos que alteran las heurísticas de evaluación
     try:

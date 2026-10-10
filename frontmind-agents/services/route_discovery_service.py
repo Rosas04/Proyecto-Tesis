@@ -201,8 +201,8 @@ def extract_routes_via_clicks(page: Page, origin: str) -> list[str]:
     try:
         # Find potential navigation elements that DON'T have hrefs (since we already got those)
         locators = page.locator("button:not([disabled]), [role='button']:not([disabled]), [role='link']:not([href]), [class*='nav']:not(nav), [class*='menu-item'], [class*='tab'], li:not(:has(a))").all()
-        # Limit to first 20 to avoid excessive clicking and massive time delays, prioritize visible ones
-        locators = [loc for loc in locators if loc.is_visible()][:20]
+        # Limitado a 8 elementos visibles para acotar el tiempo de descubrimiento
+        locators = [loc for loc in locators if loc.is_visible()][:8]
         
         for loc in locators:
             try:
@@ -387,12 +387,22 @@ def discover_routes(
             continue
 
         discovered.append(page.url)
-        
+
         links = extract_internal_links(page, start_url)
         logger.debug("Found internal links via href: %s", links)
 
-        clicked_links = extract_routes_via_clicks(page, start_url)
-        logger.debug("Found internal links via clicks: %s", clicked_links)
+        # El descubrimiento por clicks es costoso (navega y espera por cada
+        # elemento): sólo se usa cuando la página casi no expone enlaces <a href>,
+        # como ocurre en SPAs con navegación por botones.
+        clicked_links: list[str] = []
+        if len(links) < 3:
+            clicked_links = extract_routes_via_clicks(page, start_url)
+            logger.debug("Found internal links via clicks: %s", clicked_links)
+
+        logger.info(
+            "Interfaz descubierta %d/%d: %s",
+            len(discovered), max_pages, page.url,
+        )
         
         all_links = list(set(links + clicked_links))
 

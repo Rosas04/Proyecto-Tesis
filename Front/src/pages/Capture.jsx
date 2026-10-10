@@ -5,6 +5,7 @@ import { API_URL } from "../services/api";
 import { storageService } from "../services/storageService";
 import { getInterfaceLabel } from "../utils/interfaceLabel";
 import { TypeBadge } from "../components/TypeBadge";
+import "./Home.css"; // .home-layout (layout compartido con Inicio)
 import "./Capture.css";
 
 // Icons
@@ -201,12 +202,14 @@ export default function Capture() {
     return "";
   };
 
+  // Texto descriptivo neutro: la captura no verifica por sí sola si la vista es responsive
   const getDeviceDesc = (device) => {
-    if (device === "desktop") return { title: "Vista completa", text: "Se detecta la interfaz principal de registro en vista de escritorio." };
-    if (device === "tablet") return { title: "Vista adaptada", text: "Interfaz correctamente responsive en vista de tablet." };
-    if (device === "mobile") return { title: "Vista móvil", text: "Interfaz adaptada correctamente a dispositivos móviles." };
+    if (device === "desktop") return { title: "Vista de escritorio", text: "Captura de página completa en resolución de escritorio." };
+    if (device === "tablet") return { title: "Vista de tablet", text: "Captura de página completa en resolución de tablet." };
+    if (device === "mobile") return { title: "Vista móvil", text: "Captura de página completa en resolución móvil." };
     return { title: "Vista capturada", text: "Captura de la interfaz seleccionada." };
   };
+
 
   return (
     <div className="home-layout">

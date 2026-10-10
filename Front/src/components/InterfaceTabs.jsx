@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import "../pages/Input.css"; // .tabs-container
 import JSZip from 'jszip';
 
 export default function InterfaceTabs() {

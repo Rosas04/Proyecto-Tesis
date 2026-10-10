@@ -63,6 +63,15 @@ IGNORED_DIRS = {
 }
 
 # File name fragments that signal non-page files
+STATIC_PROJECT_TYPES = {"html", "vanilla"}
+
+# Elementos que indican contenido visual real aunque haya poco texto
+CONTENT_TAGS = [
+    "form", "input", "button", "select", "textarea", "img", "svg", "picture",
+    "video", "canvas", "table", "ul", "ol", "nav", "header", "footer", "main",
+    "section", "article", "h1", "h2", "h3", "p", "a", "label",
+]
+
 SKIP_FILE_PATTERNS = {
     "test", "spec", "story", "stories", "mock", "fixture",
     ".d.ts", ".min.", ".map", ".config.", "webpack", "rollup",
@@ -324,6 +333,9 @@ def _build_interfaces(all_files: dict, combined_css: str, project_type: str) -> 
     interfaces = []
 
     SKIP_DIRS = {"context", "contexts", "routes", "router", "providers", "services", "lib", "utils"}
+    # _detect_project_type devuelve "vanilla" para sitios HTML estáticos: en ellos
+    # index.html es una página real y no el shell de una SPA.
+    is_static_site = project_type in STATIC_PROJECT_TYPES
     ENTRY_POINTS = {"app.jsx", "app.tsx", "main.jsx", "main.tsx", "index.jsx", "index.tsx", "index.js", "index.ts"}
 
     for rel_path, f in sorted(all_files.items()):
@@ -340,11 +352,11 @@ def _build_interfaces(all_files: dict, combined_css: str, project_type: str) -> 
             continue
 
         # Skip SPA index.html
-        if fname_lower == "index.html" and project_type != "html":
+        if fname_lower == "index.html" and not is_static_site:
             continue
 
         # Skip SPA entry points
-        if fname_lower in ENTRY_POINTS and project_type != "html":
+        if fname_lower in ENTRY_POINTS and not is_static_site:
             continue
 
         # Style files are aggregated, not turned into pages
@@ -489,12 +501,18 @@ def _dispatch_visual(f: dict, combined_css: str) -> str:
 # ────────────────────────────────────────────────────────────────
 
 def _is_empty_html_shell(html: str) -> bool:
+    """
+    True sólo para el shell vacío de una SPA (p. ej. <div id="root"></div> +
+    scripts). Una página corta pero real (formulario, imagen, enlaces) no lo es.
+    """
     try:
         from bs4 import BeautifulSoup
         soup = BeautifulSoup(html, "html.parser")
-        for tag in soup.find_all(["script", "style", "meta", "link"]):
+        for tag in soup.find_all(["script", "style", "meta", "link", "noscript"]):
             tag.decompose()
-        return len(soup.get_text(strip=True)) < 40
+        if len(soup.get_text(strip=True)) >= 40:
+            return False
+        return soup.find(CONTENT_TAGS) is None
     except Exception:
         return False
 

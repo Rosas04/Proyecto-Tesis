@@ -222,38 +222,89 @@ def _build_route_result(
     }
 
 
+_GENERIC_SEGMENTS = {"page", "p", "index", "index.html", "index.php", "default.aspx", "home"}
+
+
+def _humanize(segment: str) -> str:
+    segment = re.sub(r"\.(html?|php|aspx?)$", "", segment, flags=re.IGNORECASE)
+    return segment.replace("-", " ").replace("_", " ").strip().title()
+
+
+def _name_from_path(path: str) -> str:
+    """
+    Nombre legible a partir de un path. Ignora segmentos genéricos o numéricos
+    al elegir el nombre y los agrega como sufijo de página:
+      /tag/books/page/2/  -> "Books (pág. 2)"
+      /author/Jane-Austen -> "Jane Austen"
+      /cursos/123         -> "Cursos 123"
+    """
+    segments = [seg for seg in path.split("?")[0].strip("/").split("/") if seg]
+    if not segments:
+        return ""
+
+    page_number = None
+    if len(segments) >= 2 and segments[-1].isdigit() and segments[-2].lower() in ("page", "p"):
+        page_number = segments[-1]
+        segments = segments[:-2]
+
+    meaningful = [seg for seg in segments if seg.lower() not in _GENERIC_SEGMENTS]
+    if not meaningful:
+        name = "Home"
+    elif meaningful[-1].isdigit() and len(meaningful) >= 2:
+        name = f"{_humanize(meaningful[-2])} {meaningful[-1]}"
+    else:
+        name = _humanize(meaningful[-1])
+
+    if page_number and page_number != "1":
+        name = f"{name} (pág. {page_number})"
+    return name
+
+
 def _get_display_name(route_url: str) -> str:
     """Extrae un nombre legible para la interfaz a partir de su URL."""
     from urllib.parse import parse_qs, urlparse
     parsed = urlparse(route_url)
-    
-    # 1. Intentar obtener el nombre a partir del fragment (SPA HashRouter)
+
+    # 1. Fragment de SPA con HashRouter (#/ruta o #!/ruta)
     if parsed.fragment and (parsed.fragment.startswith("/") or parsed.fragment.startswith("!/")):
-        path_segment = parsed.fragment.lstrip("/!")
-        if path_segment:
-            last_segment = path_segment.split("/")[-1]
-            last_segment = last_segment.split("?")[0] # Eliminar querystrings internos
-            return last_segment.replace("-", " ").replace("_", " ").title()
+        name = _name_from_path(parsed.fragment.lstrip("!"))
+        if name:
+            return name
 
-    # 2. Intentar obtenerlo del path normal
-    path_segment = parsed.path.strip("/")
-    if path_segment:
-        last_segment = path_segment.split("/")[-1]
-        return last_segment.replace("-", " ").replace("_", " ").title()
+    # 2. Path normal
+    name = _name_from_path(parsed.path)
+    if name and name != "Home":
+        return name
 
-    # 3. Si no hay path ni fragment, buscar en query parameters
+    # 3. Sin path: buscar en query parameters
     if parsed.query:
         query_params = parse_qs(parsed.query)
         for key in ["page", "view", "section", "tab", "action"]:
             if key in query_params and query_params[key]:
-                return str(query_params[key][0]).replace("-", " ").replace("_", " ").title()
-        
-        # Si no hay llaves comunes, usamos el primer valor del primer param
+                return _humanize(str(query_params[key][0]))
+
         first_val = next(iter(query_params.values()), [""])[0]
         if first_val and len(str(first_val)) < 20:
-            return f"Home ({str(first_val)})"
+            return f"Home ({first_val})"
 
     return "Home"
+
+
+def _route_key(route_url: str) -> str:
+    """
+    Clave para detectar rutas equivalentes: ignora el esquema (http/https),
+    "www.", la barra final, "index.html" y una paginación "/page/1".
+    """
+    parsed = urlparse(route_url)
+    host = (parsed.hostname or "").lower().removeprefix("www.")
+    path = re.sub(r"/(index\.(html?|php))$", "", parsed.path, flags=re.IGNORECASE)
+    path = re.sub(r"/page/1/?$", "", path.rstrip("/"))
+    key = f"{host}{path.rstrip('/')}"
+    if parsed.query:
+        key += f"?{parsed.query}"
+    if parsed.fragment.startswith(("/", "!/")):
+        key += f"#{parsed.fragment}"
+    return key
 
 
 def _capture_single_page(
@@ -568,17 +619,22 @@ def take_screenshots(
                 all_routes: list[str] = []
                 internal_route_set: set[str] = set()
 
+                seen_keys: set[str] = set()
+
                 # Primero las rutas internas (son las más importantes)
                 for route in post_login_routes:
-                    normalized = route.rstrip("/")
-                    if normalized not in {r.rstrip("/") for r in all_routes}:
+                    key = _route_key(route)
+                    if key not in seen_keys:
+                        seen_keys.add(key)
                         all_routes.append(route)
-                        internal_route_set.add(normalized)
+                        internal_route_set.add(route.rstrip("/"))
 
-                # Luego las rutas públicas (si no se solapan con las internas)
+                # Luego las rutas públicas (si no se solapan con las internas).
+                # Se descartan equivalentes: http/https, "/page/1", "index.html".
                 for route in pre_login_routes:
-                    normalized = route.rstrip("/")
-                    if normalized not in {r.rstrip("/") for r in all_routes}:
+                    key = _route_key(route)
+                    if key not in seen_keys:
+                        seen_keys.add(key)
                         all_routes.append(route)
 
                 if not all_routes:

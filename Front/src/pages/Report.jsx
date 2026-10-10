@@ -4,6 +4,7 @@ import { jsPDF } from "jspdf";
 import Sidebar from "../components/Sidebar";
 import { generateReport } from "../services/api";
 import { storageService } from "../services/storageService";
+import { getQualityLevel, toScore } from "../utils/qualityLevel";
 import { useAuth } from "../context/AuthContext";
 import { addAnalysisRun } from "../historyService";
 import html2canvas from "html2canvas";
@@ -148,6 +149,7 @@ export default function Report() {
   };
 
   const summary = useMemo(() => reportResult?.summary || {}, [reportResult]);
+  const scoreValue = toScore(summary.global_score);
   const scores = useMemo(() => reportResult?.scores || {}, [reportResult]);
   const findings = useMemo(
     () => (Array.isArray(reportResult?.findings) ? reportResult.findings : []),
@@ -231,18 +233,6 @@ export default function Report() {
   };
 
 
-  const getScoreColorUI = (score) => {
-    if (score >= 90) return '#10b981';
-    if (score >= 70) return '#3b82f6';
-    if (score >= 50) return '#f59e0b';
-    return '#ef4444';
-  };
-  const getScoreLabelUI = (score) => {
-    if (score >= 90) return 'Excelente';
-    if (score >= 70) return 'Bueno';
-    if (score >= 50) return 'Regular';
-    return 'Deficiente';
-  };
   const getBadgeClassUI = (severity) => {
     const s = severity?.toLowerCase() || '';
     if (s.includes('crític') || s.includes('alta') || s.includes('alto')) return 'badge-alta';
@@ -293,13 +283,13 @@ export default function Report() {
                     <div className="score-circle-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
                       <svg width="120" height="120" viewBox="0 0 120 120">
                         <circle cx="60" cy="60" r="50" fill="none" stroke="#e2e8f0" strokeWidth="8" />
-                        <circle cx="60" cy="60" r="50" fill="none" stroke={getScoreColorUI(summary.global_score ?? 84)} strokeWidth="8" strokeDasharray={2 * Math.PI * 50} strokeDashoffset={(2 * Math.PI * 50) - ((summary.global_score ?? 84) / 100) * (2 * Math.PI * 50)} transform="rotate(-90 60 60)" strokeLinecap="round" />
-                        <text x="60" y="55" textAnchor="middle" fontSize="28" fontWeight="800" fill="#0f172a">{summary.global_score ?? 84}<tspan fontSize="14" fill="#64748b">/100</tspan></text>
+                        <circle cx="60" cy="60" r="50" fill="none" stroke={getQualityLevel(scoreValue).color} strokeWidth="8" strokeDasharray={2 * Math.PI * 50} strokeDashoffset={(2 * Math.PI * 50) - ((scoreValue ?? 0) / 100) * (2 * Math.PI * 50)} transform="rotate(-90 60 60)" strokeLinecap="round" />
+                        <text x="60" y="55" textAnchor="middle" fontSize="28" fontWeight="800" fill="#0f172a">{scoreValue ?? "N/D"}<tspan fontSize="14" fill="#64748b">/100</tspan></text>
                       </svg>
-                      <div className="score-label" style={{ backgroundColor: getScoreColorUI(summary.global_score ?? 84), color: 'white', padding: '4px 16px', borderRadius: '99px', fontSize: '12px', fontWeight: '600' }}>{getScoreLabelUI(summary.global_score ?? 84)}</div>
+                      <div className="score-label" style={{ backgroundColor: getQualityLevel(scoreValue).color, color: 'white', padding: '4px 16px', borderRadius: '99px', fontSize: '12px', fontWeight: '600' }}>{(summary.quality_level || getQualityLevel(scoreValue).label)}</div>
                     </div>
                     <div className="exec-text" style={{ flex: 1, minWidth: '200px', fontSize: '13px', color: '#475569', lineHeight: '1.6' }}>
-                      <p style={{ margin: '0 0 16px 0' }}>El proyecto presenta un nivel de calidad técnica adecuado, con un buen desempeño general en la mayoría de los aspectos evaluados.</p>
+                      <p style={{ margin: '0 0 16px 0' }}>{reportResult?.technical_conclusion || "No se pudo determinar una conclusión técnica para esta evaluación."}</p>
                       <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', color: '#0f172a', fontWeight: '700' }}>Alcance de la evaluación</h4>
                       <p style={{ margin: 0 }}>Se evaluaron las interfaces frontend del proyecto según los criterios de la norma ISO/IEC 25010.</p>
                     </div>

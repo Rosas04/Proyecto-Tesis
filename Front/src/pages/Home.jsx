@@ -8,6 +8,7 @@ import {
   PieChart, Pie, Cell
 } from "recharts";
 import "./Home.css";
+import { getQualityLevel, QUALITY_LEVELS } from "../utils/qualityLevel";
 
 // --- Icons ---
 const DocIcon = () => (
@@ -108,22 +109,19 @@ export default function Home() {
 
   // Pie Chart Data
   const pieDataInfo = useMemo(() => {
-    let counts = { excelente: 0, bueno: 0, regular: 0, deficiente: 0 };
+    const counts = Object.fromEntries(QUALITY_LEVELS.map((l) => [l.label, 0]));
     runs.forEach(r => {
-      if (r.global_score >= 80) counts.excelente++;
-      else if (r.global_score >= 60) counts.bueno++;
-      else if (r.global_score >= 40) counts.regular++;
-      else counts.deficiente++;
+      const level = getQualityLevel(r.global_score);
+      if (level.label in counts) counts[level.label]++;
     });
-    
+
     const total = runs.length || 1;
-    
-    const data = [
-      { name: 'Excelente (80-100)', count: counts.excelente, color: '#10b981' },
-      { name: 'Bueno (60-79)', count: counts.bueno, color: '#f59e0b' },
-      { name: 'Regular (40-59)', count: counts.regular, color: '#f97316' },
-      { name: 'Deficiente (0-39)', count: counts.deficiente, color: '#ef4444' }
-    ];
+
+    const data = QUALITY_LEVELS.map((l) => ({
+      name: `${l.label} (${l.range})`,
+      count: counts[l.label],
+      color: l.color,
+    }));
     
     return { data, total };
   }, [runs]);
