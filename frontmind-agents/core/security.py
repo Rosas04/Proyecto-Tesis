@@ -46,12 +46,16 @@ async def verify_api_key(api_key: str = Security(_api_key_header)) -> None:
     """
     Dependencia FastAPI que valida el header X-API-Key.
 
-    Falla cerrado: si BACKEND_API_KEY no está configurada se rechaza el
-    request, salvo en FRONTMIND_ENV=development. Comparación en tiempo constante.
+    La clave viaja en el bundle del frontend, así que es una barrera secundaria:
+    - Si BACKEND_API_KEY está configurada, se exige (comparación en tiempo constante).
+    - Si no lo está, se permite sólo cuando la autenticación de usuarios con
+      Supabase está activa (control principal) o en FRONTMIND_ENV=development.
+    - Sin ninguna de las dos, falla cerrado.
     """
     expected = os.environ.get("BACKEND_API_KEY", "").strip()
     if not expected:
-        if is_dev_mode():
+        supabase_url, anon_key = _supabase_config()
+        if is_dev_mode() or (supabase_url and anon_key):
             return
         logger.error("BACKEND_API_KEY no configurada — request rechazado.")
         raise HTTPException(

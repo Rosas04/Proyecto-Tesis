@@ -56,15 +56,23 @@ export default function Register() {
         const { verifyEmail } = await import("../services/api");
         const verifyData = await verifyEmail(email.trim());
 
-        if (verifyData.deliverability !== "DELIVERABLE") {
+        // Sólo se bloquea ante un veredicto negativo; "UNKNOWN" no impide el registro
+        if (!["DELIVERABLE", "UNKNOWN"].includes(verifyData.deliverability)) {
           setError(`El correo no parece ser válido o seguro (Estado: ${verifyData.deliverability}). Intente con otro.`);
           setLoading(false);
           return;
         }
       } catch (apiErr) {
-        setError(apiErr?.message || "Error al verificar el correo. Intente más tarde.");
-        setLoading(false);
-        return;
+        const message = apiErr?.message || "";
+        // Exceso de intentos: se respeta el bloqueo
+        if (message.startsWith("Demasiadas")) {
+          setError(message);
+          setLoading(false);
+          return;
+        }
+        // Servicio de verificación no disponible/no configurado: se continúa,
+        // Supabase igualmente exige confirmar el correo por enlace.
+        console.warn("Verificación de correo no disponible; se continúa con el registro.", apiErr);
       }
 
       const { data, error: registerError } = await register(email, password);

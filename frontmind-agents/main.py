@@ -127,7 +127,7 @@ _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     if not is_dev_mode():
-        missing = [v for v in ("BACKEND_API_KEY", "SUPABASE_URL", "SUPABASE_ANON_KEY")
+        missing = [v for v in ("SUPABASE_URL", "SUPABASE_ANON_KEY")
                    if not os.environ.get(v, "").strip()]
         if missing:
             logger.error("Variables obligatorias sin configurar: %s — los endpoints responderán 503.",

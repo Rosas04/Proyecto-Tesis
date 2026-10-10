@@ -42,10 +42,20 @@ def headers(token=TOKEN, key=API_KEY):
     return h
 
 
-def test_missing_backend_key_fails_closed(client, monkeypatch):
+def test_missing_all_auth_config_fails_closed(client, monkeypatch):
     monkeypatch.delenv("BACKEND_API_KEY")
+    monkeypatch.delenv("SUPABASE_URL")
     r = client.post("/evaluate/iso", json={"html": "<p>x</p>"}, headers=headers())
     assert r.status_code == 503
+
+
+def test_api_key_optional_when_supabase_auth_active(client, monkeypatch):
+    monkeypatch.delenv("BACKEND_API_KEY")
+    ok = client.post("/evaluate/iso", json={"html": "<p>x</p>"}, headers={"Authorization": f"Bearer {TOKEN}"})
+    assert ok.status_code == 200
+    # El token de usuario sigue siendo obligatorio
+    r = client.post("/evaluate/iso", json={"html": "<p>x</p>"})
+    assert r.status_code == 401
 
 
 def test_wrong_api_key_rejected(client):
