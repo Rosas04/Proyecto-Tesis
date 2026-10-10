@@ -98,8 +98,29 @@ class UrlRequest(BaseModel):
     job_id: Optional[str] = Field(default=None, pattern=JOB_ID_PATTERN)
 
 
+class RuntimeMetrics(BaseModel):
+    """Métricas medidas por Playwright sobre la página original."""
+    ttfb_ms: Optional[float] = Field(default=None, ge=0, le=600_000)
+    lcp_ms: Optional[float] = Field(default=None, ge=0, le=600_000)
+    cls: Optional[float] = Field(default=None, ge=0, le=100)
+    transfer_bytes: Optional[float] = Field(default=None, ge=0, le=5_000_000_000)
+    requests: Optional[int] = Field(default=None, ge=0, le=100_000)
+    js_heap_mb: Optional[float] = Field(default=None, ge=0, le=100_000)
+    dom_content_loaded_ms: Optional[float] = Field(default=None, ge=0, le=600_000)
+    load_ms: Optional[float] = Field(default=None, ge=0, le=600_000)
+
+
+Characteristic = Literal[
+    "adecuacion_funcional", "eficiencia_desempeno", "usabilidad", "accesibilidad",
+    "mantenibilidad", "compatibilidad", "seguridad", "portabilidad",
+]
+
+
 class IsoRequest(BaseModel):
     html: str = Field(max_length=MAX_HTML_CHARS)
+    runtime_metrics: Optional[RuntimeMetrics] = None
+    # Subconjunto priorizado de características (ISO/IEC 25040); vacío = todas
+    characteristics: Optional[list[Characteristic]] = Field(default=None, max_length=8)
 
 
 class ReportRequest(BaseModel):
@@ -319,7 +340,8 @@ def replicate_content(request: HtmlContentRequest):
 def evaluate_iso(request: IsoRequest):
     try:
         agent = ISOEvaluationAgent()
-        return agent.run(request.html)
+        runtime = request.runtime_metrics.model_dump(exclude_none=True) if request.runtime_metrics else None
+        return agent.run(request.html, runtime_metrics=runtime or None, characteristics=request.characteristics)
     except Exception:
         logger.exception("Error en /evaluate/iso")
         raise HTTPException(status_code=500, detail="Error interno al procesar la solicitud.")

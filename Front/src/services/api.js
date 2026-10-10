@@ -124,13 +124,19 @@ export async function replicateHtmlFromContent(htmlContent, url, cssCache = null
   return handleResponse(response, "No se pudo generar la réplica HTML.");
 }
 
-export async function evaluateHtml(html) {
+// runtimeMetrics: métricas medidas por Playwright sobre la página original
+// characteristics: subconjunto priorizado (ISO/IEC 25040); null = todas
+export async function evaluateHtml(html, runtimeMetrics = null, characteristics = null) {
   const response = await fetch(`${API_URL}/evaluate/iso`, {
     method: "POST",
     headers: await buildHeaders({
       "Content-Type": "application/json",
     }),
-    body: JSON.stringify({ html }),
+    body: JSON.stringify({
+      html,
+      runtime_metrics: runtimeMetrics && Object.keys(runtimeMetrics).length ? runtimeMetrics : null,
+      characteristics,
+    }),
   });
 
   return handleResponse(response, "No se pudo evaluar el HTML.");

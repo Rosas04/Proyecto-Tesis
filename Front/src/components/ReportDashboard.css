@@ -502,3 +502,11 @@
   line-height: 1.6;
   margin: 0;
 }
+
+/* La plantilla oculta del PDF (1200px) se posiciona dentro del contenedor de
+   la página y no desborda horizontalmente la ventana en pantallas pequeñas. */
+.report-main,
+.history-main {
+  position: relative;
+  overflow-x: hidden;
+}

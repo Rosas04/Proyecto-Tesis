@@ -20,7 +20,7 @@ def test_orchestrate_evaluation(mock_evaluate_iso_25010):
     result = agent.run(html_payload)
     
     # Assert service was called correctly
-    mock_evaluate_iso_25010.assert_called_once_with(html_payload)
+    mock_evaluate_iso_25010.assert_called_once_with(html_payload, runtime_metrics=None, characteristics=None)
     
     # Assert result structure
     assert result["agent"] == "ISOEvaluationAgent"

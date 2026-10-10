@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { evaluateHtml } from "../services/api";
 import { storageService } from "../services/storageService";
+import NormativeSection from "../components/NormativeSection";
 import "./Evaluation.css";
 
 export default function Evaluation() {
@@ -76,7 +77,11 @@ export default function Evaluation() {
       setLoading(true);
       setError("");
 
-      const result = await evaluateHtml(html);
+      // Métricas de ejecución de la página original (interfaz seleccionada o principal)
+      const capture = storageService.getCaptureResult();
+      const runtimeMetrics =
+        capture?.selected_interface?.performance_metrics || capture?.performance_metrics || null;
+      const result = await evaluateHtml(html, runtimeMetrics);
 
       // Assign the interface name to the evaluation result so the ReportAgent knows it
       if (result && result.evaluation) {
@@ -362,6 +367,11 @@ export default function Evaluation() {
                             >
                               {item.severity?.toUpperCase() || "MEDIA"}
                             </span>
+                            {item.severity_grade_label && (
+                              <small style={{ display: "block", marginTop: "4px", color: "#64748b" }}>
+                                ISO 25040: {item.severity_grade} · {item.severity_grade_label}
+                              </small>
+                            )}
                           </td>
                           <td>{item.finding?.replace(/\[.*?\]\s*/g, '') || "Hallazgo no especificado."}</td>
                           <td>
@@ -424,6 +434,8 @@ export default function Evaluation() {
                 </div>
               </section>
             )}
+
+            <NormativeSection data={evaluation} />
 
             <div className="page-actions" style={{ justifyContent: "flex-start", gap: "16px", padding: "0 26px" }}>
               <button className="secondary-btn" type="button" onClick={goBack} style={{ width: "auto" }}>

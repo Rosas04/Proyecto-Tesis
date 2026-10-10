@@ -5,6 +5,7 @@ import Sidebar from "../components/Sidebar";
 import { generateReport } from "../services/api";
 import { storageService } from "../services/storageService";
 import { getQualityLevel, toScore } from "../utils/qualityLevel";
+import NormativeSection from "../components/NormativeSection";
 import { useAuth } from "../context/AuthContext";
 import { addAnalysisRun } from "../historyService";
 import html2canvas from "html2canvas";
@@ -416,6 +417,8 @@ export default function Report() {
                 </table>
               </div>
             </div>
+
+            <NormativeSection data={reportResult} />
 
             <div className="page-actions" style={{ display: 'flex', gap: '12px', marginTop: '30px', justifyContent: 'flex-start' }}>
               <button type="button" onClick={goBack} style={{ padding: '10px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', background: 'white', border: '1px solid #cbd5e1', color: '#334155' }}>

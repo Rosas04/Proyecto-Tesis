@@ -2,8 +2,8 @@ from services.iso_service import evaluate_iso_25010
 
 
 class ISOEvaluationAgent:
-    def run(self, html: str):
-        evaluation = evaluate_iso_25010(html)
+    def run(self, html: str, runtime_metrics: dict | None = None, characteristics: list | None = None):
+        evaluation = evaluate_iso_25010(html, runtime_metrics=runtime_metrics, characteristics=characteristics)
 
         return {
             "agent": "ISOEvaluationAgent",

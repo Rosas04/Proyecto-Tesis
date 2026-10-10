@@ -1,5 +1,14 @@
 from datetime import datetime
 
+from services.iso_framework import (
+    SEVERITY_GRADES,
+    decision_criterion,
+    evaluation_restrictions,
+    evaluation_scope,
+    grade_from_compliance,
+    normalize_selection,
+)
+
 
 class ReportAgent:
     def run(self, data: dict):
@@ -89,10 +98,17 @@ class ReportAgent:
                     total_findings,
                     severity_summary,
                 ),
+                **self.build_normative_section(
+                    avg_score,
+                    all_findings,
+                    [e.get("evaluation", e) for e in evaluation_data],
+                ),
             }
         else:
-            # Single evaluation
+            # Single evaluation (acepta también el envoltorio de ISOEvaluationAgent)
             evaluation = evaluation_data
+            if isinstance(evaluation, dict) and isinstance(evaluation.get("evaluation"), dict):
+                evaluation = evaluation["evaluation"]
             global_score = evaluation.get("global_score", 0)
             quality_level = evaluation.get("quality_level", "No calculado")
             scores = evaluation.get("scores", {})
@@ -119,12 +135,94 @@ class ReportAgent:
                 "scores": scores,
                 "findings": findings,
                 "main_recommendations": main_recommendations,
+                **self.build_normative_section(global_score, findings, [evaluation]),
                 "technical_conclusion": self.build_conclusion(
                     global_score,
                     total_findings,
                     severity_summary,
                 ),
             }
+
+    # ── Sección normativa (ISO/IEC 25040 / 25022) ─────────────────────────────
+
+    def build_normative_section(self, global_score, findings, evaluations):
+        evaluations = [e for e in evaluations if isinstance(e, dict)]
+        selected = normalize_selection(
+            next((e.get("evaluated_characteristics") for e in evaluations if e.get("evaluated_characteristics")), None)
+        )
+        has_runtime = any(e.get("runtime_metrics") for e in evaluations)
+        return {
+            "iso25040": decision_criterion(global_score),
+            "severity_grade_summary": self.build_severity_grade_summary(findings),
+            "metrics": self.aggregate_metrics(evaluations),
+            "evaluated_characteristics": selected,
+            "evaluation_scope": evaluation_scope(selected),
+            "restrictions": evaluation_restrictions(has_runtime),
+        }
+
+    def build_severity_grade_summary(self, findings):
+        summary = {f"{g} - {info['label']}": 0 for g, info in SEVERITY_GRADES.items() if g > 0}
+        for finding in findings:
+            grade = finding.get("severity_grade")
+            if grade in SEVERITY_GRADES and grade > 0:
+                summary[f"{grade} - {SEVERITY_GRADES[grade]['label']}"] += 1
+        return summary
+
+    def aggregate_metrics(self, evaluations):
+        """
+        Consolida las métricas de varias interfaces:
+          - X = A/B  → X = ΣA / ΣB (proporción sobre el total del sistema)
+          - valores  → promedio de las interfaces donde se midieron
+        """
+        merged = {}
+        for evaluation in evaluations:
+            for metric in evaluation.get("metrics") or []:
+                entry = merged.setdefault(metric["id"], {**metric, "_A": 0, "_B": 0, "_values": [], "interfaces": 0})
+                if metric.get("X") is None:
+                    continue
+                entry["interfaces"] += 1
+                if metric.get("formula") == "X = A / B" and metric.get("B"):
+                    entry["_A"] += metric["A"]
+                    entry["_B"] += metric["B"]
+                else:
+                    entry["_values"].append(metric["X"])
+
+        result = []
+        for entry in merged.values():
+            target_text = entry.get("target", "")
+            if entry.get("formula") == "X = A / B":
+                a, b = entry.pop("_A"), entry.pop("_B")
+                entry.pop("_values")
+                x = round(a / b, 3) if b else None
+                target = float(target_text.split("≥")[-1]) if "≥" in target_text else None
+                entry.update({
+                    "A": a, "B": b, "X": x,
+                    "meets": (x >= target) if (x is not None and target is not None) else None,
+                    "severity_grade": grade_from_compliance(min(1.0, x / target)) if (x is not None and target) else None,
+                    "status": "medido" if x is not None else entry.get("status"),
+                })
+            else:
+                values = entry.pop("_values")
+                entry.pop("_A"), entry.pop("_B")
+                if values:
+                    x = round(sum(values) / len(values), 3)
+                    entry["X"] = x
+                    entry["meets"] = all(self._meets_value(v, target_text) for v in values)
+                    entry["severity_grade"] = 0 if entry["meets"] else 3
+            result.append(entry)
+        return result
+
+    @staticmethod
+    def _meets_value(value, target_text):
+        """Evalúa metas del tipo "X ≤ 800 ms" o "1 ≤ X < 15"."""
+        try:
+            if "X <" in target_text:
+                return value < float(target_text.split("X <")[-1].split()[0])
+            if "X ≤" in target_text:
+                return value <= float(target_text.split("X ≤")[-1].split()[0])
+        except (ValueError, IndexError):
+            pass
+        return True
 
     def build_severity_summary(self, findings):
         summary = {

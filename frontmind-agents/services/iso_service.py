@@ -1,6 +1,16 @@
 from bs4 import BeautifulSoup
 import re
 
+from services.iso_framework import (
+    compute_metrics,
+    decision_criterion,
+    evaluation_restrictions,
+    evaluation_scope,
+    normalize_selection,
+    runtime_findings,
+    severity_grade,
+)
+
 
 def clamp(value):
     return max(0, min(100, value))
@@ -108,7 +118,17 @@ def format_snippets(elements, max_items=3):
     suffix = "..." if len(elements) > max_items else ""
     return f" (Ejemplo: {', '.join(snippets)}{suffix})"
 
-def evaluate_iso_25010(html: str):
+def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, characteristics: list | None = None):
+    """
+    Evalúa una interfaz según la operacionalización de ISO/IEC 25010 definida
+    en services/iso_framework.py.
+
+    runtime_metrics: métricas medidas por Playwright sobre la página original
+        (ttfb_ms, lcp_ms, cls, transfer_bytes, requests, js_heap_mb).
+    characteristics: subconjunto priorizado de características a puntuar
+        (ISO/IEC 25040). None = todas.
+    """
+    selected = normalize_selection(characteristics)
     soup = BeautifulSoup(html or "", "html.parser")
 
     findings = []
@@ -167,6 +187,11 @@ def evaluate_iso_25010(html: str):
             "findings": findings,
             "engineering_tips": ["Proporcionar un HTML válido para iniciar la auditoría."],
             "strict_mode": True,
+            "iso25040": decision_criterion(0),
+            "evaluated_characteristics": selected,
+            "evaluation_scope": evaluation_scope(selected),
+            "restrictions": evaluation_restrictions(bool(runtime_metrics)),
+            "metrics": [],
         }
 
     # 1. ADECUACIÓN FUNCIONAL
@@ -875,9 +900,20 @@ def evaluate_iso_25010(html: str):
             {"portabilidad": 10},
         )
 
+    # 10. MÉTRICAS DE EJECUCIÓN (medidas por Playwright sobre la página original)
+    for dimension, sub, severity, text, recommendation, penalties in runtime_findings(runtime_metrics):
+        add_finding(dimension, sub, severity, text, recommendation, penalties)
+
     # CALCULO DE PUNTAJES FINAL POR PROMEDIO REAL
-    clamped_scores = {key: clamp(value) for key, value in scores.items()}
+    # Sólo las características seleccionadas (ISO/IEC 25040) entran al promedio.
+    clamped_scores = {key: clamp(value) for key, value in scores.items() if key in selected}
     global_score = round(sum(clamped_scores.values()) / len(clamped_scores))
+
+    # Escala de severidad 0–4 de ISO/IEC 25040 en cada hallazgo
+    for finding in findings:
+        grade = severity_grade(finding["severity"])
+        finding["severity_grade"] = grade["grade"]
+        finding["severity_grade_label"] = grade["label"]
 
     return {
         "global_score": global_score,
@@ -887,4 +923,10 @@ def evaluate_iso_25010(html: str):
         "findings": findings,
         "engineering_tips": ["Optimizar el marcado HTML y refactorizar dependencias para lograr la conformidad."],
         "strict_mode": True,
+        "iso25040": decision_criterion(global_score),
+        "evaluated_characteristics": selected,
+        "metrics": compute_metrics(soup, html, runtime_metrics),
+        "runtime_metrics": runtime_metrics or None,
+        "evaluation_scope": evaluation_scope(selected),
+        "restrictions": evaluation_restrictions(bool(runtime_metrics)),
     }

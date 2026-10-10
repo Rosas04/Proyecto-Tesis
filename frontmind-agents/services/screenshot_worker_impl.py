@@ -82,6 +82,53 @@ def collect_dom_metrics(page) -> dict[str, int]:
     )
 
 
+_PERFORMANCE_JS = """
+() => new Promise((resolve) => {
+    const nav = performance.getEntriesByType('navigation')[0];
+    const resources = performance.getEntriesByType('resource');
+    let lcp = null;
+    let cls = 0;
+    try {
+        new PerformanceObserver((list) => {
+            const entries = list.getEntries();
+            if (entries.length) lcp = entries[entries.length - 1].startTime;
+        }).observe({ type: 'largest-contentful-paint', buffered: true });
+    } catch (e) {}
+    try {
+        new PerformanceObserver((list) => {
+            for (const e of list.getEntries()) if (!e.hadRecentInput) cls += e.value;
+        }).observe({ type: 'layout-shift', buffered: true });
+    } catch (e) {}
+    setTimeout(() => resolve({
+        ttfb_ms: nav ? Math.max(0, nav.responseStart - nav.requestStart) : null,
+        dom_content_loaded_ms: nav && nav.domContentLoadedEventEnd ? nav.domContentLoadedEventEnd : null,
+        load_ms: nav && nav.loadEventEnd ? nav.loadEventEnd : null,
+        lcp_ms: lcp,
+        cls: Math.round(cls * 1000) / 1000,
+        requests: resources.length + 1,
+        transfer_bytes: (nav ? nav.transferSize || 0 : 0)
+            + resources.reduce((acc, r) => acc + (r.transferSize || 0), 0),
+        js_heap_mb: performance.memory
+            ? Math.round(performance.memory.usedJSHeapSize / 1048576 * 10) / 10 : null,
+    }), 300);
+})
+"""
+
+
+def collect_performance_metrics(page) -> dict[str, Any]:
+    """
+    Métricas de ejecución de la navegación actual (ISO/IEC 25010 · eficiencia
+    de desempeño): TTFB, LCP, CLS, peticiones, bytes transferidos y memoria JS.
+    Se miden una sola vez desde el servidor de evaluación.
+    """
+    try:
+        metrics = page.evaluate(_PERFORMANCE_JS)
+        return {k: v for k, v in (metrics or {}).items() if v is not None}
+    except Exception as exc:
+        logger.debug("No se pudieron obtener métricas de desempeño: %s", exc)
+        return {}
+
+
 def extract_cssom_styles(page) -> list[str]:
     try:
         extracted = page.evaluate("""() => {
@@ -216,6 +263,7 @@ def _build_route_result(
         "html_content": "",
         "html_length": 0,
         "cssom_styles": [],
+        "performance_metrics": {},
         "dom_metrics": {},
         "captures": [],
         "errors": [],
@@ -323,6 +371,9 @@ def _capture_single_page(
     route_result = _build_route_result(route_index, route_url, display_name)
 
     try:
+        # Métricas de desempeño ANTES del scroll (el scroll alteraría LCP/CLS)
+        route_result["performance_metrics"] = collect_performance_metrics(page)
+
         # Scroll para activar lazy-loading
         try:
             page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
@@ -817,6 +868,7 @@ def take_screenshots(
     html_content = main_page_data["html_content"] if main_page_data else ""
     captures = main_page_data["captures"] if main_page_data else []
     cssom_styles = main_page_data["cssom_styles"] if main_page_data else []
+    performance_metrics = main_page_data.get("performance_metrics", {}) if main_page_data else {}
 
     total_routes = len(post_login_routes) + len(pre_login_routes)
 
@@ -837,6 +889,7 @@ def take_screenshots(
         "captures": captures,
         "css_cache": global_css_cache,
         "cssom_styles": cssom_styles,
+        "performance_metrics": performance_metrics,
     }
 
 
