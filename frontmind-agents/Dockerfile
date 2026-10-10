@@ -9,11 +9,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # Directorio de trabajo en el contenedor
 WORKDIR /app
 
-# Copiamos primero el requirements.txt
+# Copiamos primero el requirements.txt y el verificador de codificación
 COPY requirements.txt .
+COPY scripts/check_deploy_files.py scripts/
 
-# Instalamos las dependencias de Python como root
-RUN pip install --no-cache-dir --upgrade pip setuptools \
+# Falla con un mensaje claro si requirements.txt está en UTF-16 / corrupto,
+# y luego instala las dependencias de Python como root
+RUN python scripts/check_deploy_files.py \
+    && pip install --no-cache-dir --upgrade pip setuptools \
     && pip install --no-cache-dir -r requirements.txt
 
 # Copiamos el backend (ver .dockerignore: sin venv, sesiones, capturas ni .env)

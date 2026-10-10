@@ -1,0 +1,22 @@
+# Fuerza UTF-8 sin BOM en todos los editores (VS Code, JetBrains, etc.).
+# Un requirements.txt guardado en UTF-16 rompió el build del Space de HuggingFace.
+root = true
+
+[*]
+charset = utf-8
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{py,txt,toml,cfg,ini}]
+indent_style = space
+indent_size = 4
+
+[*.{js,jsx,json,css,html,yml,yaml}]
+indent_style = space
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.bat]
+end_of_line = crlf

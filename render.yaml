@@ -6,6 +6,25 @@ services:
     dockerfilePath: frontmind-agents/Dockerfile
     dockerContext: frontmind-agents
     plan: free # El plan free sí es válido para Web Services en Docker
+    healthCheckPath: /
+    envVars:
+      # Valores secretos: definirlos en el dashboard de Render (sync: false)
+      - key: BACKEND_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: ABSTRACT_API_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: API_BASE_URL
+        sync: false
+      - key: FRONTMIND_ENV
+        value: production
+      - key: TRUST_PROXY_HEADERS
+        value: "true"
 
   # 2. Frontend (Vite + React como Sitio Estático)
   - type: web
@@ -24,6 +43,9 @@ services:
       - key: VITE_SUPABASE_URL
         sync: false
       - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      # Debe coincidir con BACKEND_API_KEY del backend
+      - key: VITE_BACKEND_API_KEY
         sync: false
     routes:
       - type: rewrite

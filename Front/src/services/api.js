@@ -21,8 +21,16 @@ async function buildHeaders(extraHeaders = {}, { requireSession = true } = {}) {
   return headers;
 }
 
+const BACKEND_DOWN_MESSAGE =
+  "El servidor de análisis no está disponible en este momento (puede estar iniciando o con un error de despliegue). Intente nuevamente en unos minutos.";
+
 async function handleResponse(response, defaultMessage) {
   if (!response.ok) {
+    // 502/503/504 sin JSON: el backend (HuggingFace Space) está caído o iniciando
+    if ([502, 503, 504].includes(response.status) &&
+        !(response.headers.get("content-type") || "").includes("application/json")) {
+      throw new Error(BACKEND_DOWN_MESSAGE);
+    }
     if (response.status === 401) {
       throw new Error("Tu sesión expiró. Inicia sesión nuevamente.");
     }
@@ -42,6 +50,23 @@ async function handleResponse(response, defaultMessage) {
     throw new Error(message);
   }
   return response.json();
+}
+
+/**
+ * Comprueba si el backend responde. Devuelve { ok, message }.
+ * No requiere sesión ni API key (GET /).
+ */
+export async function checkBackendHealth() {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    const response = await fetch(`${API_URL}/`, { signal: controller.signal });
+    clearTimeout(timer);
+    if (response.ok) return { ok: true, message: "" };
+    return { ok: false, message: BACKEND_DOWN_MESSAGE };
+  } catch {
+    return { ok: false, message: BACKEND_DOWN_MESSAGE };
+  }
 }
 
 export async function captureInterfaceByUrl(url, credentials = null, maxPages = 10, signal = null, jobId = null) {

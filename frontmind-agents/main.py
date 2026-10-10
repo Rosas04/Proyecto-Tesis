@@ -46,7 +46,8 @@ from services.zip_service import extract_zip_project
 # ─────────────────────────────────────────────────────────────────────────────
 # Configuración (.env local; en producción las variables vienen del entorno)
 # ─────────────────────────────────────────────────────────────────────────────
-load_dotenv()
+# utf-8-sig: tolera el BOM que agregan algunos editores/PowerShell en Windows
+load_dotenv(encoding="utf-8-sig")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Logging

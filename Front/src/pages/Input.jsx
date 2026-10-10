@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Sidebar from "../components/Sidebar";
 import { useAnalysis } from "../context/AnalysisContext";
-import { getCaptureProgress } from "../services/api";
+import { checkBackendHealth, getCaptureProgress } from "../services/api";
 import "./Input.css";
 
 const EXCLUDED_FOLDERS = ["node_modules", "venv", "dist", "uploads", "capturas"];
@@ -33,6 +33,16 @@ export default function Input() {
   const [zipProgress, setZipProgress] = useState(0);
   const [zipStepIndex, setZipStepIndex] = useState(0);
   const fileInputRef = useRef(null);
+
+  // Estado del backend: avisa antes de iniciar si el servidor está caído
+  const [backendDown, setBackendDown] = useState("");
+  useEffect(() => {
+    let active = true;
+    checkBackendHealth().then(({ ok, message }) => {
+      if (active) setBackendDown(ok ? "" : message);
+    });
+    return () => { active = false; };
+  }, []);
 
   // Real-time logs polling
   useEffect(() => {
@@ -554,6 +564,7 @@ export default function Input() {
             )}
 
             {/* ── Error ───────────────────────── */}
+            {backendDown && !error && <div className="error-box">{backendDown}</div>}
             {error && <div className="error-box">{error}</div>}
 
             {/* ── Action ───────────────────────────────── */}
