@@ -3,12 +3,11 @@ services/iso_framework.py — Operacionalización de ISO/IEC 25010 para frontend
 
 La norma es un modelo conceptual: no prescribe algoritmos de medición
 (restricción 1). Este módulo hace explícito el mapeo característica →
-subcaracterística → métrica medible, aplica el proceso de ISO/IEC 25040
-(escala de severidad 0–4, criterio de decisión 0–10, selección de
-características, restricciones de evaluación) y declara qué NO puede medirse
+subcaracterística → métrica medible, define la escala de severidad 0–4, el criterio de decisión 0–10, la
+selección de características y las condiciones de la evaluación y declara qué NO puede medirse
 de forma automática (restricciones 2–5).
 
-Las métricas siguen la forma X = A / B de ISO/IEC 25022/25023, adaptadas al
+Las métricas siguen la forma X = A / B, adaptadas al
 artefacto que audita FrontMind: el DOM renderizado de una interfaz y las
 métricas de ejecución registradas por Playwright.
 """
@@ -33,7 +32,7 @@ CHARACTERISTICS = {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Escala de severidad ISO/IEC 25040 (0–4) y criterio de decisión (0–10)
+# Escala de severidad (0–4) y criterio de decisión (0–10)
 # ─────────────────────────────────────────────────────────────────────────────
 
 SEVERITY_GRADES = {
@@ -44,7 +43,7 @@ SEVERITY_GRADES = {
     4: {"label": "Catastrófico", "criterion": "Bloqueo crítico o incumplimiento total (< 1 %)"},
 }
 
-# Severidad cualitativa usada por las reglas → grado ISO/IEC 25040
+# Severidad cualitativa usada por las reglas → grado 0–4
 _SEVERITY_TO_GRADE = {"Crítica": 4, "Alta": 3, "Media": 2, "Baja": 1}
 
 
@@ -71,7 +70,7 @@ def grade_from_compliance(ratio: Optional[float]) -> Optional[int]:
 
 def decision_criterion(global_score_100: float) -> dict:
     """
-    Criterio de decisión ISO/IEC 25040 sobre escala 0–10:
+    Criterio de decisión sobre escala 0–10:
       [9.0 – 10.0] Alta · ]6.0 – 9.0[ Buena · ]2.0 – 6.0] Regular · [0.0 – 2.0] Mala
     (9.0 se asigna a "Alta" para resolver el solapamiento de los intervalos.)
     """
@@ -193,7 +192,7 @@ def evaluation_scope(selected: list[str]) -> dict:
 
 
 def evaluation_restrictions(has_runtime_metrics: bool) -> list[dict]:
-    """Restricciones de evaluación declaradas según ISO/IEC 25040 (restricción 2)."""
+    """Condiciones y límites bajo los que se realizó la evaluación."""
     return [
         {"type": "Herramientas y metodología",
          "detail": "Análisis estático del DOM (BeautifulSoup) y ejecución en Chromium headless (Playwright). "
@@ -229,7 +228,7 @@ _DECISION_RE = re.compile(r"\bif\b|\bfor\b|\bwhile\b|\bcase\b|\bcatch\b|&&|\|\||
 _FUNCTION_RE = re.compile(r"\bfunction\b|=>")
 
 
-def _ratio_metric(mid, characteristic, sub, name, a, b, a_desc, b_desc, target=0.9, reference="ISO/IEC 25023 (adaptada)"):
+def _ratio_metric(mid, characteristic, sub, name, a, b, a_desc, b_desc, target=0.9, reference="Operacionalización ISO/IEC 25010"):
     x = (a / b) if b else None
     return {
         "id": mid, "characteristic": characteristic, "subcharacteristic": sub, "name": name,
@@ -354,7 +353,7 @@ def compute_metrics(soup, html: str, runtime: Optional[dict] = None) -> list[dic
     cc = _value_metric(
         "MS4M1", "mantenibilidad", "Capacidad de ser modificado", "Complejidad ciclomática (aprox.)",
         complexity, "", "1 ≤ X < 15", (complexity is not None and 1 <= complexity < 15),
-        "ISO/IEC 25023 MS4M1 (adaptada)", formula="X = A + 1 (A = ramificaciones por función)")
+        "Operacionalización ISO/IEC 25010", formula="X = A + 1 (A = ramificaciones por función)")
     cc["functions_analyzed"] = n_functions
     if complexity is None:
         cc["status"] = "no aplica (sin scripts embebidos)"

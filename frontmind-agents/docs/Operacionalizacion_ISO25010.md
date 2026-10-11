@@ -7,12 +7,12 @@ Documento generado a partir de `services/iso_framework.py` (fuente única de ver
 | Restricción | Cómo se atiende en el sistema |
 |---|---|
 | 1. Nivel de abstracción / falta de prescripción métrica | Mapeo explícito característica → subcaracterística → métrica `X = A/B` con meta y referencia (tabla 3). |
-| 2. Restricciones operativas (ISO/IEC 25040) | Cada evaluación y reporte declara herramientas, artefacto, entorno, tiempo/recursos (sección 5). |
+| 2. Restricciones operativas | Cada evaluación y reporte declara herramientas, artefacto, entorno, tiempo/recursos (sección 5). |
 | 3. Atributos subjetivos | Estética, aprendizaje, inteligibilidad y satisfacción se marcan como *parcial* o *no automatizable*; no se inventan puntajes. |
 | 4. Dimensiones omitidas | Calidad de la información, fiabilidad, seguridad física y calidad en uso se declaran fuera de alcance (sección 4). |
 | 5. Inviabilidad de evaluación integral | `POST /evaluate/iso` acepta `characteristics` (subconjunto priorizado); sólo esas entran al puntaje global. |
 
-## 2. Escalas ISO/IEC 25040
+## 2. Escalas de severidad y decisión
 
 **Severidad (0–4)** — cada hallazgo incluye `severity_grade`; cada métrica X = A/B se gradúa por cumplimiento relativo a su meta:
 
@@ -26,7 +26,7 @@ Documento generado a partir de `services/iso_framework.py` (fuente única de ver
 
 Correspondencia con la severidad cualitativa de las reglas: Crítica → 4, Alta → 3, Media → 2, Baja → 1.
 
-**Criterio de decisión (0–10)** — `iso25040.score_10 = puntaje global / 10`: [9.0–10.0] Alta · ]6.0–9.0[ Buena · ]2.0–6.0] Regular · [0.0–2.0] Mala.
+**Criterio de decisión (0–10)** — `quality_decision.score_10 = puntaje global / 10`: 9.0–10.0 Alta · 6.0–9.0 Buena · 2.0–6.0 Regular · 0.0–2.0 Mala.
 
 ## 3. Métricas implementadas
 
@@ -37,13 +37,13 @@ Correspondencia con la severidad cualitativa de las reglas: Crítica → 4, Alta
 | ACC-03 | Accesibilidad | Operable | Botones con nombre accesible | `X = A / B` | X ≥ 0.9 | WCAG 2.2 · 4.1.2 |
 | ACC-04 | Accesibilidad | Operable | Enlaces con texto accesible | `X = A / B` | X ≥ 0.9 | WCAG 2.2 · 2.4.4 |
 | ACC-05 | Accesibilidad | Comprensible | Idioma del documento declarado | `X = A / B` | X ≥ 1.0 | WCAG 2.2 · 3.1.1 |
-| USA-01 | Usabilidad | Protección contra errores del usuario | Campos con validación declarativa | `X = A / B` | X ≥ 0.5 | ISO/IEC 25023 (adaptada) |
-| USA-02 | Usabilidad | Protección contra errores del usuario | Mecanismo de mensajes de estado | `X = A / B` | X ≥ 1.0 | ISO/IEC 25023 (adaptada) |
-| MAN-01 | Mantenibilidad | Modularidad | Proporción de contenedores semánticos | `X = A / B` | X ≥ 0.1 | ISO/IEC 25023 (adaptada) |
-| MAN-02 | Mantenibilidad | Analizabilidad | Unicidad de identificadores | `X = A / B` | X ≥ 1.0 | ISO/IEC 25023 (adaptada) |
-| MAN-03 | Mantenibilidad | Capacidad de ser modificado | Elementos sin estilos inline | `X = A / B` | X ≥ 0.9 | ISO/IEC 25023 (adaptada) |
-| MS4M1 | Mantenibilidad | Capacidad de ser modificado | Complejidad ciclomática (aprox.) | `X = A + 1 (A = ramificaciones por función)` | 1 ≤ X < 15 | ISO/IEC 25023 MS4M1 (adaptada) |
-| POR-01 | Portabilidad | Adaptabilidad | Viewport responsive declarado | `X = A / B` | X ≥ 1.0 | ISO/IEC 25023 (adaptada) |
+| USA-01 | Usabilidad | Protección contra errores del usuario | Campos con validación declarativa | `X = A / B` | X ≥ 0.5 | Operacionalización ISO/IEC 25010 |
+| USA-02 | Usabilidad | Protección contra errores del usuario | Mecanismo de mensajes de estado | `X = A / B` | X ≥ 1.0 | Operacionalización ISO/IEC 25010 |
+| MAN-01 | Mantenibilidad | Modularidad | Proporción de contenedores semánticos | `X = A / B` | X ≥ 0.1 | Operacionalización ISO/IEC 25010 |
+| MAN-02 | Mantenibilidad | Analizabilidad | Unicidad de identificadores | `X = A / B` | X ≥ 1.0 | Operacionalización ISO/IEC 25010 |
+| MAN-03 | Mantenibilidad | Capacidad de ser modificado | Elementos sin estilos inline | `X = A / B` | X ≥ 0.9 | Operacionalización ISO/IEC 25010 |
+| MS4M1 | Mantenibilidad | Capacidad de ser modificado | Complejidad ciclomática (aprox.) | `X = A + 1 (A = ramificaciones por función)` | 1 ≤ X < 15 | Operacionalización ISO/IEC 25010 |
+| POR-01 | Portabilidad | Adaptabilidad | Viewport responsive declarado | `X = A / B` | X ≥ 1.0 | Operacionalización ISO/IEC 25010 |
 | EFI-01 | Eficiencia de desempeño | Comportamiento temporal | Tiempo hasta el primer byte (TTFB) | `X = valor medido` | X ≤ 800 ms | Core Web Vitals (umbral 'bueno') |
 | EFI-02 | Eficiencia de desempeño | Comportamiento temporal | Largest Contentful Paint (LCP) | `X = valor medido` | X ≤ 2500 ms | Core Web Vitals (umbral 'bueno') |
 | EFI-03 | Eficiencia de desempeño | Comportamiento temporal | Cumulative Layout Shift (CLS) | `X = valor medido` | X ≤ 0.1 | Core Web Vitals (umbral 'bueno') |
@@ -85,7 +85,7 @@ Las métricas EFI-* se miden con Playwright sobre la página original durante la
 - **Calidad en uso (efectividad, eficiencia, satisfacción):** Requiere usuarios reales, cuestionarios y tareas observadas.
 - **Calidad de la información producida:** La norma no la contempla directamente y depende del dominio de los datos.
 
-## 5. Restricciones de evaluación declaradas
+## 5. Condiciones de la evaluación
 
 - **Herramientas y metodología:** Análisis estático del DOM (BeautifulSoup) y ejecución en Chromium headless (Playwright). Las reglas son una operacionalización propia de la norma, que no prescribe algoritmos.
 - **Artefacto evaluado:** HTML renderizado de cada interfaz (o su réplica). No se analiza el repositorio fuente, por lo que las métricas de modularidad, reusabilidad y testabilidad son parciales o no medibles.

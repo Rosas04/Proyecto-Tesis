@@ -126,8 +126,8 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
                 </div>
                 <div className="exec-text">
                   <p>{reportResult?.technical_conclusion || "No se pudo determinar una conclusión técnica para esta evaluación."}</p>
-                  {reportResult?.iso25040 && (
-                    <p><strong>Criterio de decisión ISO/IEC 25040:</strong> {reportResult.iso25040.score_10}/10 — {reportResult.iso25040.category}. Evaluación automatizada con restricciones declaradas (herramientas, entorno Chromium y artefacto HTML); los atributos subjetivos requieren validación con usuarios o expertos.</p>
+                  {reportResult?.quality_decision && (
+                    <p><strong>Criterio de decisión:</strong> {reportResult.quality_decision.score_10}/10 — {reportResult.quality_decision.category}. Evaluación automatizada con restricciones declaradas (herramientas, entorno Chromium y artefacto HTML); los atributos subjetivos requieren validación con usuarios o expertos.</p>
                   )}
                   <h4>Alcance de la evaluación</h4>
                   <p>Se evaluaron las interfaces frontend del proyecto según los criterios de la norma ISO/IEC 25010, considerando ocho características de calidad.</p>

@@ -125,7 +125,7 @@ export async function replicateHtmlFromContent(htmlContent, url, cssCache = null
 }
 
 // runtimeMetrics: métricas medidas por Playwright sobre la página original
-// characteristics: subconjunto priorizado (ISO/IEC 25040); null = todas
+// characteristics: subconjunto priorizado de características; null = todas
 export async function evaluateHtml(html, runtimeMetrics = null, characteristics = null) {
   const response = await fetch(`${API_URL}/evaluate/iso`, {
     method: "POST",

@@ -119,7 +119,7 @@ Characteristic = Literal[
 class IsoRequest(BaseModel):
     html: str = Field(max_length=MAX_HTML_CHARS)
     runtime_metrics: Optional[RuntimeMetrics] = None
-    # Subconjunto priorizado de características (ISO/IEC 25040); vacío = todas
+    # Subconjunto priorizado de características; vacío = todas
     characteristics: Optional[list[Characteristic]] = Field(default=None, max_length=8)
 
 

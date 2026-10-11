@@ -1,4 +1,4 @@
-"""Operacionalización de ISO/IEC 25010 y proceso ISO/IEC 25040."""
+"""Operacionalización de ISO/IEC 25010."""
 import pytest
 
 from agents.iso_evaluation_agent import ISOEvaluationAgent
@@ -25,7 +25,7 @@ HTML = (
     (100, "Alta calidad"), (90, "Alta calidad"), (89, "Buena calidad"), (61, "Buena calidad"),
     (60, "Regular calidad"), (21, "Regular calidad"), (20, "Mala calidad"), (0, "Mala calidad"),
 ])
-def test_decision_criterion_iso25040(score, category):
+def test_decision_criterion(score, category):
     result = decision_criterion(score)
     assert result["category"] == category
     assert result["score_10"] == round(score / 10, 1)
@@ -85,7 +85,7 @@ def test_scope_declares_non_automatable_attributes():
     assert any(o["characteristic"].startswith("Calidad en uso") for o in scope["out_of_scope"])
 
 
-def test_restrictions_follow_iso25040():
+def test_evaluation_conditions_are_declared():
     restrictions = evaluate_iso_25010(HTML)["restrictions"]
     types = {r["type"] for r in restrictions}
     assert {"Herramientas y metodología", "Entorno de prueba", "Tiempo y recursos"} <= types
@@ -98,7 +98,7 @@ def test_report_consolidates_metrics_as_sum_a_over_sum_b():
     report = ReportAgent().run({"evaluation": [e1, e2]})
     alt = {m["id"]: m for m in report["metrics"]}["ACC-01"]
     assert (alt["A"], alt["B"]) == (2, 3)
-    assert report["iso25040"]["score_10"] == round(report["summary"]["global_score"] / 10, 1)
+    assert report["quality_decision"]["score_10"] == round(report["summary"]["global_score"] / 10, 1)
 
 
 def test_report_accepts_wrapped_single_evaluation():

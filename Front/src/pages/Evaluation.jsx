@@ -369,7 +369,7 @@ export default function Evaluation() {
                             </span>
                             {item.severity_grade_label && (
                               <small style={{ display: "block", marginTop: "4px", color: "#64748b" }}>
-                                ISO 25040: {item.severity_grade} · {item.severity_grade_label}
+                                Grado {item.severity_grade} · {item.severity_grade_label}
                               </small>
                             )}
                           </td>

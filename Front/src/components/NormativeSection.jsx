@@ -8,56 +8,90 @@ function formatValue(metric) {
   return `${metric.X}${metric.unit ? ` ${metric.unit}` : ""}`;
 }
 
+function automationClass(automation = "") {
+  if (automation.startsWith("automatizada")) return "auto";
+  if (automation.startsWith("parcial")) return "partial";
+  return "manual";
+}
+
+/** Agrupa las subcaracterísticas por característica, preservando el orden del modelo. */
+function groupByCharacteristic(items = []) {
+  const groups = [];
+  for (const item of items) {
+    let group = groups.find((g) => g.label === item.characteristic_label);
+    if (!group) {
+      group = { label: item.characteristic_label, items: [] };
+      groups.push(group);
+    }
+    group.items.push(item);
+  }
+  return groups;
+}
+
 /**
- * Sección normativa de la evaluación (ISO/IEC 25010 · 25022/25023 · 25040):
- * criterio de decisión 0–10, métricas X = A/B, alcance y restricciones.
+ * Sección de evaluación según el modelo de calidad ISO/IEC 25010:
+ *   1. Resultado global  2. Métricas medidas  3. Cobertura del modelo
+ *   4. Características no evaluadas  5. Condiciones de la evaluación
  * `data` es el resultado de /evaluate/iso o de /report/generate.
  */
 export default function NormativeSection({ data }) {
   if (!data) return null;
-  const { iso25040, metrics = [], evaluation_scope: scope, restrictions = [], severity_grade_summary: grades } = data;
-  if (!iso25040 && metrics.length === 0 && !scope) return null;
+  const {
+    quality_decision: decision,
+    metrics = [],
+    evaluation_scope: scope,
+    restrictions = [],
+    severity_grade_summary: grades,
+  } = data;
+  if (!decision && metrics.length === 0 && !scope) return null;
 
   const measured = metrics.filter((m) => m.X !== null && m.X !== undefined);
   const notMeasured = metrics.filter((m) => m.X === null || m.X === undefined);
+  const groups = groupByCharacteristic(scope?.subcharacteristics);
+  const outOfScope = scope?.out_of_scope || [];
 
   return (
     <section className="normative card">
-      <div className="normative-header">
-        <h2>Evaluación normativa ISO/IEC 25040</h2>
+      <header className="normative-header">
+        <h2>Evaluación según ISO/IEC 25010</h2>
         <p>
-          Operacionalización de ISO/IEC 25010 en métricas medibles (X = A / B) y criterios de decisión.
-          Los resultados dependen de las restricciones de evaluación declaradas al final.
+          Resultado del modelo de calidad del producto aplicado a la interfaz: puntaje global, métricas
+          medidas, cobertura de características y condiciones bajo las que se realizó la evaluación.
         </p>
-      </div>
+      </header>
 
-      {iso25040 && (
-        <div className="normative-decision">
-          <div className="normative-score">
-            <span className="normative-score-value">{iso25040.score_10}</span>
-            <span className="normative-score-max">/ 10</span>
-          </div>
-          <div>
-            <strong>{iso25040.category}</strong>
-            <p>{iso25040.meaning}</p>
-            <small>Escala: [9.0–10.0] Alta · ]6.0–9.0[ Buena · ]2.0–6.0] Regular · [0.0–2.0] Mala</small>
-          </div>
-          {grades && (
-            <div className="normative-grades">
-              {Object.entries(grades).map(([label, count]) => (
-                <div key={label} className="normative-grade-item">
-                  <span>{count}</span>
-                  <small>{label}</small>
-                </div>
-              ))}
+      {/* 1. Resultado global */}
+      {decision && (
+        <div className="normative-block">
+          <h3><span className="normative-step">1</span> Resultado global</h3>
+          <div className="normative-decision">
+            <div className="normative-score">
+              <span className="normative-score-value">{decision.score_10}</span>
+              <span className="normative-score-max">/ 10</span>
             </div>
-          )}
+            <div className="normative-decision-text">
+              <strong>{decision.category}</strong>
+              <p>{decision.meaning}</p>
+              <small>Escala: 9.0–10.0 Alta · 6.0–9.0 Buena · 2.0–6.0 Regular · 0.0–2.0 Mala</small>
+            </div>
+            {grades && (
+              <div className="normative-grades">
+                {Object.entries(grades).map(([label, count]) => (
+                  <div key={label} className="normative-grade-item">
+                    <span>{count}</span>
+                    <small>{label}</small>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
+      {/* 2. Métricas medidas */}
       {measured.length > 0 && (
-        <>
-          <h3>Métricas de calidad medidas</h3>
+        <div className="normative-block">
+          <h3><span className="normative-step">2</span> Métricas medidas</h3>
           <div className="normative-table-wrap">
             <table className="normative-table">
               <thead>
@@ -70,7 +104,7 @@ export default function NormativeSection({ data }) {
                   <th>B</th>
                   <th>X</th>
                   <th>Meta</th>
-                  <th>Severidad (0–4)</th>
+                  <th>Severidad</th>
                 </tr>
               </thead>
               <tbody>
@@ -101,25 +135,34 @@ export default function NormativeSection({ data }) {
           </div>
           {notMeasured.length > 0 && (
             <p className="normative-note">
-              No medidas en esta evaluación: {notMeasured.map((m) => `${m.id} (${m.status})`).join(", ")}.
+              Sin medición en esta evaluación: {notMeasured.map((m) => m.id).join(", ")}.
             </p>
           )}
-        </>
+        </div>
       )}
 
-      {scope && (
-        <>
-          <h3>Alcance de la evaluación</h3>
-          <p className="normative-note">
-            Características evaluadas: {scope.selected_characteristics?.join(", ")}.
-            Subcaracterísticas: {scope.coverage?.automatizada} automatizadas, {scope.coverage?.parcial} con
-            indicador aproximado y {scope.coverage?.no_automatizable} no automatizables.
-          </p>
+      {/* 3. Cobertura del modelo de calidad */}
+      {groups.length > 0 && (
+        <div className="normative-block">
+          <h3><span className="normative-step">3</span> Cobertura del modelo de calidad</h3>
+          <div className="normative-coverage">
+            <div className="coverage-item auto">
+              <span>{scope.coverage?.automatizada}</span>
+              <small>Automatizadas</small>
+            </div>
+            <div className="coverage-item partial">
+              <span>{scope.coverage?.parcial}</span>
+              <small>Indicador aproximado</small>
+            </div>
+            <div className="coverage-item manual">
+              <span>{scope.coverage?.no_automatizable}</span>
+              <small>No automatizables</small>
+            </div>
+          </div>
           <div className="normative-table-wrap">
             <table className="normative-table">
               <thead>
                 <tr>
-                  <th>Característica</th>
                   <th>Subcaracterística</th>
                   <th>Medición</th>
                   <th>Método</th>
@@ -127,41 +170,73 @@ export default function NormativeSection({ data }) {
                 </tr>
               </thead>
               <tbody>
-                {scope.subcharacteristics?.map((s, i) => (
-                  <tr key={i}>
-                    <td>{s.characteristic_label}</td>
-                    <td>{s.sub}</td>
-                    <td>
-                      <span className={`automation-pill ${s.automation.startsWith("automatizada") ? "auto" : s.automation.startsWith("parcial") ? "partial" : "manual"}`}>
-                        {s.automation}
-                      </span>
-                    </td>
-                    <td>{s.method}</td>
-                    <td>{s.limit}</td>
+                {groups.map((group) => [
+                  <tr key={group.label} className="normative-group-row">
+                    <td colSpan={4}>{group.label}</td>
+                  </tr>,
+                  ...group.items.map((s) => (
+                    <tr key={`${group.label}-${s.sub}`}>
+                      <td>{s.sub}</td>
+                      <td><span className={`automation-pill ${automationClass(s.automation)}`}>{s.automation}</span></td>
+                      <td>{s.method}</td>
+                      <td>{s.limit}</td>
+                    </tr>
+                  )),
+                ])}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* 4. Características no evaluadas */}
+      {outOfScope.length > 0 && (
+        <div className="normative-block">
+          <h3><span className="normative-step">4</span> Características no evaluadas</h3>
+          <div className="normative-table-wrap">
+            <table className="normative-table normative-two-cols">
+              <thead>
+                <tr>
+                  <th>Característica</th>
+                  <th>Motivo</th>
+                </tr>
+              </thead>
+              <tbody>
+                {outOfScope.map((o) => (
+                  <tr key={o.characteristic}>
+                    <td><strong>{o.characteristic}</strong></td>
+                    <td>{o.reason}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          {scope.out_of_scope?.length > 0 && (
-            <ul className="normative-list">
-              {scope.out_of_scope.map((o) => (
-                <li key={o.characteristic}><strong>Fuera de alcance — {o.characteristic}:</strong> {o.reason}</li>
-              ))}
-            </ul>
-          )}
-        </>
+        </div>
       )}
 
+      {/* 5. Condiciones de la evaluación */}
       {restrictions.length > 0 && (
-        <>
-          <h3>Restricciones de evaluación (ISO/IEC 25040)</h3>
-          <ul className="normative-list">
-            {restrictions.map((r) => (
-              <li key={r.type}><strong>{r.type}:</strong> {r.detail}</li>
-            ))}
-          </ul>
-        </>
+        <div className="normative-block">
+          <h3><span className="normative-step">5</span> Condiciones de la evaluación</h3>
+          <div className="normative-table-wrap">
+            <table className="normative-table normative-two-cols">
+              <thead>
+                <tr>
+                  <th>Aspecto</th>
+                  <th>Detalle</th>
+                </tr>
+              </thead>
+              <tbody>
+                {restrictions.map((r) => (
+                  <tr key={r.type}>
+                    <td><strong>{r.type}</strong></td>
+                    <td>{r.detail}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
     </section>
   );

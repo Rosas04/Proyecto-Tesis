@@ -143,7 +143,7 @@ class ReportAgent:
                 ),
             }
 
-    # ── Sección normativa (ISO/IEC 25040 / 25022) ─────────────────────────────
+    # ── Sección normativa (ISO/IEC 25010) ───────────────────────────────────────
 
     def build_normative_section(self, global_score, findings, evaluations):
         evaluations = [e for e in evaluations if isinstance(e, dict)]
@@ -152,7 +152,7 @@ class ReportAgent:
         )
         has_runtime = any(e.get("runtime_metrics") for e in evaluations)
         return {
-            "iso25040": decision_criterion(global_score),
+            "quality_decision": decision_criterion(global_score),
             "severity_grade_summary": self.build_severity_grade_summary(findings),
             "metrics": self.aggregate_metrics(evaluations),
             "evaluated_characteristics": selected,

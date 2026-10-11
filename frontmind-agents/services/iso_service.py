@@ -126,7 +126,7 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
     runtime_metrics: métricas medidas por Playwright sobre la página original
         (ttfb_ms, lcp_ms, cls, transfer_bytes, requests, js_heap_mb).
     characteristics: subconjunto priorizado de características a puntuar
-        (ISO/IEC 25040). None = todas.
+        None = todas.
     """
     selected = normalize_selection(characteristics)
     soup = BeautifulSoup(html or "", "html.parser")
@@ -187,7 +187,7 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
             "findings": findings,
             "engineering_tips": ["Proporcionar un HTML válido para iniciar la auditoría."],
             "strict_mode": True,
-            "iso25040": decision_criterion(0),
+            "quality_decision": decision_criterion(0),
             "evaluated_characteristics": selected,
             "evaluation_scope": evaluation_scope(selected),
             "restrictions": evaluation_restrictions(bool(runtime_metrics)),
@@ -905,11 +905,11 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
         add_finding(dimension, sub, severity, text, recommendation, penalties)
 
     # CALCULO DE PUNTAJES FINAL POR PROMEDIO REAL
-    # Sólo las características seleccionadas (ISO/IEC 25040) entran al promedio.
+    # Sólo las características seleccionadas entran al promedio.
     clamped_scores = {key: clamp(value) for key, value in scores.items() if key in selected}
     global_score = round(sum(clamped_scores.values()) / len(clamped_scores))
 
-    # Escala de severidad 0–4 de ISO/IEC 25040 en cada hallazgo
+    # Escala de severidad 0–4 en cada hallazgo
     for finding in findings:
         grade = severity_grade(finding["severity"])
         finding["severity_grade"] = grade["grade"]
@@ -923,7 +923,7 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
         "findings": findings,
         "engineering_tips": ["Optimizar el marcado HTML y refactorizar dependencias para lograr la conformidad."],
         "strict_mode": True,
-        "iso25040": decision_criterion(global_score),
+        "quality_decision": decision_criterion(global_score),
         "evaluated_characteristics": selected,
         "metrics": compute_metrics(soup, html, runtime_metrics),
         "runtime_metrics": runtime_metrics or None,
