@@ -8,6 +8,61 @@ function formatValue(metric) {
   return `${metric.X}${metric.unit ? ` ${metric.unit}` : ""}`;
 }
 
+
+/** Texto de recomendación por métrica cuando no se cumple la meta. */
+const FIX_HINT = {
+  "ACC-01": "Agregue el atributo alt a cada imagen (alt=\"\" si es decorativa).",
+  "ACC-02": "Asocie cada campo con un <label for> o aria-label.",
+  "ACC-03": "Dé a cada botón un texto visible o un aria-label.",
+  "ACC-04": "Use textos descriptivos en los enlaces (evite «clic aquí» o enlaces vacíos).",
+  "ACC-05": "Declare el idioma en la etiqueta <html lang=\"es\">.",
+  "USA-01": "Use type (email, number, tel…) y required/pattern para validar los campos sin depender de JavaScript.",
+  "USA-02": "Agregue una región role=\"status\" o aria-live para anunciar mensajes de error y confirmación.",
+  "MAN-01": "Reemplace <div> genéricos por <main>, <nav>, <header>, <section> o <footer>.",
+  "MAN-02": "Elimine los id repetidos: cada id debe ser único en la página.",
+  "MAN-03": "Mueva los estilos inline (style=\"…\") a una hoja de estilos CSS.",
+  "POR-01": "Agregue <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">.",
+  "EFI-01": "Reduzca el tiempo de respuesta del servidor (caché, CDN, menos procesamiento).",
+  "EFI-02": "Optimice la imagen o bloque principal: compresión, tamaños adecuados y carga prioritaria.",
+  "EFI-03": "Reserve espacio (ancho y alto) para imágenes y anuncios para evitar saltos de diseño.",
+  "EFI-04": "Comprima imágenes, minifique JS/CSS y active compresión gzip/brotli.",
+  "EFI-05": "Reduzca peticiones: combine recursos, use lazy-loading y elimine scripts innecesarios.",
+  "EFI-06": "Reduzca el JavaScript cargado y libere memoria de componentes que no se usan.",
+};
+
+function pct(x) {
+  return `${Math.round(x * 100)} %`;
+}
+
+/** Resultado en lenguaje natural: "2 de 2 (100 %)" o el valor medido con su unidad. */
+function resultText(m) {
+  if (m.A !== null && m.A !== undefined && m.B) {
+    return `${m.A} de ${m.B} (${pct(m.X)})`;
+  }
+  return formatValue(m);
+}
+
+/** Meta en lenguaje natural. */
+function goalText(m) {
+  const t = String(m.target || "");
+  const ratio = t.match(/X\s*≥\s*([\d.]+)/);
+  if (ratio && m.B !== null && m.B !== undefined) return `Meta: al menos ${pct(Number(ratio[1]))}`;
+  return t ? `Meta: ${t.replace(/^X\s*/, "")}` : "";
+}
+
+/** Por qué cumple o no cumple, y qué hacer. */
+function diagnosis(m) {
+  if (m.meets === null || m.meets === undefined) return { ok: null, why: "No se pudo medir en esta página.", fix: "" };
+  if (m.meets) {
+    return { ok: true, why: "Cumple la meta establecida.", fix: "" };
+  }
+  const missing = m.A !== null && m.A !== undefined && m.B ? m.B - m.A : null;
+  const why = missing !== null
+    ? `${missing} de ${m.B} elementos no cumplen${m.B_description ? ` (${m.B_description})` : ""}.`
+    : "El valor medido está fuera de la meta.";
+  return { ok: false, why, fix: FIX_HINT[m.id] || "Revise este aspecto y corríjalo para alcanzar la meta." };
+}
+
 function automationClass(automation = "") {
   if (automation.startsWith("automatizada")) return "auto";
   if (automation.startsWith("parcial")) return "partial";
@@ -99,16 +154,16 @@ export default function NormativeSection({ data }) {
                   <th>ID</th>
                   <th>Subcaracterística</th>
                   <th>Métrica</th>
-                  <th>Fórmula</th>
-                  <th>A</th>
-                  <th>B</th>
-                  <th>X</th>
-                  <th>Meta</th>
+                  <th>Resultado</th>
+                  <th>Estado</th>
+                  <th>Diagnóstico y recomendación</th>
                   <th>Severidad</th>
                 </tr>
               </thead>
               <tbody>
-                {measured.map((m) => (
+                {measured.map((m) => {
+                  const dg = diagnosis(m);
+                  return (
                   <tr key={m.id}>
                     <td className="mono">{m.id}</td>
                     <td>{m.subcharacteristic}</td>
@@ -116,11 +171,19 @@ export default function NormativeSection({ data }) {
                       {m.name}
                       {m.reference && <small className="normative-ref">{m.reference}</small>}
                     </td>
-                    <td className="mono">{m.formula}</td>
-                    <td>{m.A ?? "—"}</td>
-                    <td>{m.B ?? "—"}</td>
-                    <td><strong>{formatValue(m)}</strong></td>
-                    <td className="mono">{m.target}</td>
+                    <td>
+                      <strong>{resultText(m)}</strong>
+                      <small className="normative-ref">{goalText(m)}</small>
+                    </td>
+                    <td>
+                      {dg.ok === null ? "—" : (
+                        <span className={`grade-pill ${dg.ok ? "ok" : "major"}`}>{dg.ok ? "Cumple" : "No cumple"}</span>
+                      )}
+                    </td>
+                    <td>
+                      {dg.why}
+                      {dg.fix && <small className="normative-ref"><strong>Recomendación:</strong> {dg.fix}</small>}
+                    </td>
                     <td>
                       {m.severity_grade !== null && m.severity_grade !== undefined ? (
                         <span className={`grade-pill ${GRADE_CLASS[m.severity_grade]}`}>
@@ -129,7 +192,8 @@ export default function NormativeSection({ data }) {
                       ) : "—"}
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
