@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import TermsModal, { TERMS_VERSION } from "../components/TermsModal";
 import AuthLayout, { EyeIcon, LockIcon, MailIcon } from "../components/AuthLayout";
 
 export default function Register() {
@@ -11,6 +12,8 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -23,6 +26,11 @@ export default function Register() {
 
     if (!email.trim() || !password.trim() || !confirmPassword.trim()) {
       setError("Complete todos los campos para crear su cuenta.");
+      return;
+    }
+
+    if (!acceptedTerms) {
+      setError("Debe aceptar los términos y condiciones para crear su cuenta.");
       return;
     }
 
@@ -74,7 +82,11 @@ export default function Register() {
         console.warn("Verificación de correo no disponible; se continúa con el registro.", apiErr);
       }
 
-      const { data, error: registerError } = await register(email, password);
+      const { data, error: registerError } = await register(email, password, {
+        accepted_terms: true,
+        accepted_terms_version: TERMS_VERSION,
+        accepted_terms_at: new Date().toISOString(),
+      });
 
       if (registerError) {
         const errorMsg = registerError.message || "";
@@ -104,6 +116,7 @@ export default function Register() {
       setEmail("");
       setPassword("");
       setConfirmPassword("");
+      setAcceptedTerms(false);
     } catch {
       setError("No se pudo crear la cuenta. Intente nuevamente.");
       
@@ -157,10 +170,24 @@ export default function Register() {
           />
         </div>
 
+        <label className="split-check">
+          <input type="checkbox"
+            checked={acceptedTerms}
+            onChange={(e) => setAcceptedTerms(e.target.checked)}
+          />
+          <span>
+            He leído y acepto los{" "}
+            <button type="button" className="split-textlink" onClick={() => setShowTerms(true)}>
+              términos y condiciones
+            </button>
+            , incluido el almacenamiento de mis datos en la nube.
+          </span>
+        </label>
+
         {error && <div className="split-error">{error}</div>}
         {success && <div className="split-success">{success}</div>}
 
-        <button type="submit" className="split-submit" disabled={loading}>
+        <button type="submit" className="split-submit" disabled={loading || !acceptedTerms}>
           {loading ? "Creando cuenta..." : "Crear cuenta →"}
         </button>
 
@@ -168,6 +195,13 @@ export default function Register() {
           ¿Ya tienes cuenta? <Link to="/login">Iniciar sesión</Link>
         </p>
       </form>
+
+      {showTerms && (
+        <TermsModal
+          onClose={() => setShowTerms(false)}
+          onAccept={() => { setAcceptedTerms(true); setShowTerms(false); }}
+        />
+      )}
     </AuthLayout>
   );
 }

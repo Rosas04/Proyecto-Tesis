@@ -45,11 +45,12 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  const register = async (email, password) => {
+  const register = async (email, password, metadata) => {
     if (!supabase) throw new Error("Base de datos (Supabase) no configurada.");
     return await supabase.auth.signUp({
       email,
       password,
+      options: metadata ? { data: metadata } : undefined,
     });
   };
 
