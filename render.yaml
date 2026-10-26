@@ -8,13 +8,13 @@ services:
     plan: free # El plan free sí es válido para Web Services en Docker
     healthCheckPath: /
     envVars:
-      # Valores secretos: definirlos en el dashboard de Render (sync: false)
+      # Secretos en el dashboard de Render (sync: false). La URL y la clave publishable de Supabase son públicas.
       - key: BACKEND_API_KEY
         sync: false
       - key: SUPABASE_URL
-        sync: false
+        value: https://lpdwuzmhybjxjtsggdnn.supabase.co
       - key: SUPABASE_ANON_KEY
-        sync: false
+        value: sb_publishable_KRk1hCm0C_HSuoTXpcK_bg_MFGLjjOI
       - key: ABSTRACT_API_KEY
         sync: false
       - key: ALLOWED_ORIGINS
@@ -41,9 +41,9 @@ services:
           name: frontmind-backend
           property: url
       - key: VITE_SUPABASE_URL
-        sync: false
+        value: https://lpdwuzmhybjxjtsggdnn.supabase.co
       - key: VITE_SUPABASE_ANON_KEY
-        sync: false
+        value: sb_publishable_KRk1hCm0C_HSuoTXpcK_bg_MFGLjjOI
       # Debe coincidir con BACKEND_API_KEY del backend
       - key: VITE_BACKEND_API_KEY
         sync: false

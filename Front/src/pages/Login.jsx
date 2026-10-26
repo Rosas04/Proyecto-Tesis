@@ -37,6 +37,11 @@ export default function Login() {
       const { error } = await login(email, password);
 
       if (error) {
+        // status 0 / "Failed to fetch": el servidor de autenticación no es alcanzable
+        if (error.status === 0 || /fetch/i.test(error.message || "")) {
+          setError("No se pudo conectar con el servidor de autenticación. Verifique su conexión o la configuración de Supabase.");
+          return;
+        }
         registerLoginFailure();
         setError(
           error.status === 429
