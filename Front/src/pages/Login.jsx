@@ -2,9 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { loginBlockedFor, registerLoginFailure, registerLoginSuccess } from "../utils/loginThrottle";
-import logoImgWebp from "../assets/logo.webp";
-import logoImgPng from "../assets/logo.png";
-import "./Login.css";
+import AuthLayout, { EyeIcon, LockIcon, MailIcon } from "../components/AuthLayout";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -12,6 +10,7 @@ export default function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -61,46 +60,50 @@ export default function Login() {
   };
 
   return (
-    <main className="auth-page">
-      <section className="auth-card">
-        <div className="auth-brand">
-          <picture><source srcSet={logoImgWebp} type="image/webp" /><img src={logoImgPng} alt="FrontMind AI" className="auth-logo"  /></picture>
-          <h1>FrontMind AI</h1>
-          <p>Framework agéntico de evaluación frontend</p>
-        </div>
-
-        <form onSubmit={handleLogin}>
-          <h2>Iniciar sesión</h2>
-
-          <label>Correo electrónico</label>
-          <input type="email" aria-label="Correo electrónico"
+    <AuthLayout
+      title="Bienvenido de nuevo"
+      subtitle="Inicia sesión para continuar mejorando tu frontend con el poder de la IA."
+    >
+      <form className="split-form" onSubmit={handleLogin}>
+        <label htmlFor="login-email">Correo electrónico</label>
+        <div className="split-field">
+          <MailIcon />
+          <input id="login-email" type="email"
             placeholder="correo@ejemplo.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
+        </div>
 
-          <label>Contraseña</label>
-          <input type="password" aria-label="Contraseña"
+        <label htmlFor="login-password">Contraseña</label>
+        <div className="split-field">
+          <LockIcon />
+          <input id="login-password" type={showPassword ? "text" : "password"}
             placeholder="Ingrese su contraseña"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-
-          {error && <div className="auth-error">{error}</div>}
-
-          <button type="submit" disabled={loading}>
-            {loading ? "Ingresando..." : "Ingresar"}
+          <button type="button" className="split-eye"
+            aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+            onClick={() => setShowPassword((v) => !v)}>
+            <EyeIcon off={showPassword} />
           </button>
+        </div>
 
-          <p className="auth-link">
-            ¿Olvidaste tu contraseña? <Link to="/forgot-password">Recuperarla</Link>
-          </p>
+        <div className="split-row">
+          <Link to="/forgot-password">¿Olvidaste tu contraseña?</Link>
+        </div>
 
-          <p className="auth-link">
-            ¿No tienes cuenta? <Link to="/register">Crear cuenta</Link>
-          </p>
-        </form>
-      </section>
-    </main>
+        {error && <div className="split-error">{error}</div>}
+
+        <button type="submit" className="split-submit" disabled={loading}>
+          {loading ? "Ingresando..." : "Ingresar →"}
+        </button>
+
+        <p className="split-link">
+          ¿No tienes cuenta? <Link to="/register">Crear cuenta</Link>
+        </p>
+      </form>
+    </AuthLayout>
   );
 }

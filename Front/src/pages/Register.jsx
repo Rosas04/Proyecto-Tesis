@@ -1,10 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import logoImgWebp from "../assets/logo.webp";
-import logoImgPng from "../assets/logo.png";
-import "./Login.css"; // estilos base auth-* compartidos con Login
-import "./Register.css";
+import AuthLayout, { EyeIcon, LockIcon, MailIcon } from "../components/AuthLayout";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -13,6 +10,7 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -114,51 +112,62 @@ export default function Register() {
     }
   };
 
+  const eyeButton = (
+    <button type="button" className="split-eye"
+      aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+      onClick={() => setShowPassword((v) => !v)}>
+      <EyeIcon off={showPassword} />
+    </button>
+  );
+
   return (
-    <main className="auth-page">
-      <section className="auth-card">
-        <div className="auth-brand">
-          <picture><source srcSet={logoImgWebp} type="image/webp" /><img src={logoImgPng} alt="FrontMind AI" className="auth-logo"  /></picture>
-          <h1>FrontMind AI</h1>
-          <p>Crear una nueva cuenta</p>
-        </div>
-
-        <form onSubmit={handleRegister}>
-          <h2>Crear cuenta</h2>
-
-          <label>Correo electrónico</label>
-          <input type="email" aria-label="Correo electrónico"
+    <AuthLayout
+      title="Crear cuenta"
+      subtitle="Regístrate para empezar a evaluar y mejorar tu frontend con IA."
+    >
+      <form className="split-form" onSubmit={handleRegister}>
+        <label htmlFor="reg-email">Correo electrónico</label>
+        <div className="split-field">
+          <MailIcon />
+          <input id="reg-email" type="email"
             placeholder="correo@ejemplo.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
+        </div>
 
-          <label>Contraseña</label>
-          <input type="password" aria-label="Contraseña"
+        <label htmlFor="reg-password">Contraseña</label>
+        <div className="split-field">
+          <LockIcon />
+          <input id="reg-password" type={showPassword ? "text" : "password"}
             placeholder="Mínimo 8 caracteres"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+          {eyeButton}
+        </div>
 
-          <label>Confirmar contraseña</label>
-          <input type="password" aria-label="Contraseña"
+        <label htmlFor="reg-confirm">Confirmar contraseña</label>
+        <div className="split-field">
+          <LockIcon />
+          <input id="reg-confirm" type={showPassword ? "text" : "password"}
             placeholder="Repita su contraseña"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
           />
+        </div>
 
-          {error && <div className="auth-error">{error}</div>}
-          {success && <div className="auth-success">{success}</div>}
+        {error && <div className="split-error">{error}</div>}
+        {success && <div className="split-success">{success}</div>}
 
-          <button type="submit" disabled={loading}>
-            {loading ? "Creando cuenta..." : "Crear cuenta"}
-          </button>
+        <button type="submit" className="split-submit" disabled={loading}>
+          {loading ? "Creando cuenta..." : "Crear cuenta →"}
+        </button>
 
-          <p className="auth-link">
-            ¿Ya tienes cuenta? <Link to="/login">Iniciar sesión</Link>
-          </p>
-        </form>
-      </section>
-    </main>
+        <p className="split-link">
+          ¿Ya tienes cuenta? <Link to="/login">Iniciar sesión</Link>
+        </p>
+      </form>
+    </AuthLayout>
   );
 }
