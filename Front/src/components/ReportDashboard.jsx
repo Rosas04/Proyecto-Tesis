@@ -20,25 +20,35 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
     counts['Medio'] = s['Media'] || s['Medio'] || 0;
     counts['Bajo'] = s['Baja'] || s['Bajo'] || 0;
     
-    // For mock if empty
-    if(totalFindings > 0 && Object.values(counts).reduce((a,b)=>a+b,0) === 0) {
-        counts['Alto'] = 6;
-        counts['Medio'] = 5;
+    // Sin resumen: se cuenta a partir de los hallazgos reales (nunca valores fijos).
+    if (Object.values(counts).reduce((a, b) => a + b, 0) === 0 && findings.length > 0) {
+      const alias = { 'Crítica': 'Crítico', 'Alta': 'Alto', 'Media': 'Medio', 'Baja': 'Bajo' };
+      findings.forEach((f) => {
+        const key = alias[f.severity] || f.severity;
+        if (counts[key] !== undefined) counts[key] += 1;
+      });
     }
     
     return counts;
-  }, [summary.severity_summary, totalFindings]);
+  }, [summary.severity_summary, findings]);
 
-  const characteristicsScores = summary.characteristics_scores || {
-    "Adecuación funcional": 94,
-    "Eficiencia de desempeño": 90,
-    "Usabilidad": 86,
-    "Accesibilidad": 78,
-    "Mantenibilidad": 94,
-    "Compatibilidad": 82,
-    "Seguridad": 76,
-    "Portabilidad": 82
+  // Puntajes reales por característica: los envía el backend en `scores`
+  // (claves snake_case). Sin datos no se muestra nada inventado.
+  const SCORE_LABELS = {
+    adecuacion_funcional: "Adecuación funcional",
+    eficiencia_desempeno: "Eficiencia de desempeño",
+    usabilidad: "Usabilidad",
+    accesibilidad: "Accesibilidad",
+    mantenibilidad: "Mantenibilidad",
+    compatibilidad: "Compatibilidad",
+    seguridad: "Seguridad",
+    portabilidad: "Portabilidad",
   };
+  const characteristicsScores = summary.characteristics_scores || Object.fromEntries(
+    Object.entries(reportResult?.scores || {})
+      .filter(([, v]) => typeof v === "number")
+      .map(([k, v]) => [SCORE_LABELS[k] || k, Math.round(v)])
+  );
 
   const getScoreColor = (score) => getQualityLevel(score).color;
 
@@ -250,6 +260,9 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
             <div className="pdf-card">
               <h3 className="card-title">Resultados por característica ISO/IEC 25010</h3>
               <div className="chars-list">
+                {Object.keys(characteristicsScores).length === 0 && (
+                  <p>No hay puntajes por característica registrados para este análisis.</p>
+                )}
                 {Object.entries(characteristicsScores).map(([name, score], idx) => (
                   <div className="char-item" key={idx}>
                     <div className="char-name">{name}</div>
@@ -310,91 +323,19 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
                 return (
                   <tr key={i}>
                     <td>{id}</td>
-                    <td>{f.dimension || 'Accesibilidad'}</td>
-                    <td>{f.type || 'Error'}</td>
-                    <td>{f.finding?.replace('[VIOLACIÓN]', '') || 'Falta de etiqueta en campo de formulario'}</td>
-                    <td><span className={`badge ${getSeverityBadgeClass(f.severity)}`}>{f.severity || 'Alta'}</span></td>
-                    <td>{f.recommendation || 'Agregar etiquetas y atributos ARIA.'}</td>
-                    <td><span className={`badge ${getStatusBadgeClass(f.status)}`}>{f.status || (i % 2 === 0 ? 'Abierto' : 'En revisión')}</span></td>
+                    <td>{f.dimension || '—'}</td>
+                    <td>{f.type || f.severity_grade_label || f.subdimension || '—'}</td>
+                    <td>{f.finding?.replace('[VIOLACIÓN]', '') || '—'}</td>
+                    <td><span className={`badge ${getSeverityBadgeClass(f.severity)}`}>{f.severity || '—'}</span></td>
+                    <td>{f.recommendation || '—'}</td>
+                    <td><span className={`badge ${getStatusBadgeClass(f.status)}`}>{f.status || 'Abierto'}</span></td>
                   </tr>
                 );
               })}
-              {/* Fallback mock rows if not enough findings */}
               {findings.length === 0 && (
-                <>
-                  <tr>
-                    <td>H-01</td>
-                    <td>Accesibilidad</td>
-                    <td>Error</td>
-                    <td>Falta de etiqueta en campo de formulario (aria-label).</td>
-                    <td><span className="badge badge-alta">Alta</span></td>
-                    <td>Agregar etiquetas y atributos ARIA correspondientes.</td>
-                    <td><span className="badge badge-abierto">Abierto</span></td>
-                  </tr>
-                  <tr>
-                    <td>H-02</td>
-                    <td>Usabilidad</td>
-                    <td>Advertencia</td>
-                    <td>Texto de botones poco descriptivo en vista móvil.</td>
-                    <td><span className="badge badge-media">Media</span></td>
-                    <td>Usar textos más claros y específicos.</td>
-                    <td><span className="badge badge-revision">En revisión</span></td>
-                  </tr>
-                  <tr>
-                    <td>H-03</td>
-                    <td>Seguridad</td>
-                    <td>Error</td>
-                    <td>Exposición de datos sensibles en consola.</td>
-                    <td><span className="badge badge-alta">Alta</span></td>
-                    <td>Eliminar logs sensibles y revisar configuración.</td>
-                    <td><span className="badge badge-abierto">Abierto</span></td>
-                  </tr>
-                  <tr>
-                    <td>H-04</td>
-                    <td>Rendimiento</td>
-                    <td>Advertencia</td>
-                    <td>Imágenes sin compresión adecuada (&gt; 500 KB).</td>
-                    <td><span className="badge badge-media">Media</span></td>
-                    <td>Optimizar imágenes y usar formatos modernos.</td>
-                    <td><span className="badge badge-revision">En revisión</span></td>
-                  </tr>
-                  <tr>
-                    <td>H-05</td>
-                    <td>Compatibilidad</td>
-                    <td>Error</td>
-                    <td>Funciones de CSS no compatibles en navegadores antiguos.</td>
-                    <td><span className="badge badge-alta">Alta</span></td>
-                    <td>Usar fallbacks o polyfills según necesidad.</td>
-                    <td><span className="badge badge-abierto">Abierto</span></td>
-                  </tr>
-                  <tr>
-                    <td>H-06</td>
-                    <td>Mantenibilidad</td>
-                    <td>Advertencia</td>
-                    <td>Código con alta complejidad en componentes principales.</td>
-                    <td><span className="badge badge-media">Media</span></td>
-                    <td>Refactorizar y modularizar el código.</td>
-                    <td><span className="badge badge-revision">En revisión</span></td>
-                  </tr>
-                  <tr>
-                    <td>H-07</td>
-                    <td>Portabilidad</td>
-                    <td>Advertencia</td>
-                    <td>Uso de rutas absolutas en recursos.</td>
-                    <td><span className="badge badge-media">Media</span></td>
-                    <td>Usar rutas relativas o variables de entorno.</td>
-                    <td><span className="badge badge-resuelto">Resuelto</span></td>
-                  </tr>
-                  <tr>
-                    <td>H-08</td>
-                    <td>Adecuación funcional</td>
-                    <td>Error</td>
-                    <td>Formulario no valida correctamente campos obligatorios.</td>
-                    <td><span className="badge badge-alta">Alta</span></td>
-                    <td>Implementar validaciones del lado del cliente y servidor.</td>
-                    <td><span className="badge badge-abierto">Abierto</span></td>
-                  </tr>
-                </>
+                <tr>
+                  <td colSpan={7}>No se registraron hallazgos para este análisis.</td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -438,12 +379,12 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
                   return (
                     <tr key={i}>
                       <td>{id}</td>
-                      <td>{f.dimension || 'Accesibilidad'}</td>
-                      <td>{f.type || 'Error'}</td>
+                      <td>{f.dimension || '—'}</td>
+                      <td>{f.type || f.severity_grade_label || f.subdimension || '—'}</td>
                       <td>{f.finding?.replace('[VIOLACIÓN]', '') || 'N/A'}</td>
-                      <td><span className={`badge ${getSeverityBadgeClass(f.severity)}`}>{f.severity || 'Alta'}</span></td>
+                      <td><span className={`badge ${getSeverityBadgeClass(f.severity)}`}>{f.severity || '—'}</span></td>
                       <td>{f.recommendation || 'N/A'}</td>
-                      <td><span className={`badge ${getStatusBadgeClass(f.status)}`}>{f.status || (i % 2 === 0 ? 'Abierto' : 'En revisión')}</span></td>
+                      <td><span className={`badge ${getStatusBadgeClass(f.status)}`}>{f.status || 'Abierto'}</span></td>
                     </tr>
                   );
                 })}
@@ -526,6 +467,7 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
                   {/* Dynamic generation of path and points based on REAL current analysis data */}
                   {(() => {
                     const entries = Object.entries(characteristicsScores);
+                    if (entries.length === 0) return null;
                     const shortLabels = {
                       "Adecuación funcional": "Funcional",
                       "Eficiencia de desempeño": "Eficiencia",

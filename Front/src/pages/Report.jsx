@@ -82,8 +82,12 @@ export default function Report() {
       // Guardar el análisis en la base de datos si el usuario está autenticado
       if (user && user.id) {
         try {
+          // Los hallazgos consolidados vienen en el reporte; la evaluación puede
+          // ser una lista de interfaces sin campo `findings` propio.
           const evalData = evaluation || {};
-          const findings = evalData.findings || [];
+          const findings = Array.isArray(result?.findings)
+            ? result.findings
+            : (Array.isArray(evalData.findings) ? evalData.findings : []);
           const localSourceType = localStorage.getItem("inputType") || "url";
           
           // Generar hash simple del HTML evaluado para identificar esta ejecución
@@ -134,6 +138,7 @@ export default function Report() {
             inputHash: localInputHash,
             projectName: localProjectName,
             sourceUrl: localSourceType === "zip" ? null : localInputUrl || null,
+            scores: result?.scores || null,
           });
         } catch (dbErr) {
           console.error("No se pudo guardar el análisis en el historial:", dbErr);

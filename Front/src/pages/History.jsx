@@ -188,7 +188,7 @@ export default function History() {
           total_interfaces: 1,
           severity_summary: severitySummary
         },
-        scores: {},
+        scores: run.scores || {},
         findings: runFindings,
         main_recommendations: recommendations
       };
