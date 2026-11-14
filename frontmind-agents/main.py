@@ -29,6 +29,7 @@ from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, File, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -197,7 +198,13 @@ app.add_middleware(
 async def security_headers(request: Request, call_next):
     response = await call_next(request)
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
-    response.headers.setdefault("X-Frame-Options", "DENY")
+    # Sólo Hugging Face puede incrustar la API (vista del Space); cualquier otro
+    # sitio queda bloqueado frente a clickjacking. Sustituye a X-Frame-Options,
+    # que no admite listas de orígenes.
+    response.headers.setdefault(
+        "Content-Security-Policy",
+        "frame-ancestors 'self' https://huggingface.co https://*.hf.space",
+    )
     response.headers.setdefault("Referrer-Policy", "no-referrer")
     response.headers.setdefault("Cross-Origin-Resource-Policy", "cross-origin")
     if request.url.path.startswith("/captures/"):
@@ -245,8 +252,29 @@ def _protected(scope: str, limit: int) -> list:
 # Endpoints
 # ─────────────────────────────────────────────────────────────────────────────
 
+_STATUS_PAGE = """<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FrontMind AI API</title>
+<style>
+body{margin:0;min-height:100vh;display:grid;place-items:center;
+font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#f8fafc;color:#0f172a}
+main{max-width:480px;padding:32px;text-align:center}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#16a34a;margin-right:8px}
+h1{font-size:1.6rem;margin:0 0 8px}p{color:#475569;line-height:1.5}
+a{color:#2563eb}code{background:#e2e8f0;padding:2px 6px;border-radius:4px}
+</style></head><body><main>
+<h1>FrontMind AI &middot; API</h1>
+<p><span class="dot"></span>Servicio en funcionamiento &middot; versi&oacute;n <code>{version}</code></p>
+<p>Este Space aloja el backend de FrontMind. Para usar la aplicaci&oacute;n entra en
+<a href="https://frontmind-frontend.onrender.com" target="_blank" rel="noopener">frontmind-frontend.onrender.com</a>.</p>
+</main></body></html>"""
+
+
 @app.get("/")
-def home():
+def home(request: Request):
+    if "text/html" in request.headers.get("accept", ""):
+        return HTMLResponse(_STATUS_PAGE.replace("{version}", app.version))
     return {
         "message": "FrontMind AI Agents API funcionando",
         "status": "ok",

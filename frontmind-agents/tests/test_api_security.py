@@ -153,7 +153,18 @@ def test_verify_email_progressive_lockout(client):
 def test_security_headers_and_gzip(client):
     r = client.get("/", headers={"Accept-Encoding": "gzip"})
     assert r.headers["X-Content-Type-Options"] == "nosniff"
-    assert r.headers["X-Frame-Options"] == "DENY"
+    assert "X-Frame-Options" not in r.headers
+    assert r.headers["Content-Security-Policy"] == (
+        "frame-ancestors 'self' https://huggingface.co https://*.hf.space"
+    )
+
+
+def test_root_serves_status_page_to_browsers(client):
+    r = client.get("/", headers={"Accept": "text/html"})
+    assert r.status_code == 200
+    assert "text/html" in r.headers["content-type"]
+    assert "Servicio en funcionamiento" in r.text
+    assert client.get("/").json()["status"] == "ok"
 
 
 @pytest.mark.parametrize("url", [
