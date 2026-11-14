@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 import { AnalysisProvider } from "./context/AnalysisContext.jsx";
@@ -47,6 +47,10 @@ export default function App() {
             <Route path="/report" element={<ProtectedRoute><Report /></ProtectedRoute>} />
             <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
             <Route path="/interfaces" element={<ProtectedRoute><InterfaceTabs /></ProtectedRoute>} />
+            {/* Alias en español y rutas desconocidas: nunca dejar la pantalla en blanco */}
+            <Route path="/registro" element={<Navigate to="/register" replace />} />
+            <Route path="/acceso" element={<Navigate to="/login" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
       </AnalysisProvider>
