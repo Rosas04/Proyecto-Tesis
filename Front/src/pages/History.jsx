@@ -180,7 +180,7 @@ export default function History() {
          }
       });
       const mockReportResult = {
-        generated_at: new Date(run.created_at).toLocaleString("es-ES"),
+        generated_at: run.created_at,
         summary: {
           global_score: run.global_score,
           quality_level: run.quality_level,
@@ -389,9 +389,16 @@ export default function History() {
                           </td>
                           <td className="project-name-cell">
                             <strong>{run.projects?.project_name || "Proyecto Principal"}</strong>
-                            <a href="#" className="url-link" onClick={e => e.preventDefault()}>
-                              <LinkIcon /> {run.url || "https://example.com"}
-                            </a>
+                            {(run.source_url || (run.projects?.project_name && !/\.zip$/i.test(run.projects.project_name))) && (
+                              <a
+                                href={run.source_url || `https://${run.projects.project_name}`}
+                                className="url-link"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <LinkIcon /> {run.source_url || `https://${run.projects.project_name}`}
+                              </a>
+                            )}
                           </td>
                           <td className="date-cell">
                             {formatDateTime(run.created_at)}

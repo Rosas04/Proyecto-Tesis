@@ -17,7 +17,8 @@ export async function addAnalysisRun({
   findings,
   sourceType = 'url',
   inputHash = null,
-  projectName = null
+  projectName = null,
+  sourceUrl = null
 }) {
   if (!supabase) {
     throw new Error("Base de datos (Supabase) no configurada.");
@@ -81,7 +82,8 @@ export async function addAnalysisRun({
         global_score: globalScore,
         quality_level: qualityLevel,
         total_findings: totalFindings,
-        input_hash: finalInputHash
+        input_hash: finalInputHash,
+        ...(sourceUrl ? { source_url: sourceUrl } : {})
       }
     ])
     .select('id')

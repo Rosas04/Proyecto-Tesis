@@ -68,6 +68,20 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - ((globalScore ?? 0) / 100) * circumference;
 
+  // Fecha real del reporte: la del backend ("YYYY-MM-DD HH:MM:SS", UTC) o la
+  // del análisis guardado (ISO) al descargar desde el Historial.
+  const parseGeneratedAt = (value) => {
+    if (!value) return new Date();
+    const iso = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(value) ? `${value.replace(" ", "T")}Z` : value;
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime()) ? new Date() : d;
+  };
+  const generatedDate = parseGeneratedAt(reportResult?.generated_at);
+  const pad = (n) => String(n).padStart(2, "0");
+  const reportCode = `RM-${generatedDate.getFullYear()}${pad(generatedDate.getMonth() + 1)}${pad(generatedDate.getDate())}-${pad(generatedDate.getHours())}${pad(generatedDate.getMinutes())}`;
+  const dateLabel = generatedDate.toLocaleDateString("es-PE", { day: "numeric", month: "short", year: "numeric" });
+  const dateTimeLabel = `${dateLabel} - ${generatedDate.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit", hour12: false })}`;
+
   const header = (
     <div className="pdf-header">
       <div className="pdf-header-left">
@@ -79,8 +93,8 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
       </div>
       <div className="pdf-header-right">
         <div className="header-meta">
-          <span>Código de reporte: RM-2026-042</span>
-          <span>Fecha de generación: 25 sep. 2026 - 17:37</span>
+          <span>Código de reporte: {reportCode}</span>
+          <span>Fecha de generación: {dateTimeLabel}</span>
         </div>
         <div className="header-status">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -93,7 +107,7 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
   const footer = (page) => (
     <div className="pdf-footer">
       <span>FrontMind AI | Reporte técnico de calidad frontend</span>
-      <span>Página {page} de 3 | 25 sep. 2026</span>
+      <span>Página {page} de 3 | {dateLabel}</span>
     </div>
   );
 

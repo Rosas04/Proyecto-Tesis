@@ -133,6 +133,7 @@ export default function Report() {
             sourceType: localSourceType,
             inputHash: localInputHash,
             projectName: localProjectName,
+            sourceUrl: localSourceType === "zip" ? null : localInputUrl || null,
           });
         } catch (dbErr) {
           console.error("No se pudo guardar el análisis en el historial:", dbErr);
