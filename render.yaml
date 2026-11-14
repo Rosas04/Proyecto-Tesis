@@ -12,9 +12,9 @@ services:
       - key: BACKEND_API_KEY
         sync: false
       - key: SUPABASE_URL
-        value: https://lpdwuzmhybjxjtsggdnn.supabase.co
+        value: https://xivbtmxybnvolkfqzood.supabase.co
       - key: SUPABASE_ANON_KEY
-        value: sb_publishable_KRk1hCm0C_HSuoTXpcK_bg_MFGLjjOI
+        value: sb_publishable_Uw5SSw9xr_O9-44NoQ-R_g_qUW1RJ5o
       - key: ABSTRACT_API_KEY
         sync: false
       - key: ALLOWED_ORIGINS
@@ -41,9 +41,9 @@ services:
           name: frontmind-backend
           property: url
       - key: VITE_SUPABASE_URL
-        value: https://lpdwuzmhybjxjtsggdnn.supabase.co
+        value: https://xivbtmxybnvolkfqzood.supabase.co
       - key: VITE_SUPABASE_ANON_KEY
-        value: sb_publishable_KRk1hCm0C_HSuoTXpcK_bg_MFGLjjOI
+        value: sb_publishable_Uw5SSw9xr_O9-44NoQ-R_g_qUW1RJ5o
       # Debe coincidir con BACKEND_API_KEY del backend
       - key: VITE_BACKEND_API_KEY
         sync: false

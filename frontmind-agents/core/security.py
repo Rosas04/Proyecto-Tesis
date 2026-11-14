@@ -87,16 +87,16 @@ _token_cache_lock = threading.Lock()
 
 
 # Proyecto Supabase actual (URL y clave publishable son públicas por diseño).
-_DEFAULT_SUPABASE_URL = "https://lpdwuzmhybjxjtsggdnn.supabase.co"
-_DEFAULT_SUPABASE_KEY = "sb_publishable_KRk1hCm0C_HSuoTXpcK_bg_MFGLjjOI"
-# Proyecto anterior (eliminado): si el entorno aún lo trae, se usa el actual.
-_DEAD_SUPABASE_REF = "eytmbhfdjccvxmpjvidq"
+_DEFAULT_SUPABASE_URL = "https://xivbtmxybnvolkfqzood.supabase.co"
+_DEFAULT_SUPABASE_KEY = "sb_publishable_Uw5SSw9xr_O9-44NoQ-R_g_qUW1RJ5o"
+# Proyectos anteriores (pausados): si el entorno aún los trae, se usa el actual.
+_DEAD_SUPABASE_REFS = ("eytmbhfdjccvxmpjvidq", "lpdwuzmhybjxjtsggdnn")
 
 
 def _supabase_config() -> tuple[str, str]:
     url = os.environ.get("SUPABASE_URL", "").strip().rstrip("/")
     key = os.environ.get("SUPABASE_ANON_KEY", "").strip()
-    if _DEAD_SUPABASE_REF in url:
+    if any(ref in url for ref in _DEAD_SUPABASE_REFS):
         return _DEFAULT_SUPABASE_URL, _DEFAULT_SUPABASE_KEY
     return url, key
 
