@@ -273,7 +273,6 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
                   </div>
                 ))}
               </div>
-              <p className="note-text">Nota: Los puntajes mostrados son ejemplos y tienen fines ilustrativos.</p>
             </div>
 
             {/* Limitaciones */}
