@@ -37,6 +37,7 @@ Correspondencia con la severidad cualitativa de las reglas: Crítica → 4, Alta
 | ACC-03 | Accesibilidad | Operable | Botones con nombre accesible | `X = A / B` | X ≥ 0.9 | WCAG 2.2 · 4.1.2 |
 | ACC-04 | Accesibilidad | Operable | Enlaces con texto accesible | `X = A / B` | X ≥ 0.9 | WCAG 2.2 · 2.4.4 |
 | ACC-05 | Accesibilidad | Comprensible | Idioma del documento declarado | `X = A / B` | X ≥ 1.0 | WCAG 2.2 · 3.1.1 |
+| ACC-06 | Accesibilidad | Perceptible | Texto con contraste suficiente (estilos computados) | `X = A / B` | X ≥ 0.9 | WCAG 2.2 · 1.4.3 |
 | USA-01 | Usabilidad | Protección contra errores del usuario | Campos con validación declarativa | `X = A / B` | X ≥ 0.5 | Operacionalización ISO/IEC 25010 |
 | USA-02 | Usabilidad | Protección contra errores del usuario | Mecanismo de mensajes de estado | `X = A / B` | X ≥ 1.0 | Operacionalización ISO/IEC 25010 |
 | MAN-01 | Mantenibilidad | Modularidad | Proporción de contenedores semánticos | `X = A / B` | X ≥ 0.1 | Operacionalización ISO/IEC 25010 |
@@ -50,6 +51,8 @@ Correspondencia con la severidad cualitativa de las reglas: Crítica → 4, Alta
 | EFI-04 | Eficiencia de desempeño | Utilización de recursos | Datos transferidos | `X = valor medido` | X ≤ 3000 KB | Referencia práctica de peso de página |
 | EFI-05 | Eficiencia de desempeño | Utilización de recursos | Peticiones de red | `X = valor medido` | X ≤ 100 | Referencia práctica |
 | EFI-06 | Eficiencia de desempeño | Utilización de recursos | Memoria JS del cliente | `X = valor medido` | X ≤ 50 MB | Referencia práctica |
+
+ACC-06 se calcula con Playwright sobre los estilos computados del texto visible (4.5:1, o 3:1 en texto grande); si no hay medición no se reporta y el evaluador usa como respaldo la revisión de estilos inline. Las imágenes con `alt=""` se consideran correctas (decorativas) y el `placeholder` no cuenta como etiqueta de formulario.
 
 Las métricas EFI-* se miden con Playwright sobre la página original durante la captura (TTFB, LCP, CLS, bytes, peticiones, memoria JS). Si no hay medición se reportan como *no medido* y no penalizan.
 

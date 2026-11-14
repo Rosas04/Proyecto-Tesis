@@ -124,10 +124,10 @@
 .count-box.bajo { border: 1px solid #d1fae5; }
 
 .count-title { font-size: 11px; font-weight: 600; }
-.count-title.critico { color: #ef4444; }
-.count-title.alto { color: #f97316; }
-.count-title.medio { color: #f59e0b; }
-.count-title.bajo { color: #10b981; }
+.count-title.critico { color: #b91c1c; }
+.count-title.alto { color: #c2410c; }
+.count-title.medio { color: #b45309; }
+.count-title.bajo { color: #047857; }
 
 .count-val {
   font-size: 18px;

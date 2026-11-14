@@ -147,7 +147,7 @@ export function ReportWebDashboard({ reportResult, summary, findings, scores, so
                       fontSize: '11px', 
                       fontWeight: '600',
                       backgroundColor: getBadgeClassUI(f.severity).includes('alta') ? '#fee2e2' : getBadgeClassUI(f.severity).includes('media') ? '#fef3c7' : '#d1fae5',
-                      color: getBadgeClassUI(f.severity).includes('alta') ? '#ef4444' : getBadgeClassUI(f.severity).includes('media') ? '#f59e0b' : '#10b981',
+                      color: getBadgeClassUI(f.severity).includes('alta') ? '#b91c1c' : getBadgeClassUI(f.severity).includes('media') ? '#b45309' : '#047857',
                       border: `1px solid ${getBadgeClassUI(f.severity).includes('alta') ? '#fca5a5' : getBadgeClassUI(f.severity).includes('media') ? '#fcd34d' : '#86efac'}`
                     }}>{f.severity || 'Media'}</span>
                   </td>

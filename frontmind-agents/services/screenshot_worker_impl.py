@@ -99,7 +99,58 @@ _PERFORMANCE_JS = """
             for (const e of list.getEntries()) if (!e.hadRecentInput) cls += e.value;
         }).observe({ type: 'layout-shift', buffered: true });
     } catch (e) {}
+    // WCAG 2.2 · 1.4.3: contraste de texto con estilos computados
+    // (umbral 4.5:1; 3:1 para texto grande ≥ 24px o ≥ 18.66px en negrita).
+    const parse = (c) => {
+        const m = (c || '').match(/rgba?\\(([^)]+)\\)/);
+        if (!m) return null;
+        const p = m[1].split(/[ ,/]+/).filter(Boolean).map(Number);
+        return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+    };
+    const lum = (c) => {
+        const ch = [c.r, c.g, c.b].map((v) => {
+            v /= 255;
+            return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        });
+        return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
+    };
+    const background = (el) => {
+        for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+            const st = getComputedStyle(n);
+            if (st.backgroundImage && st.backgroundImage !== 'none') return null;
+            const bg = parse(st.backgroundColor);
+            if (bg && bg.a >= 0.99) return bg;
+            if (bg && bg.a > 0) return null;  // fondo semitransparente: no concluyente
+        }
+        return { r: 255, g: 255, b: 255, a: 1 };
+    };
+    let contrastChecked = 0;
+    let contrastFailures = 0;
+    try {
+        for (const el of document.body ? document.body.querySelectorAll('*') : []) {
+            if (contrastChecked >= 1500) break;
+            const hasText = Array.from(el.childNodes).some(
+                (n) => n.nodeType === 3 && n.textContent.trim().length > 0);
+            if (!hasText) continue;
+            const st = getComputedStyle(el);
+            if (st.visibility === 'hidden' || st.display === 'none' || Number(st.opacity) === 0) continue;
+            const rect = el.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) continue;
+            const fg = parse(st.color);
+            const bg = background(el);
+            if (!fg || !bg || fg.a < 0.99) continue;
+            const l1 = lum(fg), l2 = lum(bg);
+            const ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+            const size = parseFloat(st.fontSize) || 16;
+            const bold = (parseInt(st.fontWeight, 10) || 400) >= 700;
+            const large = size >= 24 || (bold && size >= 18.66);
+            contrastChecked += 1;
+            if (ratio < (large ? 3 : 4.5)) contrastFailures += 1;
+        }
+    } catch (e) {}
     setTimeout(() => resolve({
+        contrast_checked: contrastChecked,
+        contrast_failures: contrastFailures,
         ttfb_ms: nav ? Math.max(0, nav.responseStart - nav.requestStart) : null,
         dom_content_loaded_ms: nav && nav.domContentLoadedEventEnd ? nav.domContentLoadedEventEnd : null,
         load_ms: nav && nav.loadEventEnd ? nav.loadEventEnd : null,
@@ -119,6 +170,7 @@ def collect_performance_metrics(page) -> dict[str, Any]:
     """
     Métricas de ejecución de la navegación actual (ISO/IEC 25010 · eficiencia
     de desempeño): TTFB, LCP, CLS, peticiones, bytes transferidos y memoria JS.
+    Incluye el contraste de texto con estilos computados (WCAG 2.2 · 1.4.3).
     Se miden una sola vez desde el servidor de evaluación.
     """
     try:

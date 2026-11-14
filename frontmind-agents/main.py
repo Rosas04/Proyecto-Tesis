@@ -109,6 +109,8 @@ class RuntimeMetrics(BaseModel):
     js_heap_mb: Optional[float] = Field(default=None, ge=0, le=100_000)
     dom_content_loaded_ms: Optional[float] = Field(default=None, ge=0, le=600_000)
     load_ms: Optional[float] = Field(default=None, ge=0, le=600_000)
+    contrast_checked: Optional[int] = Field(default=None, ge=0, le=100_000)
+    contrast_failures: Optional[int] = Field(default=None, ge=0, le=100_000)
 
 
 Characteristic = Literal[

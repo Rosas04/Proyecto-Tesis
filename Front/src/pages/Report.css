@@ -162,7 +162,7 @@
 
 .info-item svg {
   margin-top: 2px;
-  color: #94a3b8;
+  color: #5f6d82;
 }
 
 .info-item > div {
@@ -175,7 +175,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #94a3b8;
+  color: #5f6d82;
   margin-bottom: 2px;
 }
 
@@ -271,10 +271,10 @@
   color: #0f172a;
 }
 
-.critical .severity-icon { background: #fee2e2; color: #ef4444; }
-.high .severity-icon { background: #ffedd5; color: #f97316; }
-.medium .severity-icon { background: #fef3c7; color: #f59e0b; }
-.low .severity-icon { background: #d1fae5; color: #10b981; }
+.critical .severity-icon { background: #fee2e2; color: #b91c1c; }
+.high .severity-icon { background: #ffedd5; color: #c2410c; }
+.medium .severity-icon { background: #fef3c7; color: #b45309; }
+.low .severity-icon { background: #d1fae5; color: #047857; }
 
 /* Section Headers */
 .section-header.with-icon {
@@ -316,7 +316,7 @@
 }
 
 .score-row-icon {
-  color: #94a3b8;
+  color: #5f6d82;
 }
 
 .score-row-label-text {
@@ -481,10 +481,10 @@
   font-weight: 600;
   text-transform: capitalize;
 }
-.severity-badge.crítica, .severity-badge.critica { background: #fee2e2; color: #ef4444; }
-.severity-badge.alta { background: #ffedd5; color: #f97316; }
-.severity-badge.media { background: #fef3c7; color: #f59e0b; }
-.severity-badge.baja { background: #d1fae5; color: #10b981; }
+.severity-badge.crítica, .severity-badge.critica { background: #fee2e2; color: #b91c1c; }
+.severity-badge.alta { background: #ffedd5; color: #c2410c; }
+.severity-badge.media { background: #fef3c7; color: #b45309; }
+.severity-badge.baja { background: #d1fae5; color: #047857; }
 
 .action-btn {
   display: flex;

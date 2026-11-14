@@ -380,7 +380,7 @@ export default function Capture() {
                             <p>{item.width ? `${item.width} x ${item.height}` : getDeviceRes(item.device)}</p>
                           </div>
                         </div>
-                        <span className="status-badge" style={isError ? {background: '#fef2f2', color: '#ef4444'} : {}}>
+                        <span className="status-badge" style={isError ? {background: '#fef2f2', color: '#b91c1c'} : {}}>
                           {isError ? "Error" : "OK"}
                         </span>
                       </div>
@@ -400,7 +400,7 @@ export default function Capture() {
                           {!isError && getImageSource(item) ? (
                             <img src={getImageSource(item)} alt={`Captura ${item.device}`} />
                           ) : (
-                            <div style={{padding: '20px', textAlign: 'center', color: '#94a3b8', fontSize: '12px'}}>
+                            <div style={{padding: '20px', textAlign: 'center', color: '#5f6d82', fontSize: '12px'}}>
                               {isError ? item.error : "Sin imagen"}
                             </div>
                           )}

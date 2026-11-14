@@ -277,9 +277,9 @@
   text-transform: uppercase;
 }
 
-.severity-pill.critical { background: #fee2e2; color: #ef4444; }
-.severity-pill.high { background: #ffedd5; color: #f97316; }
-.severity-pill.medium { background: #fef3c7; color: #f59e0b; }
+.severity-pill.critical { background: #fee2e2; color: #b91c1c; }
+.severity-pill.high { background: #ffedd5; color: #c2410c; }
+.severity-pill.medium { background: #fef3c7; color: #b45309; }
 .severity-pill.low { background: #eff6ff; color: #3b82f6; }
 
 .cell-principle {

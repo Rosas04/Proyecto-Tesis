@@ -12,10 +12,11 @@ function formatValue(metric) {
 /** Texto de recomendación por métrica cuando no se cumple la meta. */
 const FIX_HINT = {
   "ACC-01": "Agregue el atributo alt a cada imagen (alt=\"\" si es decorativa).",
-  "ACC-02": "Asocie cada campo con un <label for> o aria-label.",
+  "ACC-02": "Asocie cada campo con un <label for> o aria-label (el placeholder no reemplaza a la etiqueta).",
   "ACC-03": "Dé a cada botón un texto visible o un aria-label.",
   "ACC-04": "Use textos descriptivos en los enlaces (evite «clic aquí» o enlaces vacíos).",
   "ACC-05": "Declare el idioma en la etiqueta <html lang=\"es\">.",
+  "ACC-06": "Oscurezca el texto o aclare el fondo hasta lograr 4.5:1 (3:1 en texto grande).",
   "USA-01": "Use type (email, number, tel…) y required/pattern para validar los campos sin depender de JavaScript.",
   "USA-02": "Agregue una región role=\"status\" o aria-live para anunciar mensajes de error y confirmación.",
   "MAN-01": "Reemplace <div> genéricos por <main>, <nav>, <header>, <section> o <footer>.",

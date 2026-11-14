@@ -119,14 +119,14 @@
 .stat-trend {
   font-size: 10px;
   font-weight: 600;
-  color: #94a3b8;
+  color: #5f6d82;
   display: flex;
   align-items: center;
   gap: 3px;
 }
 
 .stat-trend.up {
-  color: #10b981;
+  color: #047857;
 }
 
 .dashboard-grid {
@@ -222,7 +222,7 @@
 .project-cell span {
   display: block;
   font-size: 10px;
-  color: #94a3b8;
+  color: #5f6d82;
   font-weight: 500;
 }
 
@@ -253,14 +253,14 @@
   font-weight: 800;
   border: 2px solid;
 }
-.home-score-circle.excellent { border-color: #10b981; color: #10b981; }
-.home-score-circle.high { border-color: #f59e0b; color: #f59e0b; }
-.home-score-circle.medium { border-color: #f97316; color: #f97316; }
-.home-score-circle.low { border-color: #ef4444; color: #ef4444; }
+.home-score-circle.excellent { border-color: #10b981; color: #047857; }
+.home-score-circle.high { border-color: #f59e0b; color: #b45309; }
+.home-score-circle.medium { border-color: #f97316; color: #c2410c; }
+.home-score-circle.low { border-color: #ef4444; color: #b91c1c; }
 
 .score-max {
   font-size: 9px;
-  color: #94a3b8;
+  color: #5f6d82;
   font-weight: 600;
 }
 
@@ -373,7 +373,7 @@
   text-align: right;
 }
 .criteria-score span {
-  color: #94a3b8;
+  color: #5f6d82;
   font-weight: 500;
 }
 
@@ -411,8 +411,8 @@
   font-size: 10px;
   font-weight: 800;
 }
-.priority-badge.Alta { background: #fee2e2; color: #ef4444; }
-.priority-badge.Media { background: #fef3c7; color: #f59e0b; }
+.priority-badge.Alta { background: #fee2e2; color: #b91c1c; }
+.priority-badge.Media { background: #fef3c7; color: #b45309; }
 .priority-badge.Baja { background: #f1f5f9; color: #64748b; }
 
 .empty-state {
