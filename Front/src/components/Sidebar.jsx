@@ -174,7 +174,7 @@ export default function Sidebar() {
           </div>
           <div className="user-text">
             <small>Sesión activa</small>
-            <strong>{user?.email || "lrosasm@upao.edu.pe"}</strong>
+            <strong>{user?.email || "Usuario"}</strong>
           </div>
         </div>
 

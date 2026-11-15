@@ -7,7 +7,7 @@ import { storageService } from "../services/storageService";
 import { getQualityLevel, toScore } from "../utils/qualityLevel";
 import NormativeSection from "../components/NormativeSection";
 import { useAuth } from "../context/AuthContext";
-import { addAnalysisRun } from "../historyService";
+import { addAnalysisRun } from "../services/historyService";
 import html2canvas from "html2canvas";
 import { ReportDashboard } from "../components/ReportDashboard";
 import "./Report.css";

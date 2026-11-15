@@ -4,7 +4,7 @@ import { jsPDF } from "jspdf";
 import Sidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
 import { useAnalysis } from "../context/AnalysisContext";
-import { fetchUserRuns, fetchRunFindings } from "../historyService";
+import { fetchUserRuns, fetchRunFindings } from "../services/historyService";
 import { storageService } from "../services/storageService";
 import html2canvas from "html2canvas";
 import { ReportDashboard } from "../components/ReportDashboard";
