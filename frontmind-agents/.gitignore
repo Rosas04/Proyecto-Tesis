@@ -1,4 +1,5 @@
 venv/
+.venv/
 __pycache__/
 *.pyc
 .coverage
@@ -8,6 +9,8 @@ uploads/
 extracted_projects_temp/
 *.log
 .env
+.env.*
+!.env.example
 
 # Ignorar sesiones y archivos generados
 playwright/.auth/
@@ -22,3 +25,6 @@ debug_*.png
 !templates/
 progress/
 .pytest_cache/
+
+# Capturas de depuración sueltas en la raíz del backend
+/*.png

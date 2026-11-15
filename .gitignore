@@ -17,3 +17,22 @@ progress.txt
 
 # Datos de usuarios generados en ejecución
 data/history.json
+
+# Dependencias de Node
+node_modules/
+
+# Resultados y capturas generadas por el backend (no se versionan)
+captures/
+uploads/
+progress/
+resultado_*.json
+synthetic_*.json
+playwright/.auth/
+
+# Caché local de la CLI de Supabase
+supabase/.temp/
+
+# Sistema operativo y editores
+.DS_Store
+Thumbs.db
+.idea/
