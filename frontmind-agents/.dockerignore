@@ -16,7 +16,6 @@ data/
 *.log
 *.txt
 !requirements*.txt
-tests/TallerIntegrador-main.zip
 resultado_*.json
 synthetic_*.json
 *.html
