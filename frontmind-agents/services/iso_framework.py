@@ -315,6 +315,14 @@ def compute_metrics(soup, html: str, runtime: Optional[dict] = None) -> list[dic
         1 if (html_tag and html_tag.get("lang")) else 0, 1,
         "documento con atributo lang", "documento", target=1.0, reference="WCAG 2.2 · 3.1.1"))
 
+    checked = (runtime or {}).get("contrast_checked")
+    if isinstance(checked, int) and checked > 0:
+        failures = (runtime or {}).get("contrast_failures") or 0
+        metrics.append(_ratio_metric(
+            "ACC-06", "accesibilidad", "Perceptible", "Texto con contraste suficiente",
+            checked - failures, checked, "elementos de texto con contraste ≥ 4.5:1 (3:1 grande)",
+            "elementos de texto evaluados (estilos computados)", reference="WCAG 2.2 · 1.4.3"))
+
     # ── Usabilidad: protección contra errores del usuario ───────────────────
     inputs = [c for c in controls]
     metrics.append(_ratio_metric(
@@ -420,10 +428,19 @@ def runtime_findings(runtime: Optional[dict]) -> list[tuple[str, str, str, str, 
                     {"eficiencia_desempeno": pen}))
     if cls is not None and cls > 0.1:
         sev, pen = ("Alta", 10) if cls > 0.25 else ("Media", 5)
-        out.append(("Usabilidad", "Estabilidad visual", sev,
+        out.append(("Usabilidad", "Operabilidad", sev,
                     f"CLS medido de {cls} (umbral recomendado ≤ 0.1).",
                     "Reservar espacio para imágenes, anuncios y contenido dinámico (width/height o aspect-ratio).",
                     {"usabilidad": pen, "eficiencia_desempeno": 3}))
+    checked, failures = num("contrast_checked"), num("contrast_failures")
+    if checked and failures:
+        ratio = failures / checked
+        sev, pen = ("Alta", 15) if ratio > 0.2 else ("Media", 8)
+        out.append(("Accesibilidad", "Perceptible (WCAG 1.4.3)", sev,
+                    f"{int(failures)} de {int(checked)} elementos de texto no alcanzan el contraste mínimo "
+                    "(4.5:1, o 3:1 en texto grande) según los estilos computados.",
+                    "Oscurecer el color del texto o aclarar el fondo hasta cumplir 4.5:1 (3:1 en texto ≥ 24 px o ≥ 18.66 px en negrita).",
+                    {"accesibilidad": pen, "usabilidad": 5}))
     if transfer is not None and transfer > 3_000 * 1024:
         out.append(("Eficiencia de desempeño", "Utilización de recursos", "Media",
                     f"La página transfiere {round(transfer / 1024 / 1024, 1)} MB.",

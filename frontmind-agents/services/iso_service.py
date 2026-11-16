@@ -221,8 +221,8 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
     h1_tags = soup.find_all("h1")
     if len(h1_tags) == 0:
         add_finding(
-            "Adecuación funcional",
-            "Comprensibilidad",
+            "Usabilidad",
+            "Inteligibilidad (WCAG 2.4.6)",
             "Alta",
             "No se detectó un encabezado principal <h1>.",
             "Agregar un <h1> claro y único que indique el propósito principal de la interfaz.",
@@ -230,8 +230,8 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
         )
     elif len(h1_tags) > 1:
         add_finding(
-            "Adecuación funcional",
-            "Jerarquía de información",
+            "Usabilidad",
+            "Inteligibilidad (WCAG 1.3.1)",
             "Media",
             f"Se detectaron {len(h1_tags)} encabezados <h1> en la interfaz." + format_snippets(h1_tags),
             "Mantener un solo encabezado <h1> principal y organizar el resto con <h2>, <h3> y niveles posteriores.",
@@ -277,12 +277,13 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
     # 2. ACCESIBILIDAD
     # 2.1 Imágenes sin alt
     images = soup.find_all("img")
-    images_without_alt = [img for img in images if not img.get("alt")]
+    # alt="" es válido (WCAG 1.1.1: imágenes decorativas); sólo falla la ausencia del atributo
+    images_without_alt = [img for img in images if not img.has_attr("alt")]
     if images_without_alt:
         total = len(images_without_alt)
         add_finding(
             "Accesibilidad",
-            "Texto alternativo",
+            "Perceptible (WCAG 1.1.1)",
             "Alta",
             f"Se detectaron {total} imágenes sin atributo alt." + format_snippets(images_without_alt),
             "Agregar texto alternativo descriptivo en imágenes informativas y alt vacío (alt='') en imágenes decorativas.",
@@ -305,7 +306,7 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
         total = len(buttons_without_text)
         add_finding(
             "Accesibilidad",
-            "Nombre accesible de controles",
+            "Robusto (WCAG 4.1.2)",
             "Alta",
             f"Se detectaron {total} botones sin texto visible ni nombre accesible." + format_snippets(buttons_without_text),
             "Agregar texto visible, atributo 'title' o 'aria-label' a cada botón para lectores de pantalla.",
@@ -329,7 +330,7 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
         total = len(links_without_text)
         add_finding(
             "Accesibilidad",
-            "Nombre accesible de enlaces",
+            "Operable (WCAG 2.4.4)",
             "Alta",
             f"Se detectaron {total} enlaces sin texto visible ni nombre accesible." + format_snippets(links_without_text),
             "Agregar texto descriptivo, aria-label o un elemento de imagen con 'alt' descriptivo dentro del enlace.",
@@ -339,7 +340,7 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
             },
         )
 
-    # 2.4 Inputs de formulario sin etiquetas (label/aria-label/placeholder)
+    # 2.4 Inputs de formulario sin etiquetas (label/aria-label/title)
     inputs = soup.find_all(["input", "textarea", "select"])
     inputs_without_label = []
     inputs_without_validation = []
@@ -358,10 +359,16 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
 
         if input_id and soup.find("label", attrs={"for": input_id}):
             has_label = True
-        elif input_tag.get("aria-label") or input_tag.get("aria-labelledby"):
+        elif input_tag.find_parent("label"):
             has_label = True
-        elif input_tag.get("placeholder"):
+        elif (
+            input_tag.get("aria-label")
+            or input_tag.get("aria-labelledby")
+            or input_tag.get("title")
+        ):
             has_label = True
+        # El placeholder no cuenta como etiqueta (WCAG 1.3.1 / 3.3.2):
+        # desaparece al escribir y no siempre lo anuncian los lectores de pantalla.
 
         if not has_label:
             inputs_without_label.append(input_tag)
@@ -381,10 +388,10 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
         total = len(inputs_without_label)
         add_finding(
             "Accesibilidad",
-            "Identificación de formularios",
+            "Comprensible (WCAG 1.3.1 / 3.3.2)",
             "Alta",
-            f"Se detectaron {total} campos de formulario sin etiqueta accesible (label, aria-label o placeholder)." + format_snippets(inputs_without_label),
-            "Asociar cada campo con una etiqueta <label> mediante el atributo 'for', o implementar atributos 'aria-label' / 'placeholder'.",
+            f"Se detectaron {total} campos de formulario sin etiqueta accesible (label, aria-label, aria-labelledby o title)." + format_snippets(inputs_without_label),
+            "Asociar cada campo con una etiqueta <label> mediante el atributo 'for' (o envolviéndolo en <label>), o usar 'aria-label' / 'aria-labelledby'. El placeholder no sustituye a la etiqueta.",
             {
                 "accesibilidad": min(15, total * 3),
                 "usabilidad": min(10, total * 2),
@@ -395,15 +402,18 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
         total = len(inputs_without_validation)
         add_finding(
             "Usabilidad",
-            "Protección contra errores de usuario",
+            "Protección contra errores del usuario",
             "Media",
             f"Se detectaron {total} campos de entrada de datos sin atributos de validación nativos (required, pattern, etc.)." + format_snippets(inputs_without_validation),
             "Agregar validación nativa del navegador mediante atributos como 'required', 'pattern' o tipos específicos (type='email').",
             {"usabilidad": min(10, total * 2)},
         )
 
-    # 2.5 Relación de contraste de color bajo
-    styled_elements = soup.find_all(style=True)
+    # 2.5 Relación de contraste de color bajo (WCAG 1.4.3)
+    # Si la captura midió el contraste con estilos computados, ese resultado
+    # (runtime_findings) reemplaza a esta aproximación sobre estilos inline.
+    contrast_measured = bool(runtime_metrics and runtime_metrics.get("contrast_checked"))
+    styled_elements = [] if contrast_measured else soup.find_all(style=True)
     low_contrast_count = 0
     low_contrast_elements = []
     for el in styled_elements:
@@ -424,7 +434,7 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
     if low_contrast_count > 0:
         add_finding(
             "Accesibilidad",
-            "Contraste mínimo",
+            "Perceptible (WCAG 1.4.3)",
             "Media",
             f"Se detectaron {low_contrast_count} elementos con contraste de color bajo (< 4.5:1), dificultando la legibilidad." + format_snippets(low_contrast_elements),
             "Asegurar una relación de contraste mínima de 4.5:1 para texto normal y de 3:1 para texto grande según la WCAG AA.",
@@ -440,7 +450,7 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
     if tabindex_tags:
         add_finding(
             "Accesibilidad",
-            "Flujo de enfoque",
+            "Operable (WCAG 2.4.3)",
             "Alta",
             f"Se detectaron {len(tabindex_tags)} elementos con 'tabindex' mayor a 0, alterando la navegación natural." + format_snippets(tabindex_tags),
             "Evitar el uso de tabindex > 0. Utilizar tabindex='0' para elementos interactivos personalizados y estructurar el DOM lógicamente.",
@@ -463,7 +473,7 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
     if missing_tracks > 0:
         add_finding(
             "Accesibilidad",
-            "Soporte multimedia",
+            "Perceptible (WCAG 1.2.2)",
             "Alta",
             f"Se detectaron {missing_tracks} elementos multimedia (video/audio) sin pistas de subtítulos o transcripciones." + format_snippets(media_without_tracks),
             "Agregar elementos <track kind='subtitles' srclang='es' src='subtítulos.vtt'> a todos los videos y audios.",
@@ -478,7 +488,7 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
         total = len(long_paragraphs)
         add_finding(
             "Usabilidad",
-            "Legibilidad",
+            "Estética de la interfaz",
             "Media",
             f"Se detectaron {total} párrafos extensos que pueden sobrecargar la lectura." + format_snippets(long_paragraphs),
             "Dividir bloques de texto largos en secciones más pequeñas, listas o agregar subtítulos organizadores.",
@@ -490,7 +500,7 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
     if len(colors) > 14:
         add_finding(
             "Usabilidad",
-            "Consistencia estética",
+            "Estética de la interfaz",
             "Media",
             f"Se detectó una paleta de colores demasiado amplia ({len(colors)} colores), afectando la sobriedad estética.",
             "Establecer una paleta de colores unificada y consistente en el archivo de diseño global.",
@@ -572,7 +582,7 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
     if len(videos) > 1:
         add_finding(
             "Eficiencia de desempeño",
-            "Recursos multimedia",
+            "Utilización de recursos",
             "Media",
             f"Se detectaron {len(videos)} etiquetas de video integradas de forma síncrona." + format_snippets(videos, 2),
             "Cargar elementos multimedia de forma diferida o mediante reproducción a demanda para no penalizar la red.",
@@ -582,7 +592,7 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
     if len(html) > 80000:
         add_finding(
             "Eficiencia de desempeño",
-            "Tamaño del documento",
+            "Utilización de recursos",
             "Media",
             "El tamaño del archivo HTML supera los 80KB.",
             "Dividir el HTML, remover scripts embebidos pesados e implementar renderizado dinámico o compresión Gzip/Brotli.",
@@ -778,7 +788,7 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
     if len(duplicated_sigs) > 0:
         add_finding(
             "Mantenibilidad",
-            "Modularidad y semántica",
+            "Modularidad",
             "Media",
             "Se detectó duplicación de estructuras complejas en el DOM que no están modularizadas.",
             "Identificar patrones repetitivos en el marcado y modularizarlos en componentes de UI reutilizables.",
@@ -796,7 +806,7 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
     if inline_body_scripts_with_fetch:
         add_finding(
             "Mantenibilidad",
-            "Modificabilidad",
+            "Capacidad de ser modificado",
             "Media",
             "Se detectaron scripts de comunicación HTTP directamente incrustados dentro de los contenedores visuales de la interfaz.",
             "Desacoplar la lógica de red de las vistas. Centralizar las peticiones HTTP en módulos de servicios o hooks dedicados.",
@@ -813,7 +823,7 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
     if div_count > 25 and semantic_count < 5:
         add_finding(
             "Mantenibilidad",
-            "Modularidad y semántica",
+            "Modularidad",
             "Media",
             f"Se detectó un uso excesivo de etiquetas <div> ({div_count}) en relación a etiquetas semánticas ({semantic_count}).",
             "Reemplazar contenedores genéricos <div> por etiquetas semánticas de HTML5 (section, article, header, footer) para mejorar la legibilidad del DOM.",
@@ -825,7 +835,7 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
     if len(inline_styles) > 20:
         add_finding(
             "Mantenibilidad",
-            "Modificabilidad",
+            "Capacidad de ser modificado",
             "Media",
             f"Se detectaron {len(inline_styles)} elementos con estilos inline directos." + format_snippets(inline_styles, 2),
             "Migrar estilos inline hacia clases en hojas de estilo CSS reutilizables para facilitar la mantenibilidad.",
@@ -856,7 +866,7 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
     if not soup.find("html") or not soup.find("body"):
         add_finding(
             "Portabilidad",
-            "Estructura base",
+            "Adaptabilidad",
             "Media",
             "El documento HTML está incompleto y carece de las etiquetas base estándar (html, body).",
             "Completar la estructura básica del documento incluyendo las etiquetas html, head y body válidas.",
@@ -866,7 +876,7 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
     if not soup.find("head"):
         add_finding(
             "Portabilidad",
-            "Metadatos",
+            "Adaptabilidad",
             "Media",
             "No se detectó la sección <head> en el HTML.",
             "Agregar el elemento <head> para contener los metadatos globales, título y recursos necesarios.",
@@ -876,8 +886,8 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
     # 9.2 Meta viewport
     if not soup.find("meta", attrs={"name": "viewport"}):
         add_finding(
-            "Compatibilidad",
-            "Adaptabilidad responsive",
+            "Portabilidad",
+            "Adaptabilidad",
             "Alta",
             "No se detectó la etiqueta <meta name='viewport'> para diseño responsive.",
             "Agregar <meta name='viewport' content='width=device-width, initial-scale=1.0'> para habilitar el escalamiento responsive.",

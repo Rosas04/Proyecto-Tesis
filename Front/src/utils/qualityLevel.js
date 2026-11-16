@@ -4,14 +4,14 @@
  *   90-100 Excelente · 80-89 Alto · 60-79 Medio · 40-59 Bajo · 0-39 Crítico
  */
 export const QUALITY_LEVELS = [
-  { min: 90, label: "Excelente", color: "#10b981", range: "90-100" },
-  { min: 80, label: "Alto", color: "#3b82f6", range: "80-89" },
-  { min: 60, label: "Medio", color: "#f59e0b", range: "60-79" },
-  { min: 40, label: "Bajo", color: "#f97316", range: "40-59" },
-  { min: 0, label: "Crítico", color: "#ef4444", range: "0-39" },
+  { min: 90, label: "Excelente", color: "#047857", range: "90-100" },
+  { min: 80, label: "Alto", color: "#2563eb", range: "80-89" },
+  { min: 60, label: "Medio", color: "#b45309", range: "60-79" },
+  { min: 40, label: "Bajo", color: "#c2410c", range: "40-59" },
+  { min: 0, label: "Crítico", color: "#b91c1c", range: "0-39" },
 ];
 
-const UNKNOWN = { label: "N/D", color: "#94a3b8", range: "" };
+const UNKNOWN = { label: "N/D", color: "#5f6d82", range: "" };
 
 /** Puntaje numérico válido o null (nunca se inventa un valor). */
 export function toScore(value) {

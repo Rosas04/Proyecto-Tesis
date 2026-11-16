@@ -180,7 +180,7 @@
   left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: #94a3b8;
+  color: #5f6d82;
 }
 
 .form-input {
@@ -251,7 +251,7 @@
 }
 
 .chevron-icon {
-  color: #94a3b8;
+  color: #5f6d82;
 }
 
 .credentials-content {
@@ -299,7 +299,7 @@
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #94a3b8;
+  color: #5f6d82;
 }
 
 .form-input-small {
@@ -514,7 +514,7 @@
 .terminal-icon {
   font-family: monospace;
   font-weight: bold;
-  color: #94a3b8;
+  color: #5f6d82;
 }
 
 .terminal-title h3 {
@@ -526,7 +526,7 @@
 
 .terminal-control-btn {
   background: #334155;
-  color: #94a3b8;
+  color: #5f6d82;
   font-family: monospace;
   padding: 2px 5px;
   border-radius: 3px;
@@ -561,7 +561,7 @@
 }
 
 .log-date {
-  color: #10b981;
+  color: #047857;
 }
 
 .log-info {
@@ -690,7 +690,7 @@
 .zip-drop-subtitle {
   margin: 0;
   font-size: 13px;
-  color: #94a3b8;
+  color: #5f6d82;
 }
 
 /* ── File Info Card ── */
@@ -751,7 +751,7 @@
 .zip-file-size {
   margin: 2px 0 0;
   font-size: 12px;
-  color: #94a3b8;
+  color: #5f6d82;
 }
 
 .zip-file-actions {
@@ -781,7 +781,7 @@
 }
 
 .zip-action-btn.delete {
-  color: #ef4444;
+  color: #b91c1c;
   border-color: #fecaca;
   background: #fef2f2;
 }
@@ -803,7 +803,7 @@
   justify-content: center;
   gap: 8px;
   height: 100%;
-  color: #94a3b8;
+  color: #5f6d82;
 }
 
 .zip-file-empty p {
@@ -905,7 +905,7 @@
   align-items: center;
   gap: 5px;
   font-size: 12px;
-  color: #94a3b8;
+  color: #5f6d82;
 }
 
 .zip-progress-bar-track {
@@ -1000,14 +1000,14 @@
   justify-content: center;
   font-size: 10px;
   font-weight: 600;
-  color: #94a3b8;
+  color: #5f6d82;
 }
 
 .zip-step-label {
   margin: 0;
   font-size: 12px;
   font-weight: 600;
-  color: #94a3b8;
+  color: #5f6d82;
   text-align: center;
 }
 
@@ -1019,7 +1019,7 @@
 .zip-step-sublabel {
   margin: 0;
   font-size: 10.5px;
-  color: #94a3b8;
+  color: #5f6d82;
   text-align: center;
 }
 
@@ -1043,7 +1043,7 @@
   border: 2px solid #fca5a5;
   border-radius: 8px;
   background: #fff5f5;
-  color: #ef4444;
+  color: #b91c1c;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;

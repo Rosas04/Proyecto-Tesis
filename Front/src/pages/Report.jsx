@@ -313,19 +313,19 @@ export default function Report() {
                     </div>
                     <div className="findings-counts" style={{ flex: '2', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
                       <div className="count-box" style={{ background: '#fff', border: '1px solid #fee2e2', borderRadius: '10px', padding: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                        <span className="count-title" style={{ fontSize: '11px', fontWeight: '600', color: '#ef4444' }}>Críticos</span>
+                        <span className="count-title" style={{ fontSize: '11px', fontWeight: '600', color: '#b91c1c' }}>Críticos</span>
                         <span className="count-val" style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a' }}>{summary.severity_summary?.['Crítica'] || 0}</span>
                       </div>
                       <div className="count-box" style={{ background: '#fff', border: '1px solid #ffedd5', borderRadius: '10px', padding: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                        <span className="count-title" style={{ fontSize: '11px', fontWeight: '600', color: '#f97316' }}>Altos</span>
+                        <span className="count-title" style={{ fontSize: '11px', fontWeight: '600', color: '#c2410c' }}>Altos</span>
                         <span className="count-val" style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a' }}>{summary.severity_summary?.['Alta'] || 0}</span>
                       </div>
                       <div className="count-box" style={{ background: '#fff', border: '1px solid #fef3c7', borderRadius: '10px', padding: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                        <span className="count-title" style={{ fontSize: '11px', fontWeight: '600', color: '#f59e0b' }}>Medios</span>
+                        <span className="count-title" style={{ fontSize: '11px', fontWeight: '600', color: '#b45309' }}>Medios</span>
                         <span className="count-val" style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a' }}>{summary.severity_summary?.['Media'] || 0}</span>
                       </div>
                       <div className="count-box" style={{ background: '#fff', border: '1px solid #d1fae5', borderRadius: '10px', padding: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                        <span className="count-title" style={{ fontSize: '11px', fontWeight: '600', color: '#10b981' }}>Bajos</span>
+                        <span className="count-title" style={{ fontSize: '11px', fontWeight: '600', color: '#047857' }}>Bajos</span>
                         <span className="count-val" style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a' }}>{summary.severity_summary?.['Baja'] || 0}</span>
                       </div>
                     </div>
@@ -410,7 +410,7 @@ export default function Report() {
                             fontSize: '11px', 
                             fontWeight: '600',
                             backgroundColor: getBadgeClassUI(f.severity).includes('alta') ? '#fee2e2' : getBadgeClassUI(f.severity).includes('media') ? '#fef3c7' : '#d1fae5',
-                            color: getBadgeClassUI(f.severity).includes('alta') ? '#ef4444' : getBadgeClassUI(f.severity).includes('media') ? '#f59e0b' : '#10b981',
+                            color: getBadgeClassUI(f.severity).includes('alta') ? '#b91c1c' : getBadgeClassUI(f.severity).includes('media') ? '#b45309' : '#047857',
                             border: `1px solid ${getBadgeClassUI(f.severity).includes('alta') ? '#fca5a5' : getBadgeClassUI(f.severity).includes('media') ? '#fcd34d' : '#86efac'}`
                           }}>{f.severity || 'Media'}</span>
                         </td>

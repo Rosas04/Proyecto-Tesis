@@ -75,7 +75,7 @@ export default function Sidebar() {
         <picture><source srcSet={logoImgWebp} type="image/webp" /><img src={logoImgPng} alt="FrontMind AI" className="brand-icon"  /></picture>
 
         <div>
-          <h1>FrontMind AI</h1>
+          <p className="sidebar-title">FrontMind AI</p>
           <p>Framework agéntico</p>
         </div>
       </div>
