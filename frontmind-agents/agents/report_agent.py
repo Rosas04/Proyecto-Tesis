@@ -26,6 +26,7 @@ class ReportAgent:
             all_findings = []
             
             total_dimension_scores = {}
+            total_complementary = {}
 
             for eval_item in evaluation_data:
                 # the item might be the direct result from ISOEvaluationAgent
@@ -37,6 +38,8 @@ class ReportAgent:
                 eval_scores = inner_eval.get("scores", {})
                 for k, v in eval_scores.items():
                     total_dimension_scores[k] = total_dimension_scores.get(k, 0) + v
+                for k, v in (inner_eval.get("complementary_scores") or {}).items():
+                    total_complementary[k] = total_complementary.get(k, 0) + v
 
                 total_score += score
                 total_findings += len(findings)
@@ -57,6 +60,9 @@ class ReportAgent:
             if total_interfaces > 0:
                 for k, v in total_dimension_scores.items():
                     avg_scores[k] = round(v / total_interfaces)
+            avg_complementary = {
+                k: round(v / total_interfaces) for k, v in total_complementary.items()
+            } if total_interfaces > 0 else {}
             
             # Determine quality level based on avg_score
             if avg_score >= 90:
@@ -91,6 +97,7 @@ class ReportAgent:
                     "dimension_summary": dimension_summary,
                 },
                 "scores": avg_scores,
+                "complementary_scores": avg_complementary,
                 "findings": all_findings,
                 "main_recommendations": main_recommendations,
                 "technical_conclusion": self.build_conclusion(
@@ -133,6 +140,7 @@ class ReportAgent:
                     "dimension_summary": dimension_summary,
                 },
                 "scores": scores,
+                "complementary_scores": evaluation.get("complementary_scores", {}),
                 "findings": findings,
                 "main_recommendations": main_recommendations,
                 **self.build_normative_section(global_score, findings, [evaluation]),

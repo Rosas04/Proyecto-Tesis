@@ -182,7 +182,8 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
         return {
             "global_score": 0,
             "quality_level": "Crítico",
-            "scores": {key: 0 for key in scores},
+            "scores": {key: 0 for key in selected},
+            "complementary_scores": {key: 0 for key in scores if key not in selected},
             "total_findings": len(findings),
             "findings": findings,
             "engineering_tips": ["Proporcionar un HTML válido para iniciar la auditoría."],
@@ -916,7 +917,12 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
 
     # CALCULO DE PUNTAJES FINAL POR PROMEDIO REAL
     # Sólo las características seleccionadas entran al promedio.
-    clamped_scores = {key: clamp(value) for key, value in scores.items() if key in selected}
+    all_scores = {key: clamp(value) for key, value in scores.items()}
+    # ISO/IEC 25010:2023: la accesibilidad (inclusividad y asistencia al usuario)
+    # es subcaracterística de la capacidad de interacción, no una característica aparte.
+    all_scores["usabilidad"] = round((all_scores["usabilidad"] + all_scores["accesibilidad"]) / 2)
+    clamped_scores = {key: all_scores[key] for key in selected}
+    complementary_scores = {key: value for key, value in all_scores.items() if key not in selected}
     global_score = round(sum(clamped_scores.values()) / len(clamped_scores))
 
     # Escala de severidad 0–4 en cada hallazgo
@@ -929,6 +935,7 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
         "global_score": global_score,
         "quality_level": get_level(global_score),
         "scores": clamped_scores,
+        "complementary_scores": complementary_scores,
         "total_findings": len(findings),
         "findings": findings,
         "engineering_tips": ["Optimizar el marcado HTML y refactorizar dependencias para lograr la conformidad."],

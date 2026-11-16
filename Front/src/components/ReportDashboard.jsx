@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import './ReportDashboard.css';
 import logoImgWebp from "../assets/logo.webp";
 import { getQualityLevel, toScore } from '../utils/qualityLevel';
+import { characteristicScores, CORE_CHARACTERISTICS } from '../utils/isoCharacteristics';
 import logoImgPng from "../assets/logo.png";
 
 export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, inputType }, ref) => {
@@ -29,16 +30,10 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
     return counts;
   }, [summary.severity_summary, totalFindings]);
 
-  const characteristicsScores = summary.characteristics_scores || {
-    "Adecuación funcional": 94,
-    "Eficiencia de desempeño": 90,
-    "Usabilidad": 86,
-    "Accesibilidad": 78,
-    "Mantenibilidad": 94,
-    "Compatibilidad": 82,
-    "Seguridad": 76,
-    "Portabilidad": 82
-  };
+  // Sólo las características centrales; ponderan en la nota global.
+  const { core: coreChars, complementary: complementaryChars } = characteristicScores(reportResult);
+  const hasScores = coreChars.some((c) => c.value !== null);
+  const characteristicsScores = Object.fromEntries(coreChars.map((c) => [c.label, c.value]));
 
   const getScoreColor = (score) => getQualityLevel(score).color;
 
@@ -236,17 +231,21 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
             <div className="pdf-card">
               <h3 className="card-title">Resultados por característica ISO/IEC 25010</h3>
               <div className="chars-list">
-                {Object.entries(characteristicsScores).map(([name, score], idx) => (
-                  <div className="char-item" key={idx}>
-                    <div className="char-name">{name}</div>
+                {[...coreChars, ...complementaryChars].map(({ key, label, value }, idx) => (
+                  <div className="char-item" key={key}>
+                    <div className="char-name">{idx >= coreChars.length ? `${label} *` : label}</div>
                     <div className="char-bar-bg">
-                      <div className="char-bar-fill" style={{ width: `${score}%` }}></div>
+                      <div className="char-bar-fill" style={{ width: `${value ?? 0}%` }}></div>
                     </div>
-                    <div className="char-score">{score}/100</div>
+                    <div className="char-score">{value === null ? "N/D" : `${value}/100`}</div>
                   </div>
                 ))}
               </div>
-              <p className="note-text">Nota: Los puntajes mostrados son ejemplos y tienen fines ilustrativos.</p>
+              <p className="note-text">
+                {hasScores
+                  ? "La nota global usa las cuatro características centrales. * Indicador complementario, sin peso en la nota."
+                  : "Este análisis no tiene puntajes por característica guardados."}
+              </p>
             </div>
 
             {/* Limitaciones */}
@@ -512,16 +511,7 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
                   {/* Dynamic generation of path and points based on REAL current analysis data */}
                   {(() => {
                     const entries = Object.entries(characteristicsScores);
-                    const shortLabels = {
-                      "Adecuación funcional": "Funcional",
-                      "Eficiencia de desempeño": "Eficiencia",
-                      "Usabilidad": "Usabilidad",
-                      "Accesibilidad": "Accesib.",
-                      "Mantenibilidad": "Mantenib.",
-                      "Compatibilidad": "Compatib.",
-                      "Seguridad": "Seguridad",
-                      "Portabilidad": "Portabil."
-                    };
+                    const shortLabels = Object.fromEntries(CORE_CHARACTERISTICS.map((c) => [c.label, c.short]));
 
                     const pts = entries.map(([key, val], i) => {
                       const score = val || 0;

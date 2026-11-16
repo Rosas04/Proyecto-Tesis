@@ -6,6 +6,7 @@ import { generateReport } from "../services/api";
 import { storageService } from "../services/storageService";
 import { getQualityLevel, toScore } from "../utils/qualityLevel";
 import NormativeSection from "../components/NormativeSection";
+import { characteristicScores } from "../utils/isoCharacteristics";
 import { useAuth } from "../context/AuthContext";
 import { addAnalysisRun } from "../historyService";
 import html2canvas from "html2canvas";
@@ -151,7 +152,6 @@ export default function Report() {
 
   const summary = useMemo(() => reportResult?.summary || {}, [reportResult]);
   const scoreValue = toScore(summary.global_score);
-  const scores = useMemo(() => reportResult?.scores || {}, [reportResult]);
   const findings = useMemo(
     () => (Array.isArray(reportResult?.findings) ? reportResult.findings : []),
     [reportResult]
@@ -161,16 +161,10 @@ export default function Report() {
       ? inputZip || "Proyecto ZIP"
       : inputUrl || "No especificada";
 
-  const scoreLabels = {
-    adecuacion_funcional: "Adecuación funcional",
-    eficiencia_desempeno: "Eficiencia de desempeño",
-    usabilidad: "Usabilidad",
-    accesibilidad: "Accesibilidad",
-    mantenibilidad: "Mantenibilidad",
-    compatibilidad: "Compatibilidad",
-    seguridad: "Seguridad",
-    portabilidad: "Portabilidad",
-  };
+  const { core: coreScores, complementary: complementaryScores } = useMemo(
+    () => characteristicScores(reportResult),
+    [reportResult]
+  );
 
   const goBack = () => {
     navigate("/evaluation");
@@ -359,8 +353,8 @@ export default function Report() {
                 <div className="pdf-card" style={{ background: '#fff', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                   <h3 className="card-title" style={{ margin: '0 0 20px 0', fontSize: '16px', color: '#0f172a', fontWeight: '700' }}>Resultados ISO/IEC 25010</h3>
                   <div className="chars-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {Object.entries(scoreLabels).map(([key, label], idx) => {
-                       const score = typeof scores[key] === "number" ? scores[key] : null;
+                    {[...coreScores, ...complementaryScores].map(({ label: baseLabel, value: score }, idx) => {
+                       const label = idx >= coreScores.length ? `${baseLabel} · complementario` : baseLabel;
                        return (
                       <div className="char-item" key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <div className="char-name" style={{ width: '150px', fontSize: '12px', color: '#475569', fontWeight: '500' }}>{label}</div>

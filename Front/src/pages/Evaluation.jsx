@@ -4,6 +4,7 @@ import Sidebar from "../components/Sidebar";
 import { evaluateHtml } from "../services/api";
 import { storageService } from "../services/storageService";
 import NormativeSection from "../components/NormativeSection";
+import { characteristicScores } from "../utils/isoCharacteristics";
 import "./Evaluation.css";
 
 export default function Evaluation() {
@@ -112,10 +113,6 @@ export default function Evaluation() {
     return evaluationResult?.evaluation || evaluationResult || {};
   }, [evaluationResult]);
 
-  const scores = useMemo(() => {
-    return evaluation?.scores || {};
-  }, [evaluation]);
-
   const findings = useMemo(() => {
     if (!evaluation?.findings || !Array.isArray(evaluation.findings)) {
       return [];
@@ -128,48 +125,10 @@ export default function Evaluation() {
   const qualityLevel = evaluation?.quality_level || "No calculado";
   const totalFindings = evaluation?.total_findings ?? findings.length;
 
-  const scoreItems = [
-    {
-      label: "Adecuación funcional",
-      key: "adecuacion_funcional",
-      value: scores.adecuacion_funcional ?? 0,
-    },
-    {
-      label: "Eficiencia de desempeño",
-      key: "eficiencia_desempeno",
-      value: scores.eficiencia_desempeno ?? 0,
-    },
-    {
-      label: "Usabilidad",
-      key: "usabilidad",
-      value: scores.usabilidad ?? 0,
-    },
-    {
-      label: "Accesibilidad",
-      key: "accesibilidad",
-      value: scores.accesibilidad ?? 0,
-    },
-    {
-      label: "Mantenibilidad",
-      key: "mantenibilidad",
-      value: scores.mantenibilidad ?? 0,
-    },
-    {
-      label: "Compatibilidad",
-      key: "compatibilidad",
-      value: scores.compatibilidad ?? 0,
-    },
-    {
-      label: "Seguridad",
-      key: "seguridad",
-      value: scores.seguridad ?? 0,
-    },
-    {
-      label: "Portabilidad",
-      key: "portabilidad",
-      value: scores.portabilidad ?? 0,
-    },
-  ];
+  const { core: scoreItems, complementary: complementaryItems } = useMemo(
+    () => characteristicScores(evaluation),
+    [evaluation]
+  );
 
   const severityCount = useMemo(() => {
     const result = {
@@ -306,9 +265,10 @@ export default function Evaluation() {
 
             <section className="scores-section card">
               <div className="section-header">
-                <h2>Puntajes por dimensión ISO/IEC 25010</h2>
+                <h2>Puntajes por característica ISO/IEC 25010</h2>
                 <p>
-                  Cada dimensión evalúa un aspecto específico de la calidad del frontend, con un puntaje en base a los criterios definidos por la norma.
+                  La nota global se calcula con las cuatro características observables en la interfaz: adecuación funcional,
+                  capacidad de interacción (incluye la accesibilidad WCAG), compatibilidad y flexibilidad.
                 </p>
               </div>
 
@@ -317,18 +277,40 @@ export default function Evaluation() {
                   <div className="score-row" key={item.key}>
                     <div className="score-row-label">
                       <strong>{item.label}</strong>
-                      <span>{item.value}/100</span>
+                      <span>{item.value ?? "N/D"}{item.value !== null && "/100"}</span>
                     </div>
 
                     <div className="score-bar">
                       <div
                         className="score-bar-fill"
-                        style={{ width: `${item.value}%`, background: "#1e3a8a" }}
+                        style={{ width: `${item.value ?? 0}%`, background: "#1e3a8a" }}
                       />
                     </div>
                   </div>
                 ))}
               </div>
+
+              {complementaryItems.length > 0 && (
+                <>
+                  <h3 className="complementary-title">Indicadores complementarios (no entran en la nota)</h3>
+                  <div className="score-list">
+                    {complementaryItems.map((item) => (
+                      <div className="score-row" key={item.key}>
+                        <div className="score-row-label">
+                          <strong>{item.label}</strong>
+                          <span>{item.value}/100</span>
+                        </div>
+                        <div className="score-bar">
+                          <div
+                            className="score-bar-fill"
+                            style={{ width: `${item.value}%`, background: "#5f6d82" }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </section>
 
             <section className="findings-section card">

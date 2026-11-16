@@ -60,7 +60,9 @@ def test_runtime_metrics_are_reported_and_penalize_only_when_measured():
     assert efi_static["status"] == "no medido" and efi_static["X"] is None
 
     slow = evaluate_iso_25010(HTML, runtime_metrics={"lcp_ms": 5200, "ttfb_ms": 2000})
-    assert slow["scores"]["eficiencia_desempeno"] < static["scores"]["eficiencia_desempeno"]
+    assert slow["complementary_scores"]["eficiencia_desempeno"] < static["complementary_scores"]["eficiencia_desempeno"]
+    # El desempeño es complementario: no cambia la nota global
+    assert slow["global_score"] == static["global_score"]
     assert any("LCP medido" in f["finding"] for f in slow["findings"])
 
 
@@ -105,3 +107,26 @@ def test_report_accepts_wrapped_single_evaluation():
     wrapped = ISOEvaluationAgent().run(HTML)
     report = ReportAgent().run({"evaluation": wrapped})
     assert report["summary"]["global_score"] == wrapped["evaluation"]["global_score"]
+
+
+def test_default_selection_uses_core_characteristics():
+    result = evaluate_iso_25010(HTML)
+    assert list(result["scores"]) == ["adecuacion_funcional", "usabilidad", "compatibilidad", "portabilidad"]
+    assert set(result["complementary_scores"]) == {"accesibilidad", "eficiencia_desempeno", "mantenibilidad", "seguridad"}
+    assert result["global_score"] == round(sum(result["scores"].values()) / 4)
+
+
+def test_accessibility_is_part_of_interaction_capability():
+    result = evaluate_iso_25010(HTML, characteristics=["usabilidad", "accesibilidad"])
+    merged = evaluate_iso_25010(HTML)["scores"]["usabilidad"]
+    assert result["scores"]["usabilidad"] == merged
+    scope = evaluate_iso_25010(HTML)["evaluation_scope"]
+    wcag = [i for i in scope["subcharacteristics"] if i["characteristic"] == "accesibilidad"]
+    assert wcag and wcag[0]["characteristic_label"].startswith("Capacidad de interacción")
+
+
+def test_scope_lists_complementary_characteristics():
+    scope = evaluate_iso_25010(HTML)["evaluation_scope"]
+    names = {c["characteristic"] for c in scope["complementary"]}
+    assert {"Eficiencia de desempeño", "Mantenibilidad", "Seguridad"} <= names
+    assert "ISO/IEC 25040" in scope["selection_criterion"]
