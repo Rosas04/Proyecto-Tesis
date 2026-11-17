@@ -9,28 +9,6 @@ function formatValue(metric) {
 }
 
 
-/** Texto de recomendación por métrica cuando no se cumple la meta. */
-const FIX_HINT = {
-  "ACC-01": "Agregue el atributo alt a cada imagen (alt=\"\" si es decorativa).",
-  "ACC-02": "Asocie cada campo con un <label for> o aria-label (el placeholder no reemplaza a la etiqueta).",
-  "ACC-03": "Dé a cada botón un texto visible o un aria-label.",
-  "ACC-04": "Use textos descriptivos en los enlaces (evite «clic aquí» o enlaces vacíos).",
-  "ACC-05": "Declare el idioma en la etiqueta <html lang=\"es\">.",
-  "ACC-06": "Oscurezca el texto o aclare el fondo hasta lograr 4.5:1 (3:1 en texto grande).",
-  "USA-01": "Use type (email, number, tel…) y required/pattern para validar los campos sin depender de JavaScript.",
-  "USA-02": "Agregue una región role=\"status\" o aria-live para anunciar mensajes de error y confirmación.",
-  "MAN-01": "Reemplace <div> genéricos por <main>, <nav>, <header>, <section> o <footer>.",
-  "MAN-02": "Elimine los id repetidos: cada id debe ser único en la página.",
-  "MAN-03": "Mueva los estilos inline (style=\"…\") a una hoja de estilos CSS.",
-  "POR-01": "Agregue <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">.",
-  "EFI-01": "Reduzca el tiempo de respuesta del servidor (caché, CDN, menos procesamiento).",
-  "EFI-02": "Optimice la imagen o bloque principal: compresión, tamaños adecuados y carga prioritaria.",
-  "EFI-03": "Reserve espacio (ancho y alto) para imágenes y anuncios para evitar saltos de diseño.",
-  "EFI-04": "Comprima imágenes, minifique JS/CSS y active compresión gzip/brotli.",
-  "EFI-05": "Reduzca peticiones: combine recursos, use lazy-loading y elimine scripts innecesarios.",
-  "EFI-06": "Reduzca el JavaScript cargado y libere memoria de componentes que no se usan.",
-};
-
 function pct(x) {
   return `${Math.round(x * 100)} %`;
 }
@@ -51,17 +29,20 @@ function goalText(m) {
   return t ? `Meta: ${t.replace(/^X\s*/, "")}` : "";
 }
 
-/** Por qué cumple o no cumple, y qué hacer. */
+/** Por qué cumple o no cumple, y qué hacer (texto generado por el backend para cada métrica). */
 function diagnosis(m) {
-  if (m.meets === null || m.meets === undefined) return { ok: null, why: "No se pudo medir en esta página.", fix: "" };
+  if (m.meets === null || m.meets === undefined) {
+    if (m.status === "informativo") return { ok: null, why: "Métrica informativa: no influye en el puntaje.", fix: "" };
+    return { ok: null, why: m.status ? `${m.status.charAt(0).toUpperCase()}${m.status.slice(1)}.` : "No se pudo medir.", fix: "" };
+  }
   if (m.meets) {
     return { ok: true, why: "Cumple la meta establecida.", fix: "" };
   }
   const missing = m.A !== null && m.A !== undefined && m.B ? m.B - m.A : null;
-  const why = missing !== null
-    ? `${missing} de ${m.B} elementos no cumplen${m.B_description ? ` (${m.B_description})` : ""}.`
-    : "El valor medido está fuera de la meta.";
-  return { ok: false, why, fix: FIX_HINT[m.id] || "Revise este aspecto y corríjalo para alcanzar la meta." };
+  const why = m.finding || (missing !== null
+    ? `${missing} de ${m.B} elementos no cumplen.`
+    : "El valor medido está fuera de la meta.");
+  return { ok: false, why, fix: m.recommendation || "Revise este aspecto y corríjalo para alcanzar la meta." };
 }
 
 function automationClass(automation = "") {

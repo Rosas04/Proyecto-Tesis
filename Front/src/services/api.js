@@ -124,9 +124,12 @@ export async function replicateHtmlFromContent(htmlContent, url, cssCache = null
   return handleResponse(response, "No se pudo generar la réplica HTML.");
 }
 
-// runtimeMetrics: métricas medidas por Playwright sobre la página original
-// characteristics: subconjunto priorizado de características; null = todas
-export async function evaluateHtml(html, runtimeMetrics = null, characteristics = null) {
+// runtimeMetrics: métricas de desempeño y contraste medidas por Playwright
+// characteristics: subconjunto de características; null = las seis núcleo
+// evidence: evidencias de ejecución de la interfaz (seguridad, fiabilidad, etc.)
+// expectedFunctions: funciones que la interfaz debe ofrecer (adecuación funcional)
+export async function evaluateHtml(html, runtimeMetrics = null, characteristics = null,
+                                   evidence = null, expectedFunctions = null) {
   const response = await fetch(`${API_URL}/evaluate/iso`, {
     method: "POST",
     headers: await buildHeaders({
@@ -136,6 +139,8 @@ export async function evaluateHtml(html, runtimeMetrics = null, characteristics 
       html,
       runtime_metrics: runtimeMetrics && Object.keys(runtimeMetrics).length ? runtimeMetrics : null,
       characteristics,
+      evidence: evidence && Object.keys(evidence).length ? evidence : null,
+      expected_functions: expectedFunctions && expectedFunctions.length ? expectedFunctions : null,
     }),
   });
 

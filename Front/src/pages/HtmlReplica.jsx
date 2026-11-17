@@ -215,8 +215,12 @@ export default function HtmlReplica() {
       return;
     }
 
+    // Se evalúa el DOM ORIGINAL capturado, no la réplica: la réplica fuerza
+    // idioma y viewport, elimina scripts y concatena CSS, lo que alteraría la
+    // medición. La réplica (y sus ediciones) sólo sirven para visualizar.
+    const originalHtml = selectedIface?.html_content || combinedHtml || htmlPreview;
     // storageService conserva el HTML en memoria si excede la cuota de localStorage
-    storageService.setHtmlToEvaluate(htmlPreview);
+    storageService.setHtmlToEvaluate(originalHtml);
     navigate("/evaluation");
   };
 

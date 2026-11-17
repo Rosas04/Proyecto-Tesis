@@ -23,6 +23,14 @@ from services.route_discovery_service import (
     is_auth_page_url,
 )
 from services.spa_helpers import wait_for_spa
+from services.evidence_collector import (
+    EvidenceRecorder,
+    check_internal_links,
+    collect_network_security,
+    probe_layout,
+    probe_page,
+    run_cross_browser,
+)
 from core.security import is_host_allowed, validate_url
 
 logger = logging.getLogger(__name__)
@@ -286,10 +294,10 @@ def _block_trackers(page) -> None:
     """Bloquea trackers conocidos para evitar cuelgues de networkidle."""
     def safe_abort(route):
         try:
-            route.abort()
+            route.abort("blockedbyclient")
         except Exception:
             pass
-            
+
     for pattern in _TRACKER_PATTERNS:
         page.route(pattern, safe_abort)
 
@@ -414,13 +422,17 @@ def _capture_single_page(
     timestamp: str,
     api_base_url: str,
     global_css_cache: dict,
+    recorder: EvidenceRecorder | None = None,
+    response=None,
+    host_cache: dict | None = None,
 ) -> dict[str, Any]:
     """
-    Captura HTML, métricas DOM, CSSOM y screenshots de una sola página.
-    Asume que la página ya fue navegada y la SPA terminó de cargar.
+    Captura HTML, métricas DOM, CSSOM, evidencias de calidad y screenshots de
+    una sola página. Asume que la página ya fue navegada y la SPA terminó de cargar.
     """
     display_name = _get_display_name(route_url)
     route_result = _build_route_result(route_index, route_url, display_name)
+    evidence: dict[str, Any] = {}
 
     try:
         # Métricas de desempeño ANTES del scroll (el scroll alteraría LCP/CLS)
@@ -429,11 +441,15 @@ def _capture_single_page(
         # Scroll para activar lazy-loading
         try:
             page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-            page.wait_for_timeout(300)
+            page.wait_for_timeout(600)
             page.evaluate("window.scrollTo(0, 0)")
             page.wait_for_timeout(300)
         except Exception:
             pass
+
+        # Evidencias del DOM vivo (formularios, imágenes, storage, scripts, enlaces)
+        evidence["page"] = probe_page(page)
+        evidence["layout"] = {}
 
         route_result["html_content"] = page.content()
         route_result["cssom_styles"] = extract_cssom_styles(page)
@@ -447,6 +463,7 @@ def _capture_single_page(
                     {"width": viewport["width"], "height": viewport["height"]}
                 )
                 page.wait_for_timeout(500)
+                evidence["layout"][viewport["device"]] = probe_layout(page, viewport["device"] == "mobile")
 
                 file_name = (
                     f"{timestamp}_"
@@ -473,11 +490,36 @@ def _capture_single_page(
                     "message": str(exc),
                 })
 
+        # WCAG 2.2 · 1.4.10 (reflow): sin desplazamiento horizontal a 320 px
+        try:
+            page.set_viewport_size({"width": 320, "height": 640})
+            page.wait_for_timeout(400)
+            evidence["layout"]["reflow_320"] = probe_layout(page, False)
+        except Exception:
+            pass
+
+        # Enlaces internos operativos (adecuación funcional · corrección)
+        links = (evidence.get("page") or {}).pop("internal_links", []) or []
+        evidence["links"] = check_internal_links(page, links)
+        # Seguridad de transporte, cabeceras y cookies
+        evidence.update(collect_network_security(page, response, host_cache if host_cache is not None else {}))
+
     except Exception as exc:
         route_result["errors"].append({
             "device": "general",
             "message": str(exc),
         })
+
+    finally:
+        # La siguiente interfaz debe cargarse otra vez en resolución de escritorio
+        try:
+            page.set_viewport_size({"width": VIEWPORTS[0]["width"], "height": VIEWPORTS[0]["height"]})
+        except Exception:
+            pass
+
+    if recorder is not None:
+        evidence.update(recorder.snapshot())
+    route_result["quality_evidence"] = evidence
 
     successful = sum(1 for c in route_result["captures"] if c.get("success"))
     route_result["successful_captures"] = successful
@@ -525,6 +567,13 @@ def take_screenshots(
     results: list[dict[str, Any]] = []
     global_css_cache: dict[str, str] = {}
     generated_state_path: str | None = None
+    host_cache: dict[str, dict] = {}          # TLS y redirección HTTP→HTTPS por host
+    recorders: dict[Any, EvidenceRecorder] = {}
+
+    def recorder_for(target_page) -> EvidenceRecorder:
+        if target_page not in recorders:
+            recorders[target_page] = EvidenceRecorder(target_page)
+        return recorders[target_page]
 
     def handle_response(response):
         try:
@@ -805,7 +854,9 @@ def take_screenshots(
                             page = public_capture_page
 
                         try:
-                            page.goto(
+                            recorder = recorder_for(page)
+                            recorder.reset()
+                            response = page.goto(
                                 route_url,
                                 wait_until="domcontentloaded",
                                 timeout=20_000,
@@ -838,7 +889,9 @@ def take_screenshots(
                                 auth_capture_page.on("dialog", lambda d: d.dismiss())
                                 page = auth_capture_page
 
-                                page.goto(
+                                recorder = recorder_for(page)
+                                recorder.reset()
+                                response = page.goto(
                                     route_url,
                                     wait_until="domcontentloaded",
                                     timeout=20_000,
@@ -869,7 +922,11 @@ def take_screenshots(
                                 timestamp=timestamp,
                                 api_base_url=api_base_url,
                                 global_css_cache=global_css_cache,
+                                recorder=recorder,
+                                response=response,
+                                host_cache=host_cache,
                             )
+                            result["is_internal"] = is_internal
                             results.append(result)
 
                         except Exception as exc:
@@ -882,6 +939,35 @@ def take_screenshots(
                                 "message": str(exc),
                             })
                             results.append(error_result)
+
+                    # ── Compatibilidad: las mismas interfaces en Firefox y WebKit ──
+                    compat_targets = [
+                        {"route_index": r["route_index"], "url": r["url"], "is_internal": r.get("is_internal")}
+                        for r in results if r.get("status") == "completed"
+                    ]
+                    if compat_targets:
+                        if storage_state_for_capture and auth_capture_context is not None:
+                            try:  # estado de sesión actualizado tras la navegación
+                                save_storage_state(auth_capture_context, storage_state_for_capture)
+                            except Exception:
+                                pass
+                        compat = run_cross_browser(
+                            playwright, compat_targets, storage_state_for_capture,
+                            _install_ssrf_guard, _is_on_login_page,
+                        )
+                        for r in results:
+                            chromium = (r.get("quality_evidence") or {}).get("layout", {}).get("desktop") or {}
+                            engines = compat.get(r["route_index"]) or {}
+                            r.setdefault("quality_evidence", {})["cross_browser"] = {
+                                "chromium": {
+                                    "available": True, "loaded": r.get("status") == "completed",
+                                    "js_errors": (r["quality_evidence"].get("js_errors") or {}).get("count", 0),
+                                    "overflow_desktop": chromium.get("overflow"),
+                                    "overflow_mobile": ((r["quality_evidence"].get("layout") or {}).get("mobile") or {}).get("overflow"),
+                                    "height": chromium.get("height"),
+                                },
+                                **engines,
+                            }
 
                 finally:
                     # Cerrar contextos de captura
@@ -921,6 +1007,7 @@ def take_screenshots(
     captures = main_page_data["captures"] if main_page_data else []
     cssom_styles = main_page_data["cssom_styles"] if main_page_data else []
     performance_metrics = main_page_data.get("performance_metrics", {}) if main_page_data else {}
+    quality_evidence = main_page_data.get("quality_evidence", {}) if main_page_data else {}
 
     total_routes = len(post_login_routes) + len(pre_login_routes)
 
@@ -942,6 +1029,7 @@ def take_screenshots(
         "css_cache": global_css_cache,
         "cssom_styles": cssom_styles,
         "performance_metrics": performance_metrics,
+        "quality_evidence": quality_evidence,
     }
 
 

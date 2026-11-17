@@ -3,6 +3,7 @@ import './ReportDashboard.css';
 import logoImgWebp from "../assets/logo.webp";
 import { getQualityLevel, toScore } from '../utils/qualityLevel';
 import logoImgPng from "../assets/logo.png";
+import { SHORT_LABELS, characteristicLabel } from "../utils/isoCharacteristics";
 
 export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, inputType }, ref) => {
   const summary = reportResult?.summary || {};
@@ -34,20 +35,10 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
 
   // Puntajes reales por característica: los envía el backend en `scores`
   // (claves snake_case). Sin datos no se muestra nada inventado.
-  const SCORE_LABELS = {
-    adecuacion_funcional: "Adecuación funcional",
-    eficiencia_desempeno: "Eficiencia de desempeño",
-    usabilidad: "Usabilidad",
-    accesibilidad: "Accesibilidad",
-    mantenibilidad: "Mantenibilidad",
-    compatibilidad: "Compatibilidad",
-    seguridad: "Seguridad",
-    portabilidad: "Portabilidad",
-  };
   const characteristicsScores = summary.characteristics_scores || Object.fromEntries(
     Object.entries(reportResult?.scores || {})
       .filter(([, v]) => typeof v === "number")
-      .map(([k, v]) => [SCORE_LABELS[k] || k, Math.round(v)])
+      .map(([k, v]) => [characteristicLabel(k), Math.round(v)])
   );
 
   const getScoreColor = (score) => getQualityLevel(score).color;
@@ -198,7 +189,7 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
                 Metodología y criterios de evaluación
               </h3>
               <p className="methodology-text">
-                La evaluación se realizó bajo el estándar ISO/IEC 25010, analizando el frontend del sistema en base a 8 características: adecuación funcional, eficiencia de desempeño, usabilidad, accesibilidad, mantenibilidad, compatibilidad, seguridad y portabilidad. Se aplicaron métricas automáticas y revisiones manuales, con criterios específicos para cada característica.
+                La evaluación se realizó bajo la norma ISO/IEC 25010:2023 sobre el DOM original de cada interfaz, con seis características: adecuación funcional, capacidad de interacción, compatibilidad, flexibilidad, seguridad y fiabilidad (eficiencia de desempeño es opcional; mantenibilidad queda fuera porque requiere el código fuente). Cada puntaje se calcula a partir de métricas medidas en ejecución con Chromium, Firefox y WebKit; las características sin evidencia suficiente no se puntúan.
               </p>
             </div>
 
@@ -467,16 +458,7 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
                   {(() => {
                     const entries = Object.entries(characteristicsScores);
                     if (entries.length === 0) return null;
-                    const shortLabels = {
-                      "Adecuación funcional": "Funcional",
-                      "Eficiencia de desempeño": "Eficiencia",
-                      "Usabilidad": "Usabilidad",
-                      "Accesibilidad": "Accesib.",
-                      "Mantenibilidad": "Mantenib.",
-                      "Compatibilidad": "Compatib.",
-                      "Seguridad": "Seguridad",
-                      "Portabilidad": "Portabil."
-                    };
+                    const shortLabels = SHORT_LABELS;
 
                     const pts = entries.map(([key, val], i) => {
                       const score = val || 0;
@@ -526,7 +508,7 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                 Conclusión técnica
               </h3>
-              <p className="conclusion-text">El sistema presenta un buen nivel de calidad frontend, destacando en rendimiento, mantenibilidad y compatibilidad. Se recomienda atender los hallazgos de severidad alta y media, especialmente en accesibilidad, seguridad y validación de formularios, para garantizar una experiencia más segura, inclusiva y estable para todos los usuarios.</p>
+              <p className="conclusion-text">{reportResult?.technical_conclusion || "Sin conclusión disponible."}</p>
             </div>
           </div>
         </div>

@@ -1,942 +1,694 @@
-from bs4 import BeautifulSoup
+"""
+services/iso_service.py — Evaluación ISO/IEC 25010:2023 de una interfaz.
+
+Entradas
+  html               DOM original de la interfaz (no su réplica).
+  runtime_metrics    métricas de desempeño y contraste medidas por Playwright.
+  evidence           evidencias de ejecución (services/evidence_collector.py).
+  characteristics    subconjunto a puntuar (por defecto las seis núcleo).
+  expected_functions funciones que la interfaz debe ofrecer (completitud y
+                     pertinencia funcional); opcional.
+
+Cada puntaje se deriva de métricas trazables (services/iso_framework.py) y cada
+hallazgo corresponde a una métrica que no alcanzó su meta.
+"""
+from __future__ import annotations
+
 import re
+from typing import Any, Optional
+
+from bs4 import BeautifulSoup
 
 from services.iso_framework import (
-    compute_metrics,
+    CHARACTERISTICS,
+    SEVERITY_GRADES,
+    apply_impact,
     decision_criterion,
     evaluation_restrictions,
     evaluation_scope,
+    findings_from_metrics,
+    make_metric,
     normalize_selection,
-    runtime_findings,
-    severity_grade,
+    normalize_text,
+    score_characteristics,
 )
 
+RUNTIME = "no medido (requiere captura en ejecución)"
+WCAG = "WCAG 2.2"
+OWASP = "OWASP Secure Headers / ASVS 4.0"
 
-def clamp(value):
-    return max(0, min(100, value))
-
-
-def detect_colors(html):
-    hex_colors = re.findall(r"#[0-9a-fA-F]{3,6}", html)
-    rgb_colors = re.findall(r"rgb[a]?\([^)]+\)", html)
-    named_colors = re.findall(r"(?:color|background-color)\s*:\s*([a-zA-Z]+)", html)
-    return list(set(hex_colors + rgb_colors + named_colors))
-
-
-def parse_hex_color(color_str):
-    color_str = color_str.strip().lower()
-    if color_str.startswith("#"):
-        hex_val = color_str[1:]
-        if len(hex_val) == 3:
-            hex_val = "".join(c * 2 for c in hex_val)
-        if len(hex_val) == 6:
-            try:
-                return (
-                    int(hex_val[0:2], 16),
-                    int(hex_val[2:4], 16),
-                    int(hex_val[4:6], 16),
-                )
-            except ValueError:
-                return None
-    names = {
-        "white": (255, 255, 255),
-        "black": (0, 0, 0),
-        "gray": (128, 128, 128),
-        "red": (255, 0, 0),
-        "green": (0, 128, 0),
-        "blue": (0, 0, 255),
-        "yellow": (255, 255, 0),
-    }
-    return names.get(color_str)
+_NON_LABELED_INPUT_TYPES = {"hidden", "submit", "button", "reset", "image"}
+_VALIDATION_TYPES = {"email", "number", "url", "tel", "date", "datetime-local", "month", "week", "time", "range"}
+_NO_VALIDATION_NEEDED = {"checkbox", "radio", "color", "file", "range"}
+_PERSONAL_TYPES = {"email", "tel", "password"}
+_PERSONAL_NAME_RE = re.compile(
+    r"(name|nombre|apellido|email|e-mail|correo|phone|telefono|teléfono|celular|tel\b|address|direcci|"
+    r"user|usuario|login|zip|postal|cc-|birth|nacimiento|dni|city|ciudad|country|pais|país)", re.I)
+_VALIDATION_ATTRS = ("required", "pattern", "min", "max", "minlength", "maxlength")
 
 
-def get_luminance(r, g, b):
-    a = []
-    for v in (r, g, b):
-        v /= 255.0
-        if v <= 0.03928:
-            a.append(v / 12.92)
-        else:
-            a.append(((v + 0.055) / 1.055) ** 2.4)
-    return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722
-
-
-def get_contrast_ratio(c1, c2):
-    rgb1 = parse_hex_color(c1)
-    rgb2 = parse_hex_color(c2)
-    if not rgb1 or not rgb2:
-        return None
-    l1 = get_luminance(*rgb1)
-    l2 = get_luminance(*rgb2)
-    if l1 > l2:
-        return (l1 + 0.05) / (l2 + 0.05)
-    else:
-        return (l2 + 0.05) / (l1 + 0.05)
-
-
-def get_level(score):
-    if score >= 90:
-        return "Excelente"
-    if score >= 80:
-        return "Alto"
-    if score >= 60:
-        return "Medio"
-    if score >= 40:
-        return "Bajo"
-    return "Crítico"
-
-
-
-def get_element_snippet(el):
-    if not hasattr(el, 'name') or not el.name:
-        if isinstance(el, str): return el
+def get_element_snippet(el) -> str:
+    if not getattr(el, "name", None):
         return ""
     attrs = []
-    if el.get('id'):
-        attrs.append(f'id="{el.get("id")}"')
-    if el.get('class'):
-        cl = el.get("class")
-        cl_str = " ".join(cl) if isinstance(cl, list) else cl
-        attrs.append(f'class="{cl_str}"')
-    if el.get('src'):
-        attrs.append(f'src="{el.get("src")[:50]}"')
-    if el.get('href'):
-        attrs.append(f'href="{el.get("href")[:50]}"')
-    attr_str = " " + " ".join(attrs) if attrs else ""
-    return f"<{el.name}{attr_str}>"
+    for attr in ("id", "class", "name", "type", "src", "href"):
+        value = el.get(attr)
+        if value:
+            value = " ".join(value) if isinstance(value, list) else str(value)
+            attrs.append(f'{attr}="{value[:50]}"')
+    return f"<{el.name}{(' ' + ' '.join(attrs)) if attrs else ''}>"
 
-def format_snippets(elements, max_items=3):
-    if not elements:
-        return ""
-    snippets = []
-    for el in elements[:max_items]:
-        snippet = get_element_snippet(el)
-        if snippet:
-            snippets.append(snippet)
-    if not snippets:
-        return ""
-    suffix = "..." if len(elements) > max_items else ""
-    return f" (Ejemplo: {', '.join(snippets)}{suffix})"
 
-def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, characteristics: list | None = None):
-    """
-    Evalúa una interfaz según la operacionalización de ISO/IEC 25010 definida
-    en services/iso_framework.py.
+def _snippets(elements, n=3) -> list[str]:
+    return [s for s in (get_element_snippet(e) for e in elements[:n]) if s]
 
-    runtime_metrics: métricas medidas por Playwright sobre la página original
-        (ttfb_ms, lcp_ms, cls, transfer_bytes, requests, js_heap_mb).
-    characteristics: subconjunto priorizado de características a puntuar
-        None = todas.
-    """
+
+def _accessible_name(el, soup) -> bool:
+    if el.get_text(strip=True) or el.get("aria-label", "").strip() or el.get("title", "").strip():
+        return True
+    labelledby = el.get("aria-labelledby", "")
+    if labelledby and any(soup.find(id=i) for i in labelledby.split()):
+        return True
+    if el.name == "input" and el.get("value", "").strip():
+        return True
+    img = el.find("img")
+    if img is not None and img.get("alt", "").strip():
+        return True
+    svg = el.find("svg")
+    return bool(svg is not None and (svg.get("aria-label") or svg.find("title")))
+
+
+def _is_hidden(el) -> bool:
+    return (el.get("aria-hidden") == "true" or el.get("role") in ("presentation", "none")
+            or el.has_attr("hidden"))
+
+
+def _control_texts(soup) -> list[str]:
+    """Nombres visibles o accesibles de los controles operables."""
+    labels = {lbl.get("for"): lbl.get_text(" ", strip=True) for lbl in soup.find_all("label") if lbl.get("for")}
+    texts = []
+    selector = ["a", "button", "input", "select", "textarea", "summary"]
+    for el in soup.find_all(selector) + soup.find_all(attrs={"role": re.compile("^(button|link|tab|menuitem)$")}):
+        if el.name == "a" and not el.get("href"):
+            continue
+        parts = [el.get_text(" ", strip=True), el.get("aria-label", ""), el.get("title", ""),
+                 el.get("placeholder", ""), el.get("value", "") if el.name == "input" else "",
+                 labels.get(el.get("id"), "")]
+        if el.find("img"):
+            parts.append(el.find("img").get("alt", ""))
+        parent_label = el.find_parent("label")
+        if parent_label is not None:
+            parts.append(parent_label.get_text(" ", strip=True))
+        texts.append(normalize_text(" ".join(p for p in parts if p)))
+    return texts
+
+
+def _page_corpus(soup) -> str:
+    parts = [soup.get_text(" ", strip=True)]
+    for el in soup.find_all(attrs={"aria-label": True}):
+        parts.append(el["aria-label"])
+    for el in soup.find_all(["input", "img"]):
+        parts.extend([el.get("placeholder", ""), el.get("alt", ""), el.get("value", "")])
+    return normalize_text(" ".join(parts))
+
+
+def _viewport_content(soup) -> Optional[str]:
+    meta = soup.find("meta", attrs={"name": re.compile("^viewport$", re.I)})
+    return (meta.get("content") or "") if meta is not None else None
+
+
+def _zoom_blocked(content: Optional[str]) -> bool:
+    if not content:
+        return False
+    c = content.lower().replace(" ", "")
+    if re.search(r"user-scalable=(no|0)\b", c):
+        return True
+    m = re.search(r"maximum-scale=([\d.]+)", c)
+    return bool(m and float(m.group(1)) < 2)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Métricas por característica
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _functional_suitability(soup, ev, expected) -> list[dict]:
+    metrics = []
+    expected = [normalize_text(e) for e in (expected or []) if normalize_text(e)]
+    spec_missing = "no evaluado (requiere la lista de funciones esperadas)"
+    if expected:
+        corpus = _page_corpus(soup)
+        controls = _control_texts(soup)
+        found = [e for e in expected if e in corpus]
+        operable = [e for e in expected if any(e in t for t in controls)]
+        missing = [e for e in expected if e not in found]
+        not_operable = [e for e in expected if e not in operable]
+    else:
+        found = operable = missing = not_operable = []
+    n = len(expected) or None
+
+    metrics.append(make_metric(
+        "AF-01", "adecuacion_funcional", "Completitud funcional", "Funciones esperadas presentes",
+        kind="ratio", a=len(found) if n else None, b=n, reference="ISO/IEC 25023 · cobertura funcional",
+        not_measured=spec_missing,
+        finding=f"{len(missing)} de {n} funciones esperadas no aparecen en la interfaz: {', '.join(missing[:5])}." if n else "",
+        recommendation="Implementar o hacer visibles las funciones requeridas por la especificación."))
+    metrics.append(make_metric(
+        "AF-04", "adecuacion_funcional", "Pertinencia funcional", "Funciones esperadas disponibles como control operable",
+        kind="ratio", a=len(operable) if n else None, b=n, reference="ISO/IEC 25023 · pertinencia funcional",
+        not_measured=spec_missing,
+        finding=(f"{len(not_operable)} de {n} funciones esperadas no tienen un enlace, botón o campo que permita "
+                 f"ejecutarlas: {', '.join(not_operable[:5])}.") if n else "",
+        recommendation="Ofrecer cada función principal mediante un control directo (botón, enlace o formulario) con nombre claro."))
+
+    links = (ev or {}).get("links") or {}
+    checked, broken = links.get("checked"), links.get("broken", 0)
+    metrics.append(make_metric(
+        "AF-02", "adecuacion_funcional", "Corrección funcional", "Enlaces internos que responden sin error",
+        kind="ratio", a=(checked - broken) if checked else None, b=checked or None,
+        reference="ISO/IEC 25023 · corrección funcional",
+        not_measured=RUNTIME if not links else "no aplica (sin enlaces internos)",
+        finding=f"{broken} de {checked} enlaces internos responden con error o no responden.",
+        recommendation="Corregir o eliminar los enlaces rotos y configurar redirecciones para rutas movidas.",
+        examples=links.get("samples")))
+
+    images = ((ev or {}).get("page") or {}).get("images") or {}
+    total, broken_img = images.get("total"), images.get("broken", 0)
+    metrics.append(make_metric(
+        "AF-03", "adecuacion_funcional", "Corrección funcional", "Imágenes de contenido que cargan",
+        kind="ratio", a=(total - broken_img) if total else None, b=total or None,
+        reference="ISO/IEC 25023 · corrección funcional",
+        not_measured=RUNTIME if not images else "no aplica (sin imágenes)",
+        finding=f"{broken_img} de {total} imágenes no cargan (recurso inexistente o inaccesible).",
+        recommendation="Verificar las rutas de las imágenes y su disponibilidad en el servidor o CDN.",
+        examples=images.get("samples")))
+    return metrics
+
+
+def _interaction_capability(soup, rt, ev) -> list[dict]:
+    m = []
+    char = "capacidad_interaccion"
+    incl = "Inclusividad"
+
+    images = [i for i in soup.find_all("img") if not _is_hidden(i)]
+    no_alt = [i for i in images if not i.has_attr("alt")]
+    m.append(make_metric("CI-01", char, incl, "Imágenes con texto alternativo", kind="ratio", target=0.9,
+                         a=len(images) - len(no_alt), b=len(images) or None, reference=f"{WCAG} · 1.1.1",
+                         not_measured="no aplica (sin imágenes)",
+                         finding=f"{len(no_alt)} de {len(images)} imágenes no tienen atributo alt.",
+                         recommendation="Agregar alt descriptivo a imágenes informativas y alt=\"\" a las decorativas.",
+                         examples=_snippets(no_alt)))
+
+    labeled_ids = {lbl.get("for") for lbl in soup.find_all("label") if lbl.get("for")}
+    controls = [c for c in soup.find_all(["input", "select", "textarea"])
+                if (c.get("type") or "").lower() not in _NON_LABELED_INPUT_TYPES and not _is_hidden(c)]
+    unlabeled = [c for c in controls if not (
+        (c.get("id") and c.get("id") in labeled_ids) or c.find_parent("label") is not None
+        or c.get("aria-label", "").strip() or c.get("aria-labelledby") or c.get("title", "").strip())]
+    m.append(make_metric("CI-02", char, incl, "Controles de formulario etiquetados", kind="ratio", target=0.9,
+                         a=len(controls) - len(unlabeled), b=len(controls) or None,
+                         reference=f"{WCAG} · 1.3.1 / 3.3.2 / 4.1.2", not_measured="no aplica (sin formularios)",
+                         finding=f"{len(unlabeled)} de {len(controls)} campos no tienen etiqueta accesible "
+                                 "(el placeholder no la sustituye).",
+                         recommendation="Asociar cada campo a un <label for> o usar aria-label / aria-labelledby.",
+                         examples=_snippets(unlabeled)))
+
+    buttons = [b for b in soup.find_all("button") + soup.find_all(attrs={"role": "button"})
+               + soup.find_all("input", attrs={"type": re.compile("^(submit|button|reset)$", re.I)})
+               if not _is_hidden(b)]
+    nameless = [b for b in buttons if not _accessible_name(b, soup)]
+    m.append(make_metric("CI-03", char, incl, "Botones con nombre accesible", kind="ratio", target=0.9,
+                         a=len(buttons) - len(nameless), b=len(buttons) or None, reference=f"{WCAG} · 4.1.2",
+                         not_measured="no aplica (sin botones)",
+                         finding=f"{len(nameless)} de {len(buttons)} botones no tienen nombre accesible.",
+                         recommendation="Dar a cada botón texto visible, aria-label o un ícono con texto alternativo.",
+                         examples=_snippets(nameless)))
+
+    links = [a for a in soup.find_all("a", href=True) if not _is_hidden(a)]
+    nameless_links = [a for a in links if not _accessible_name(a, soup)]
+    m.append(make_metric("CI-04", char, incl, "Enlaces con nombre accesible", kind="ratio", target=0.9,
+                         a=len(links) - len(nameless_links), b=len(links) or None, reference=f"{WCAG} · 2.4.4",
+                         not_measured="no aplica (sin enlaces)",
+                         finding=f"{len(nameless_links)} de {len(links)} enlaces no tienen texto ni nombre accesible.",
+                         recommendation="Agregar texto descriptivo o aria-label a los enlaces (también a los de ícono).",
+                         examples=_snippets(nameless_links)))
+
+    html_tag = soup.find("html")
+    m.append(make_metric("CI-05", char, incl, "Idioma del documento declarado", kind="binary",
+                         x=1 if (html_tag is not None and html_tag.get("lang", "").strip()) else 0,
+                         reference=f"{WCAG} · 3.1.1",
+                         finding="El documento no declara su idioma (atributo lang en <html>).",
+                         recommendation="Agregar lang=\"es\" (o el idioma correspondiente) al elemento <html>."))
+
+    checked = (rt or {}).get("contrast_checked")
+    failures = (rt or {}).get("contrast_failures") or 0
+    m.append(make_metric("CI-06", char, incl, "Texto con contraste suficiente", kind="ratio", target=0.9,
+                         a=(checked - failures) if checked else None, b=checked or None,
+                         reference=f"{WCAG} · 1.4.3", not_measured=RUNTIME,
+                         finding=f"{failures} de {checked} elementos de texto no alcanzan el contraste mínimo "
+                                 "(4.5:1, o 3:1 en texto grande).",
+                         recommendation="Oscurecer el texto o aclarar el fondo hasta cumplir 4.5:1 (3:1 en texto grande)."))
+
+    viewport = _viewport_content(soup)
+    m.append(make_metric("CI-07", char, incl, "Zoom del usuario permitido", kind="binary",
+                         x=0 if _zoom_blocked(viewport) else 1, reference=f"{WCAG} · 1.4.4",
+                         finding=f"El meta viewport impide ampliar la página ({viewport}).",
+                         recommendation="Eliminar user-scalable=no y maximum-scale menor a 2 del meta viewport."))
+
+    mobile = (((ev or {}).get("layout") or {}).get("mobile")) or {}
+    targets, small = mobile.get("targets"), mobile.get("small_targets", 0)
+    m.append(make_metric("CI-08", char, "Operabilidad", "Objetivos táctiles de al menos 24×24 px (móvil)",
+                         kind="ratio", target=0.9, a=(targets - small) if targets else None, b=targets or None,
+                         reference=f"{WCAG} · 2.5.8", not_measured=RUNTIME if not mobile else "no aplica (sin controles)",
+                         finding=f"{small} de {targets} controles miden menos de 24×24 px en móvil (390 px).",
+                         recommendation="Aumentar el área táctil (padding o min-width/min-height de 24 px; 44 px recomendado).",
+                         examples=mobile.get("small_samples")))
+
+    positive_tab = [t for t in soup.find_all(attrs={"tabindex": True})
+                    if str(t.get("tabindex")).strip().isdigit() and int(t.get("tabindex")) > 0]
+    m.append(make_metric("CI-09", char, "Operabilidad", "Orden de foco natural (sin tabindex positivo)",
+                         kind="binary", x=0 if positive_tab else 1, reference=f"{WCAG} · 2.4.3",
+                         finding=f"{len(positive_tab)} elementos usan tabindex mayor a 0 y alteran el orden de foco.",
+                         recommendation="Usar tabindex=\"0\" o \"-1\" y ordenar el DOM según el orden lógico.",
+                         examples=_snippets(positive_tab)))
+
+    entry = [c for c in controls if (c.get("type") or "text").lower() not in _NO_VALIDATION_NEEDED]
+    validated = [c for c in entry if any(c.has_attr(a) for a in _VALIDATION_ATTRS)
+                 or (c.get("type") or "").lower() in _VALIDATION_TYPES or c.name == "select"]
+    m.append(make_metric("CI-10", char, "Protección contra errores del usuario", "Campos con validación declarativa",
+                         kind="ratio", target=0.5, a=len(validated), b=len(entry) or None,
+                         reference="ISO/IEC 25023 · protección contra errores", not_measured="no aplica (sin campos)",
+                         finding=f"Sólo {len(validated)} de {len(entry)} campos declaran validación "
+                                 "(required, pattern, min/max, longitud o tipo).",
+                         recommendation="Declarar required, pattern, minlength/maxlength o tipos como email/tel/number.",
+                         examples=_snippets([c for c in entry if c not in validated])))
+
+    personal = [c for c in controls if c.name == "input" and (
+        (c.get("type") or "").lower() in _PERSONAL_TYPES
+        or _PERSONAL_NAME_RE.search(f"{c.get('name', '')} {c.get('id', '')}"))]
+    with_ac = [c for c in personal if (c.get("autocomplete") or "").strip().lower() not in ("", "off")]
+    m.append(make_metric("CI-11", char, "Protección contra errores del usuario",
+                         "Campos de datos personales con autocompletado", kind="ratio", target=0.9,
+                         a=len(with_ac), b=len(personal) or None, reference=f"{WCAG} · 1.3.5",
+                         not_measured="no aplica (sin campos de datos personales)",
+                         finding=f"{len(personal) - len(with_ac)} de {len(personal)} campos de datos personales "
+                                 "no declaran su propósito con autocomplete.",
+                         recommendation="Agregar autocomplete (email, tel, name, username, current-password, new-password…).",
+                         examples=_snippets([c for c in personal if c not in with_ac])))
+
+    has_status = bool(soup.find(attrs={"aria-live": True}) or soup.find(attrs={"role": re.compile("^(alert|status)$")}))
+    m.append(make_metric("CI-12", char, "Asistencia al usuario", "Región de mensajes de estado",
+                         kind="binary", x=(1 if has_status else 0) if controls else None,
+                         reference=f"{WCAG} · 4.1.3", not_measured="no aplica (sin formularios)",
+                         finding="La interfaz tiene formularios pero ninguna región que anuncie mensajes de estado o error.",
+                         recommendation="Mostrar errores y confirmaciones en un contenedor con role=\"alert\" o aria-live."))
+
+    title = soup.find("title")
+    m.append(make_metric("CI-13", char, "Autodescriptividad", "Título de página descriptivo", kind="binary",
+                         x=1 if (title is not None and title.get_text(strip=True)) else 0, reference=f"{WCAG} · 2.4.2",
+                         finding="La interfaz no tiene un <title> que describa su propósito.",
+                         recommendation="Definir un <title> único por interfaz (p. ej. \"Pagos · Mi sistema\")."))
+
+    has_h1 = bool(soup.find("h1") or soup.find(attrs={"role": "heading", "aria-level": "1"}))
+    m.append(make_metric("CI-14", char, "Autodescriptividad", "Encabezado principal presente", kind="binary",
+                         x=1 if has_h1 else 0, reference=f"{WCAG} · 1.3.1 / 2.4.6",
+                         finding="No hay un encabezado principal (<h1>) que identifique el contenido.",
+                         recommendation="Agregar un <h1> con el propósito de la interfaz y jerarquizar con <h2>, <h3>."))
+
+    texts, tiny = mobile.get("text_elements"), mobile.get("small_text", 0)
+    m.append(make_metric("CI-15", char, "Operabilidad", "Texto legible en móvil (≥ 12 px)", kind="ratio",
+                         target=0.6, a=(texts - tiny) if texts else None, b=texts or None,
+                         reference="Lighthouse · Legible font sizes", not_measured=RUNTIME if not mobile else "no aplica",
+                         finding=f"{tiny} de {texts} bloques de texto miden menos de 12 px en móvil.",
+                         recommendation="Usar un tamaño base de 16 px y no bajar de 12 px en textos secundarios."))
+    return m
+
+
+def _compatibility(ev) -> list[dict]:
+    m = []
+    char = "compatibilidad"
+    req = (ev or {}).get("requests") or {}
+    api_total, api_failed = req.get("api_total"), req.get("api_failed", 0)
+    m.append(make_metric("CO-01", char, "Interoperabilidad", "Peticiones a API completadas sin error", kind="ratio",
+                         target=0.95, a=(api_total - api_failed) if api_total else None, b=api_total or None,
+                         reference="ISO/IEC 25023 · interoperabilidad",
+                         not_measured=RUNTIME if not req else "no aplica (sin peticiones a API)",
+                         finding=f"{api_failed} de {api_total} peticiones a API (fetch/XHR) fallaron o devolvieron error.",
+                         recommendation="Revisar los endpoints, CORS y formatos de intercambio con los servicios externos.",
+                         examples=req.get("failed_samples")))
+
+    cb = (ev or {}).get("cross_browser") or {}
+    chromium = cb.get("chromium") or {}
+    others = {k: v for k, v in cb.items() if k != "chromium" and v.get("available") and not v.get("session_lost")}
+    base_errors = chromium.get("js_errors", 0) or 0
+    loads = [k for k, v in others.items() if v.get("loaded") and (v.get("js_errors", 0) or 0) <= base_errors]
+    failing = [k for k in others if k not in loads]
+    tested = (len(others) + 1) if (others and chromium.get("loaded")) else None
+    m.append(make_metric("CO-02", char, "Interoperabilidad", "Navegadores donde la interfaz funciona sin errores nuevos",
+                         kind="ratio", a=(len(loads) + 1) if tested else None, b=tested,
+                         reference="ISO/IEC 25023 · compatibilidad entre plataformas",
+                         not_measured="no medido (navegadores adicionales no disponibles)" if cb else RUNTIME,
+                         finding="La interfaz no carga o genera errores JavaScript adicionales en: "
+                                 + ", ".join(failing) + ".",
+                         recommendation="Probar en Firefox y Safari (WebKit), revisar APIs no estándar y agregar polyfills.",
+                         examples=[f"{k}: {(others[k].get('js_error_samples') or [others[k].get('error', '')])[0]}"
+                                   for k in failing if others[k].get('js_error_samples') or others[k].get('error')]))
+
+    def coherent(v):
+        if not v.get("loaded"):
+            return False
+        if v.get("overflow_desktop") and not chromium.get("overflow_desktop"):
+            return False
+        if v.get("overflow_mobile") and not chromium.get("overflow_mobile"):
+            return False
+        h, h0 = v.get("height") or 0, chromium.get("height") or 0
+        return not (h0 and abs(h - h0) / h0 > 0.25)
+
+    loaded_others = {k: v for k, v in others.items() if v.get("loaded")}
+    incoherent = [k for k, v in loaded_others.items() if not coherent(v)]
+    m.append(make_metric("CO-03", char, "Interoperabilidad", "Diseño coherente con Chromium en otros motores",
+                         kind="ratio", a=(len(loaded_others) - len(incoherent)) if loaded_others else None,
+                         b=len(loaded_others) or None, reference="ISO/IEC 25023 · compatibilidad entre plataformas",
+                         not_measured="no medido (navegadores adicionales no disponibles)" if cb else RUNTIME,
+                         finding="El diseño cambia de forma significativa (desbordamiento o alto ±25 %) en: "
+                                 + ", ".join(incoherent) + ".",
+                         recommendation="Revisar propiedades CSS sin soporte uniforme y usar prefijos o alternativas."))
+
+    globals_ = (((ev or {}).get("page") or {}).get("globals")) or {}
+    count = globals_.get("count")
+    m.append(make_metric("CO-04", char, "Coexistencia", "Variables globales añadidas al navegador", kind="max",
+                         target=50, x=count, reference="Referencia práctica (aislamiento de módulos)", weight=0.5,
+                         not_measured=RUNTIME,
+                         finding=f"La interfaz añade {count} variables globales a window, que pueden colisionar con "
+                                 "otros scripts del mismo entorno.",
+                         recommendation="Encapsular el código en módulos ES y evitar asignaciones a window.",
+                         examples=globals_.get("samples")))
+    return m
+
+
+def _flexibility(soup, ev) -> list[dict]:
+    m = []
+    char = "flexibilidad"
+    m.append(make_metric("FL-01", char, "Adaptabilidad", "Meta viewport adaptable declarado", kind="binary",
+                         x=1 if _viewport_content(soup) else 0, reference="HTML Living Standard · viewport",
+                         finding="No se declara <meta name=\"viewport\">: los móviles muestran la versión de escritorio reducida.",
+                         recommendation="Agregar <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">."))
+
+    layout = (ev or {}).get("layout") or {}
+    measured = {d: layout[d] for d in ("desktop", "tablet", "mobile") if layout.get(d)}
+    overflowing = [d for d, v in measured.items() if v.get("overflow")]
+    m.append(make_metric("FL-02", char, "Adaptabilidad", "Resoluciones sin desplazamiento horizontal", kind="ratio",
+                         a=(len(measured) - len(overflowing)) if measured else None, b=len(measured) or None,
+                         reference="ISO/IEC 25023 · adaptabilidad", not_measured=RUNTIME,
+                         finding="La interfaz desborda horizontalmente en: " + ", ".join(
+                             f"{d} ({measured[d].get('scroll_width')} px en {measured[d].get('width')} px)"
+                             for d in overflowing) + ".",
+                         recommendation="Usar unidades relativas, max-width: 100% y diseños flex/grid que se reacomoden."))
+
+    reflow = layout.get("reflow_320")
+    m.append(make_metric("FL-03", char, "Adaptabilidad", "Reflow a 320 px sin desplazamiento horizontal",
+                         kind="binary", x=(0 if reflow.get("overflow") else 1) if reflow else None,
+                         reference=f"{WCAG} · 1.4.10", not_measured=RUNTIME,
+                         finding=f"A 320 px de ancho el contenido mide {(reflow or {}).get('scroll_width')} px "
+                                 "y obliga a desplazarse en dos direcciones.",
+                         recommendation="Permitir que tablas, imágenes y barras se reacomoden o desplacen dentro de su contenedor."))
+
+    manifest = ((ev or {}).get("page") or {}).get("manifest")
+    if manifest is None:
+        manifest = bool(soup.find("link", attrs={"rel": "manifest"}))
+    m.append(make_metric("FL-04", char, "Instalabilidad", "Manifiesto de aplicación web instalable", kind="binary",
+                         x=1 if manifest else 0, scored=False, reference="W3C Web App Manifest",
+                         finding="", recommendation=""))
+    return m
+
+
+def _security(soup, ev) -> list[dict]:
+    m = []
+    char = "seguridad"
+    conf, integ = "Confidencialidad", "Integridad"
+    ev = ev or {}
+    nav = ev.get("navigation") or {}
+    https = nav.get("https") if nav else None
+    headers = ev.get("headers")
+    page = ev.get("page") or {}
+    no_https = "no aplica (la interfaz no usa HTTPS)"
+
+    m.append(make_metric("SE-01", char, conf, "Conexión cifrada (HTTPS)", kind="binary",
+                         x=None if https is None else int(https), reference=f"{OWASP} · V9.1", not_measured=RUNTIME,
+                         finding="La interfaz se sirve por HTTP sin cifrar: los datos viajan legibles por la red.",
+                         recommendation="Servir todo el sitio por HTTPS con un certificado válido."))
+
+    tls = ev.get("tls") or {}
+    m.append(make_metric("SE-02", char, conf, "Certificado TLS válido", kind="binary",
+                         x=None if tls.get("valid") is None else int(tls["valid"]), reference=f"{OWASP} · V9.1",
+                         not_measured=no_https if https is False else RUNTIME,
+                         finding=f"El certificado TLS no es válido: {tls.get('error', '')}.",
+                         recommendation="Renovar el certificado e incluir la cadena intermedia completa."))
+
+    def header(name):
+        return (headers or {}).get(name, "") if headers is not None else None
+
+    hsts = header("hsts")
+    m.append(make_metric("SE-03", char, conf, "HSTS (Strict-Transport-Security)", kind="binary",
+                         x=None if (hsts is None or not https) else int(bool(hsts)), reference=f"{OWASP} · V14.4.5",
+                         not_measured=no_https if https is False else RUNTIME,
+                         finding="El servidor no envía Strict-Transport-Security; el primer acceso puede degradarse a HTTP.",
+                         recommendation="Enviar Strict-Transport-Security: max-age=31536000; includeSubDomains."))
+
+    redirect = ev.get("http_redirects_to_https")
+    m.append(make_metric("SE-04", char, conf, "Redirección de HTTP a HTTPS", kind="binary",
+                         x=None if redirect is None else int(redirect), reference=f"{OWASP} · V9.1",
+                         not_measured=no_https if https is False else "no medido (puerto 80 sin respuesta)",
+                         finding="La versión http:// del sitio responde sin redirigir a HTTPS.",
+                         recommendation="Redirigir con 301 todo el tráfico HTTP a HTTPS."))
+
+    forms = page.get("password_forms") or {}
+    total_forms = forms.get("total") or 0
+    insecure = total_forms if https is False else (forms.get("insecure") or 0)
+    m.append(make_metric("SE-05", char, conf, "Formularios de contraseña enviados por HTTPS y POST", kind="ratio",
+                         a=(total_forms - insecure) if total_forms else None, b=total_forms or None,
+                         reference=f"{OWASP} · V8.3.1",
+                         not_measured="no aplica (sin formularios de contraseña)" if forms else RUNTIME,
+                         finding=f"{insecure} de {total_forms} formularios con contraseña se envían sin HTTPS o por GET "
+                                 "(la contraseña queda expuesta en la red o en la URL).",
+                         recommendation="Enviar las credenciales sólo por POST a un destino HTTPS."))
+
+    mixed = ev.get("mixed_content") or {}
+    m.append(make_metric("SE-06", char, conf, "Recursos sin contenido mixto", kind="count",
+                         x=mixed.get("count") if (mixed and https) else None, reference="W3C Mixed Content",
+                         not_measured=no_https if https is False else RUNTIME,
+                         finding=f"La página HTTPS solicita {mixed.get('count')} recursos por HTTP sin cifrar.",
+                         recommendation="Cargar todos los recursos por HTTPS (o agregar upgrade-insecure-requests a la CSP).",
+                         examples=mixed.get("samples")))
+
+    cookies = ev.get("cookies") or {}
+    m.append(make_metric("SE-07", char, conf, "Cookies con atributo Secure", kind="ratio",
+                         a=cookies.get("secure") if (https and cookies.get("total")) else None,
+                         b=cookies.get("total") if https else None, reference=f"{OWASP} · V3.4.1",
+                         not_measured=no_https if https is False else ("no aplica (sin cookies)" if cookies else RUNTIME),
+                         finding=f"{cookies.get('total', 0) - cookies.get('secure', 0)} de {cookies.get('total')} cookies "
+                                 "no tienen el atributo Secure.",
+                         recommendation="Marcar las cookies como Secure (y HttpOnly/SameSite las de sesión).",
+                         examples=cookies.get("insecure_samples")))
+
+    creds = page.get("storage_credentials")
+    m.append(make_metric("SE-08", char, conf, "Credenciales fuera de Web Storage", kind="binary",
+                         x=None if creds is None else int(creds.get("count", 0) == 0), reference=f"{OWASP} · V3.2.3",
+                         not_measured=RUNTIME,
+                         finding=f"Se guardan {(creds or {}).get('count')} tokens o credenciales en localStorage/"
+                                 "sessionStorage, accesibles para cualquier script (riesgo ante XSS).",
+                         recommendation="Mantener los tokens de sesión en cookies HttpOnly, Secure y SameSite.",
+                         examples=(creds or {}).get("keys")))
+
+    csp = header("csp")
+    meta_csp = page.get("meta_csp") or ""
+    csp_value = (csp or "") or meta_csp
+    m.append(make_metric("SE-09", char, integ, "Content-Security-Policy definida", kind="binary",
+                         x=None if (headers is None and not meta_csp) else int(bool(csp_value)),
+                         reference=f"{OWASP} · V14.4.3", not_measured=RUNTIME,
+                         finding="No se define Content-Security-Policy: el navegador no limita el origen de scripts.",
+                         recommendation="Definir una CSP (al menos default-src 'self'; script-src con orígenes explícitos)."))
+
+    xfo = header("x_frame_options")
+    m.append(make_metric("SE-10", char, integ, "Protección contra clickjacking", kind="binary",
+                         x=None if headers is None else int(bool(xfo) or "frame-ancestors" in (csp or "")),
+                         reference=f"{OWASP} · V14.4.7", not_measured=RUNTIME,
+                         finding="La interfaz puede incrustarse en sitios ajenos (sin X-Frame-Options ni frame-ancestors).",
+                         recommendation="Enviar X-Frame-Options: DENY o CSP frame-ancestors 'self'."))
+
+    nosniff = header("x_content_type_options")
+    m.append(make_metric("SE-11", char, integ, "X-Content-Type-Options: nosniff", kind="binary",
+                         x=None if headers is None else int((nosniff or "").lower() == "nosniff"),
+                         reference=f"{OWASP} · V14.4.4", not_measured=RUNTIME,
+                         finding="Falta X-Content-Type-Options: nosniff (el navegador puede reinterpretar tipos de archivo).",
+                         recommendation="Enviar X-Content-Type-Options: nosniff en todas las respuestas."))
+
+    third = page.get("third_party_scripts") or {}
+    m.append(make_metric("SE-12", char, integ, "Scripts de terceros con integridad verificada (SRI)", kind="ratio",
+                         a=third.get("with_sri") if third.get("total") else None, b=third.get("total") or None,
+                         weight=0.5, reference=f"{OWASP} · V14.2.3",
+                         not_measured="no aplica (sin scripts de terceros)" if third else RUNTIME,
+                         finding=f"{third.get('total', 0) - third.get('with_sri', 0)} de {third.get('total')} scripts de "
+                                 "terceros se cargan sin atributo integrity.",
+                         recommendation="Agregar integrity y crossorigin a los scripts de CDN con versión fija.",
+                         examples=third.get("samples")))
+
+    meta_ref = soup.find("meta", attrs={"name": re.compile("^referrer$", re.I)})
+    ref_policy = header("referrer_policy")
+    m.append(make_metric("SE-13", char, conf, "Política de referencia (Referrer-Policy)", kind="binary",
+                         x=None if (headers is None and meta_ref is None) else int(bool(ref_policy) or meta_ref is not None),
+                         weight=0.5, reference=f"{OWASP} · V14.4.6", not_measured=RUNTIME,
+                         finding="No se define Referrer-Policy: las URL completas pueden filtrarse a sitios externos.",
+                         recommendation="Enviar Referrer-Policy: strict-origin-when-cross-origin (o no-referrer)."))
+    return m
+
+
+def _reliability(ev) -> list[dict]:
+    m = []
+    char = "fiabilidad"
+    ev = ev or {}
+    status = (ev.get("navigation") or {}).get("status")
+    m.append(make_metric("FI-01", char, "Disponibilidad", "La interfaz responde sin error HTTP", kind="binary",
+                         x=None if status is None else int(status < 400), reference="ISO/IEC 25023 · disponibilidad",
+                         not_measured=RUNTIME,
+                         finding=f"La interfaz respondió con el código HTTP {status}.",
+                         recommendation="Revisar el servidor o la ruta: la interfaz no está disponible para el usuario."))
+
+    js = ev.get("js_errors")
+    m.append(make_metric("FI-02", char, "Ausencia de fallos", "Errores JavaScript no capturados", kind="count",
+                         x=js.get("count") if js else None, reference="ISO/IEC 25023 · ausencia de fallos",
+                         not_measured=RUNTIME,
+                         finding=f"Se produjeron {(js or {}).get('count')} errores JavaScript no capturados al cargar la interfaz.",
+                         recommendation="Corregir los errores y agregar manejo de excepciones (try/catch, Error Boundaries).",
+                         examples=(js or {}).get("samples")))
+
+    console = ev.get("console_errors")
+    m.append(make_metric("FI-03", char, "Ausencia de fallos", "Errores registrados en consola", kind="count",
+                         x=console.get("count") if console else None, weight=0.5,
+                         reference="ISO/IEC 25023 · ausencia de fallos", not_measured=RUNTIME,
+                         finding=f"La consola registró {(console or {}).get('count')} errores durante la carga.",
+                         recommendation="Revisar y resolver los errores registrados en la consola del navegador.",
+                         examples=(console or {}).get("samples")))
+
+    req = ev.get("requests") or {}
+    total, failed = req.get("total"), req.get("failed", 0)
+    m.append(make_metric("FI-04", char, "Tolerancia a fallos", "Recursos cargados sin error", kind="ratio",
+                         target=0.98, a=(total - failed) if total else None, b=total or None,
+                         reference="ISO/IEC 25023 · tolerancia a fallos", not_measured=RUNTIME,
+                         finding=f"{failed} de {total} recursos (scripts, estilos, imágenes o API) fallaron al cargar.",
+                         recommendation="Corregir los recursos que fallan y prever alternativas cuando un servicio no responde.",
+                         examples=req.get("failed_samples")))
+    return m
+
+
+def _efficiency(rt) -> list[dict]:
+    rt = rt or {}
+
+    def num(key):
+        v = rt.get(key)
+        return v if isinstance(v, (int, float)) else None
+
+    char, temporal, resources = "eficiencia_desempeno", "Comportamiento temporal", "Utilización de recursos"
+    cwv = "Core Web Vitals (umbral 'bueno')"
+    ttfb, lcp, cls = num("ttfb_ms"), num("lcp_ms"), num("cls")
+    transfer, requests, heap = num("transfer_bytes"), num("requests"), num("js_heap_mb")
+    return [
+        make_metric("EF-01", char, temporal, "Tiempo hasta el primer byte (TTFB)", kind="max", target=800, unit="ms",
+                    x=round(ttfb) if ttfb is not None else None, reference=cwv, not_measured=RUNTIME,
+                    finding=f"TTFB medido de {round(ttfb or 0)} ms.",
+                    recommendation="Reducir el tiempo de respuesta del servidor (caché, CDN, consultas)."),
+        make_metric("EF-02", char, temporal, "Largest Contentful Paint (LCP)", kind="max", target=2500, unit="ms",
+                    x=round(lcp) if lcp is not None else None, reference=cwv, not_measured=RUNTIME,
+                    finding=f"LCP medido de {(lcp or 0) / 1000:.1f} s.",
+                    recommendation="Optimizar la imagen o bloque principal y reducir el JS que bloquea el render."),
+        make_metric("EF-03", char, temporal, "Cumulative Layout Shift (CLS)", kind="max", target=0.1, x=cls,
+                    reference=cwv, not_measured=RUNTIME, finding=f"CLS medido de {cls}.",
+                    recommendation="Reservar espacio para imágenes y contenido dinámico (width/height o aspect-ratio)."),
+        make_metric("EF-04", char, resources, "Datos transferidos", kind="max", target=3000, unit="KB",
+                    x=round(transfer / 1024) if transfer is not None else None,
+                    reference="Referencia práctica de peso de página", not_measured=RUNTIME,
+                    finding=f"La página transfiere {round((transfer or 0) / 1024)} KB.",
+                    recommendation="Comprimir imágenes, dividir el bundle y cargar recursos bajo demanda."),
+        make_metric("EF-05", char, resources, "Peticiones de red", kind="max", target=100, x=requests,
+                    reference="Referencia práctica", not_measured=RUNTIME,
+                    finding=f"La página realiza {requests} peticiones.",
+                    recommendation="Agrupar recursos y eliminar dependencias innecesarias."),
+        make_metric("EF-06", char, resources, "Memoria JS del cliente", kind="max", target=50, unit="MB", x=heap,
+                    reference="Referencia práctica", not_measured=RUNTIME,
+                    finding=f"La página usa {heap} MB de memoria JavaScript.",
+                    recommendation="Liberar referencias y reducir el estado y las librerías cargadas."),
+    ]
+
+
+def compute_metrics(soup, runtime=None, evidence=None, expected_functions=None) -> list[dict]:
+    return apply_impact(
+        _functional_suitability(soup, evidence, expected_functions)
+        + _interaction_capability(soup, runtime, evidence)
+        + _compatibility(evidence)
+        + _flexibility(soup, evidence)
+        + _security(soup, evidence)
+        + _reliability(evidence)
+        + _efficiency(runtime)
+    )
+
+
+def _engineering_tips(findings: list[dict]) -> list[str]:
+    tips: list[str] = []
+    for f in findings:
+        if f["recommendation"] and f["recommendation"] not in tips:
+            tips.append(f["recommendation"])
+        if len(tips) == 5:
+            break
+    return tips
+
+
+def evaluate_iso_25010(
+    html: str,
+    runtime_metrics: dict | None = None,
+    characteristics: list | None = None,
+    evidence: dict | None = None,
+    expected_functions: list | None = None,
+) -> dict[str, Any]:
     selected = normalize_selection(characteristics)
-    soup = BeautifulSoup(html or "", "html.parser")
-
-    findings = []
-    tips = []
-
-    scores = {
-        "adecuacion_funcional": 100,
-        "eficiencia_desempeno": 100,
-        "usabilidad": 100,
-        "accesibilidad": 100,
-        "mantenibilidad": 100,
-        "compatibilidad": 100,
-        "seguridad": 100,
-        "portabilidad": 100,
+    labels = {k: CHARACTERISTICS[k] for k in selected}
+    base = {
+        "evaluated_characteristics": selected,
+        "characteristic_labels": labels,
+        "evaluation_scope": evaluation_scope(selected),
+        "restrictions": evaluation_restrictions(bool(evidence)),
+        "runtime_metrics": runtime_metrics or None,
+        "evidence_received": bool(evidence),
+        "strict_mode": True,
     }
 
-    def add_finding(
-        dimension, subdimension, severity, finding, recommendation, penalties
-    ):
-        findings.append(
-            {
-                "dimension": dimension,
-                "subdimension": subdimension,
-                "severity": severity,
-                "finding": finding,
-                "recommendation": recommendation,
-            }
-        )
-
-        for key, value in penalties.items():
-            if key in scores:
-                scores[key] -= value
-
     if not html or len(html.strip()) < 50:
-        add_finding(
-            "Adecuación funcional",
-            "Artefacto evaluable",
-            "Crítica",
-            "El contenido HTML recibido es insuficiente para realizar una evaluación técnica.",
-            "Verificar que la interfaz capture o proporcione un HTML completo antes de ejecutar la evaluación.",
-            {
-                "adecuacion_funcional": 60,
-                "eficiencia_desempeno": 40,
-                "usabilidad": 40,
-                "accesibilidad": 40,
-                "mantenibilidad": 40,
-                "compatibilidad": 40,
-                "portabilidad": 40,
-            },
-        )
-        return {
-            "global_score": 0,
-            "quality_level": "Crítico",
-            "scores": {key: 0 for key in scores},
-            "total_findings": len(findings),
-            "findings": findings,
-            "engineering_tips": ["Proporcionar un HTML válido para iniciar la auditoría."],
-            "strict_mode": True,
-            "quality_decision": decision_criterion(0),
-            "evaluated_characteristics": selected,
-            "evaluation_scope": evaluation_scope(selected),
-            "restrictions": evaluation_restrictions(bool(runtime_metrics)),
-            "metrics": [],
+        finding = {
+            "metric_id": None, "dimension": "Adecuación funcional", "subdimension": "Artefacto evaluable",
+            "severity": "Crítica", "severity_grade": 4, "severity_grade_label": SEVERITY_GRADES[4]["label"],
+            "finding": "El contenido HTML recibido es insuficiente para realizar una evaluación técnica.",
+            "recommendation": "Verificar que la interfaz se capture completa antes de evaluarla.",
         }
+        decision = decision_criterion(0)
+        return {**base, "global_score": 0, "quality_level": decision["category"], "quality_decision": decision,
+                "scores": {}, "not_evaluated": selected, "total_findings": 1, "findings": [finding],
+                "engineering_tips": [finding["recommendation"]], "metrics": []}
 
-    # 1. ADECUACIÓN FUNCIONAL
-    # 1.1 Elemento main
-    if not soup.find("main"):
-        add_finding(
-            "Adecuación funcional",
-            "Completitud funcional",
-            "Alta",
-            "No se detectó la etiqueta <main> para delimitar el contenido principal.",
-            "Agregar una etiqueta <main> para estructurar el contenido principal de la interfaz.",
-            {"adecuacion_funcional": 10, "usabilidad": 5},
-        )
-
-    # 1.2 Elemento nav
-    if not soup.find("nav"):
-        add_finding(
-            "Adecuación funcional",
-            "Pertinencia funcional",
-            "Media",
-            "No se detectó una estructura de navegación principal (<nav>).",
-            "Incorporar una etiqueta <nav> o una estructura equivalente para mejorar la orientación del usuario.",
-            {"adecuacion_funcional": 5, "usabilidad": 5},
-        )
-
-    # 1.3 Elemento h1 principal
-    h1_tags = soup.find_all("h1")
-    if len(h1_tags) == 0:
-        add_finding(
-            "Usabilidad",
-            "Inteligibilidad (WCAG 2.4.6)",
-            "Alta",
-            "No se detectó un encabezado principal <h1>.",
-            "Agregar un <h1> claro y único que indique el propósito principal de la interfaz.",
-            {"adecuacion_funcional": 10, "usabilidad": 10},
-        )
-    elif len(h1_tags) > 1:
-        add_finding(
-            "Usabilidad",
-            "Inteligibilidad (WCAG 1.3.1)",
-            "Media",
-            f"Se detectaron {len(h1_tags)} encabezados <h1> en la interfaz." + format_snippets(h1_tags),
-            "Mantener un solo encabezado <h1> principal y organizar el resto con <h2>, <h3> y niveles posteriores.",
-            {"adecuacion_funcional": 5, "usabilidad": 5},
-        )
-
-    # 1.4 Elementos interactivos
-    interactive = soup.find_all(["button", "a", "input", "select", "textarea"])
-    if len(interactive) == 0:
-        add_finding(
-            "Adecuación funcional",
-            "Pertinencia funcional",
-            "Alta",
-            "No se detectaron elementos interactivos en la interfaz.",
-            "Agregar controles interactivos cuando la interfaz requiera navegación, acciones o entrada de datos.",
-            {"adecuacion_funcional": 15, "usabilidad": 10},
-        )
-
-    # 1.5 Estados asíncronos (Carga, Error, Vacío)
-    if len(interactive) > 0:
-        html_lower = html.lower()
-        has_loading = any(
-            x in html_lower
-            for x in ["loading", "cargando", "spinner", "skeleton", "status"]
-        ) or soup.find(attrs={"role": "status"})
-        has_error = any(
-            x in html_lower for x in ["error", "falló", "alert"]
-        ) or soup.find(attrs={"role": "alert"})
-        has_empty = any(
-            x in html_lower for x in ["empty", "vacío", "no data", "no hay datos"]
-        )
-
-        if not (has_loading or has_error or has_empty):
-            add_finding(
-                "Adecuación funcional",
-                "Completitud funcional",
-                "Alta",
-                "No se detectaron elementos visuales para el manejo de estados de carga (spinners/skeletons), errores o estados vacíos.",
-                "Implementar estados visuales de carga, control de excepciones (Error Boundaries/alertas) y estados vacíos en el ciclo de vida asíncrono.",
-                {"adecuacion_funcional": 10},
-            )
-
-    # 2. ACCESIBILIDAD
-    # 2.1 Imágenes sin alt
-    images = soup.find_all("img")
-    # alt="" es válido (WCAG 1.1.1: imágenes decorativas); sólo falla la ausencia del atributo
-    images_without_alt = [img for img in images if not img.has_attr("alt")]
-    if images_without_alt:
-        total = len(images_without_alt)
-        add_finding(
-            "Accesibilidad",
-            "Perceptible (WCAG 1.1.1)",
-            "Alta",
-            f"Se detectaron {total} imágenes sin atributo alt." + format_snippets(images_without_alt),
-            "Agregar texto alternativo descriptivo en imágenes informativas y alt vacío (alt='') en imágenes decorativas.",
-            {
-                "accesibilidad": min(15, total * 3),
-                "usabilidad": min(10, total * 2),
-            },
-        )
-
-    # 2.2 Botones sin texto o aria-label
-    buttons = soup.find_all("button")
-    buttons_without_text = [
-        btn
-        for btn in buttons
-        if not btn.get_text(strip=True)
-        and not btn.get("aria-label")
-        and not btn.get("title")
-    ]
-    if buttons_without_text:
-        total = len(buttons_without_text)
-        add_finding(
-            "Accesibilidad",
-            "Robusto (WCAG 4.1.2)",
-            "Alta",
-            f"Se detectaron {total} botones sin texto visible ni nombre accesible." + format_snippets(buttons_without_text),
-            "Agregar texto visible, atributo 'title' o 'aria-label' a cada botón para lectores de pantalla.",
-            {
-                "accesibilidad": min(20, total * 4),
-                "usabilidad": min(10, total * 2),
-            },
-        )
-
-    # 2.3 Enlaces sin texto ni accesibilidad
-    links = soup.find_all("a")
-    links_without_text = [
-        a
-        for a in links
-        if not a.get_text(strip=True)
-        and not a.get("aria-label")
-        and not a.get("title")
-        and not a.find("img", alt=True)
-    ]
-    if links_without_text:
-        total = len(links_without_text)
-        add_finding(
-            "Accesibilidad",
-            "Operable (WCAG 2.4.4)",
-            "Alta",
-            f"Se detectaron {total} enlaces sin texto visible ni nombre accesible." + format_snippets(links_without_text),
-            "Agregar texto descriptivo, aria-label o un elemento de imagen con 'alt' descriptivo dentro del enlace.",
-            {
-                "accesibilidad": min(15, total * 2),
-                "usabilidad": min(10, total * 1),
-            },
-        )
-
-    # 2.4 Inputs de formulario sin etiquetas (label/aria-label/title)
-    inputs = soup.find_all(["input", "textarea", "select"])
-    inputs_without_label = []
-    inputs_without_validation = []
-
-    for input_tag in inputs:
-        if input_tag.name == "input" and input_tag.get("type") in [
-            "hidden",
-            "submit",
-            "button",
-            "image",
-        ]:
-            continue
-
-        input_id = input_tag.get("id")
-        has_label = False
-
-        if input_id and soup.find("label", attrs={"for": input_id}):
-            has_label = True
-        elif input_tag.find_parent("label"):
-            has_label = True
-        elif (
-            input_tag.get("aria-label")
-            or input_tag.get("aria-labelledby")
-            or input_tag.get("title")
-        ):
-            has_label = True
-        # El placeholder no cuenta como etiqueta (WCAG 1.3.1 / 3.3.2):
-        # desaparece al escribir y no siempre lo anuncian los lectores de pantalla.
-
-        if not has_label:
-            inputs_without_label.append(input_tag)
-
-        if input_tag.name in ["textarea", "select"] or (
-            input_tag.name == "input"
-            and input_tag.get("type")
-            in ["text", "email", "password", "search", "tel", "url", "number"]
-        ):
-            has_validation = any(
-                input_tag.get(attr) for attr in ["required", "pattern", "min", "max"]
-            )
-            if not has_validation:
-                inputs_without_validation.append(input_tag)
-
-    if inputs_without_label:
-        total = len(inputs_without_label)
-        add_finding(
-            "Accesibilidad",
-            "Comprensible (WCAG 1.3.1 / 3.3.2)",
-            "Alta",
-            f"Se detectaron {total} campos de formulario sin etiqueta accesible (label, aria-label, aria-labelledby o title)." + format_snippets(inputs_without_label),
-            "Asociar cada campo con una etiqueta <label> mediante el atributo 'for' (o envolviéndolo en <label>), o usar 'aria-label' / 'aria-labelledby'. El placeholder no sustituye a la etiqueta.",
-            {
-                "accesibilidad": min(15, total * 3),
-                "usabilidad": min(10, total * 2),
-            },
-        )
-
-    if inputs_without_validation:
-        total = len(inputs_without_validation)
-        add_finding(
-            "Usabilidad",
-            "Protección contra errores del usuario",
-            "Media",
-            f"Se detectaron {total} campos de entrada de datos sin atributos de validación nativos (required, pattern, etc.)." + format_snippets(inputs_without_validation),
-            "Agregar validación nativa del navegador mediante atributos como 'required', 'pattern' o tipos específicos (type='email').",
-            {"usabilidad": min(10, total * 2)},
-        )
-
-    # 2.5 Relación de contraste de color bajo (WCAG 1.4.3)
-    # Si la captura midió el contraste con estilos computados, ese resultado
-    # (runtime_findings) reemplaza a esta aproximación sobre estilos inline.
-    contrast_measured = bool(runtime_metrics and runtime_metrics.get("contrast_checked"))
-    styled_elements = [] if contrast_measured else soup.find_all(style=True)
-    low_contrast_count = 0
-    low_contrast_elements = []
-    for el in styled_elements:
-        style_attr = el.get("style", "")
-        color_match = re.search(r"color\s*:\s*([^;]+)", style_attr)
-        bg_match = re.search(
-            r"background(?:-color)?\s*:\s*([^;]+)", style_attr
-        )
-
-        if color_match and bg_match:
-            c1 = color_match.group(1).strip()
-            c2 = bg_match.group(1).strip()
-            ratio = get_contrast_ratio(c1, c2)
-            if ratio and ratio < 4.5:
-                low_contrast_count += 1
-                low_contrast_elements.append(el)
-
-    if low_contrast_count > 0:
-        add_finding(
-            "Accesibilidad",
-            "Perceptible (WCAG 1.4.3)",
-            "Media",
-            f"Se detectaron {low_contrast_count} elementos con contraste de color bajo (< 4.5:1), dificultando la legibilidad." + format_snippets(low_contrast_elements),
-            "Asegurar una relación de contraste mínima de 4.5:1 para texto normal y de 3:1 para texto grande según la WCAG AA.",
-            {"accesibilidad": 10, "usabilidad": 5},
-        )
-
-    # 2.6 Orden de enfoque TabIndex > 0
-    tabindex_tags = [
-        t
-        for t in soup.find_all(attrs={"tabindex": True})
-        if t.get("tabindex").isdigit() and int(t.get("tabindex")) > 0
-    ]
-    if tabindex_tags:
-        add_finding(
-            "Accesibilidad",
-            "Operable (WCAG 2.4.3)",
-            "Alta",
-            f"Se detectaron {len(tabindex_tags)} elementos con 'tabindex' mayor a 0, alterando la navegación natural." + format_snippets(tabindex_tags),
-            "Evitar el uso de tabindex > 0. Utilizar tabindex='0' para elementos interactivos personalizados y estructurar el DOM lógicamente.",
-            {"accesibilidad": 10, "usabilidad": 5},
-        )
-
-    # 2.7 Pistas de subtítulos en videos/audios
-    media_tags = soup.find_all(["video", "audio"])
-    missing_tracks = 0
-    media_without_tracks = []
-    for media in media_tags:
-        tracks = media.find_all("track")
-        has_subtitles = any(
-            t.get("kind") in ["subtitles", "captions"] for t in tracks
-        )
-        if not has_subtitles:
-            missing_tracks += 1
-            media_without_tracks.append(media)
-
-    if missing_tracks > 0:
-        add_finding(
-            "Accesibilidad",
-            "Perceptible (WCAG 1.2.2)",
-            "Alta",
-            f"Se detectaron {missing_tracks} elementos multimedia (video/audio) sin pistas de subtítulos o transcripciones." + format_snippets(media_without_tracks),
-            "Agregar elementos <track kind='subtitles' srclang='es' src='subtítulos.vtt'> a todos los videos y audios.",
-            {"accesibilidad": 10, "usabilidad": 5},
-        )
-
-    # 3. USABILIDAD
-    # 3.1 Párrafos demasiado largos (> 350 caracteres)
-    paragraphs = soup.find_all("p")
-    long_paragraphs = [p for p in paragraphs if len(p.get_text(strip=True)) > 350]
-    if long_paragraphs:
-        total = len(long_paragraphs)
-        add_finding(
-            "Usabilidad",
-            "Estética de la interfaz",
-            "Media",
-            f"Se detectaron {total} párrafos extensos que pueden sobrecargar la lectura." + format_snippets(long_paragraphs),
-            "Dividir bloques de texto largos en secciones más pequeñas, listas o agregar subtítulos organizadores.",
-            {"usabilidad": min(10, total * 2)},
-        )
-
-    # 3.2 Consistencia de la paleta de colores (> 14 colores)
-    colors = detect_colors(html)
-    if len(colors) > 14:
-        add_finding(
-            "Usabilidad",
-            "Estética de la interfaz",
-            "Media",
-            f"Se detectó una paleta de colores demasiado amplia ({len(colors)} colores), afectando la sobriedad estética.",
-            "Establecer una paleta de colores unificada y consistente en el archivo de diseño global.",
-            {"usabilidad": 10},
-        )
-
-    # 3.3 Estabilidad Visual (CLS) - Imágenes/Iframes sin dimensiones
-    media_files = soup.find_all(["img", "iframe"])
-    cls_violations = 0
-    elements_cls = []
-    for med in media_files:
-        has_dims = med.get("width") and med.get("height")
-        style = med.get("style", "")
-        has_style_dims = "width" in style and "height" in style
-        if not (has_dims or has_style_dims):
-            cls_violations += 1
-            elements_cls.append(med)
-
-    if cls_violations > 0:
-        add_finding(
-            "Usabilidad",
-            "Estética de la interfaz",
-            "Media",
-            f"Se detectaron {cls_violations} elementos multimedia (imágenes/iframes) sin dimensiones explícitas, propiciando saltos de diseño (CLS)." + format_snippets(elements_cls),
-            "Definir siempre atributos width/height en etiquetas de imágenes o configurar relaciones de aspecto en CSS (aspect-ratio).",
-            {"usabilidad": 8, "eficiencia_desempeno": 8},
-        )
-
-    # 3.4 Coherencia visual con Variables CSS
-    css_inline_text = "".join(el.get("style", "") for el in styled_elements)
-    style_tags = soup.find_all("style")
-    css_tag_text = "".join(tag.get_text() for tag in style_tags)
-    total_css = css_inline_text + css_tag_text
-    if len(total_css) > 500 and "--" not in total_css:
-        add_finding(
-            "Usabilidad",
-            "Estética de la interfaz",
-            "Baja",
-            "Se detectó código CSS/estilos inline que no consumen variables CSS globales del sistema de diseño (Design System).",
-            "Declarar valores comunes de color, tipografía y espaciado como variables CSS (--font-primary, --color-main) para asegurar la coherencia.",
-            {"usabilidad": 5},
-        )
-
-    # 4. EFICIENCIA DE DESEMPEÑO
-    # 4.1 Script y Hojas de estilo excesivas
-    scripts = soup.find_all("script")
-    stylesheets = soup.find_all("link", rel="stylesheet")
-    if len(scripts) > 10:
-        add_finding(
-            "Eficiencia de desempeño",
-            "Comportamiento temporal",
-            "Media",
-            f"Se detectó un exceso de scripts en el documento ({len(scripts)} scripts)." + format_snippets(scripts, 2),
-            "Unificar scripts, utilizar bundles y aplicar técnicas de carga diferida (defer/async).",
-            {"eficiencia_desempeno": 10},
-        )
-
-    if len(stylesheets) > 6:
-        add_finding(
-            "Eficiencia de desempeño",
-            "Utilización de recursos",
-            "Media",
-            f"Se detectaron {len(stylesheets)} hojas de estilo externas." + format_snippets(stylesheets, 2),
-            "Minificar y concatenar archivos CSS, o implementar CSS crítico para mejorar el renderizado inicial.",
-            {"eficiencia_desempeno": 8},
-        )
-
-    if len(images) > 12:
-        add_finding(
-            "Eficiencia de desempeño",
-            "Utilización de recursos",
-            "Media",
-            f"Se detectaron {len(images)} imágenes en el marcado inicial." + format_snippets(images, 2),
-            "Implementar lazy loading nativo (loading='lazy') en imágenes secundarias y optimizar formatos a WebP/AVIF.",
-            {"eficiencia_desempeno": 8},
-        )
-
-    videos = soup.find_all("video")
-    if len(videos) > 1:
-        add_finding(
-            "Eficiencia de desempeño",
-            "Utilización de recursos",
-            "Media",
-            f"Se detectaron {len(videos)} etiquetas de video integradas de forma síncrona." + format_snippets(videos, 2),
-            "Cargar elementos multimedia de forma diferida o mediante reproducción a demanda para no penalizar la red.",
-            {"eficiencia_desempeno": 10},
-        )
-
-    if len(html) > 80000:
-        add_finding(
-            "Eficiencia de desempeño",
-            "Utilización de recursos",
-            "Media",
-            "El tamaño del archivo HTML supera los 80KB.",
-            "Dividir el HTML, remover scripts embebidos pesados e implementar renderizado dinámico o compresión Gzip/Brotli.",
-            {"eficiencia_desempeno": 10, "mantenibilidad": 10},
-        )
-
-    # 4.2 LCP
-    head_tag = soup.find("head")
-    head_scripts_blocking = [
-        s
-        for s in head_tag.find_all("script")
-        if s.get("src") and not s.get("defer") and not s.get("async")
-    ] if head_tag else []
-
-    hero_image = soup.find("img")
-    has_lcp_violation = len(head_scripts_blocking) > 3 or (
-        hero_image and hero_image.get("loading") == "lazy"
-    )
-    if has_lcp_violation:
-        add_finding(
-            "Eficiencia de desempeño",
-            "Comportamiento temporal",
-            "Alta",
-            "Se detectaron bloqueos potenciales al Largest Contentful Paint (LCP) (ej. scripts síncronos en el <head> o imagen hero cargada diferida)." + format_snippets(head_scripts_blocking, 2),
-            "Remover el atributo loading='lazy' de la imagen de portada/hero, y asegurar que los scripts del head utilicen defer o async.",
-            {"eficiencia_desempeno": 10},
-        )
-
-    # 4.3 INP
-    inline_events = []
-    for tag in soup.find_all(True):
-        for attr in tag.attrs:
-            if attr.lower().startswith("on"):
-                inline_events.append(tag)
-
-    if len(inline_events) > 5:
-        add_finding(
-            "Eficiencia de desempeño",
-            "Comportamiento temporal",
-            "Media",
-            f"Se detectaron {len(inline_events)} manejadores de eventos JavaScript inline, lo que puede degradar la interacción al usuario (INP)." + format_snippets(inline_events, 2),
-            "Mudar los manejadores de eventos inline (onclick) hacia listeners en archivos JS externos (.addEventListener).",
-            {"eficiencia_desempeno": 10},
-        )
-
-    # 4.4 Tree Shaking
-    cdn_scripts = [
-        s.get("src", "")
-        for s in scripts
-        if "cdn" in s.get("src", "") or "cdnjs" in s.get("src", "")
-    ]
-    heavy_libs_detected = [
-        lib
-        for lib in ["lodash", "moment", "jquery", "bootstrap"]
-        for src in cdn_scripts
-        if lib in src.lower()
-    ]
-    if heavy_libs_detected:
-        add_finding(
-            "Eficiencia de desempeño",
-            "Utilización de recursos",
-            "Media",
-            f"Se detectaron scripts CDN para librerías pesadas completas ({', '.join(set(heavy_libs_detected))}) sin Tree Shaking.",
-            "Migrar a módulos ES6 importados de forma selectiva o utilizar empaquetadores como Vite/Webpack para agrupar únicamente el código en uso.",
-            {"eficiencia_desempeno": 8},
-        )
-
-    # 5. COMPATIBILIDAD
-    # 5.1 Fuga de estilos CSS
-    global_selectors = []
-    for tag in style_tags:
-        css_text = tag.get_text()
-        found_tags = re.findall(
-            r"(?:^|[\s,])(body|div|p|span|button|a|input|h1|h2|h3)\s*\{",
-            css_text,
-        )
-        global_selectors.extend(found_tags)
-
-    if global_selectors:
-        add_finding(
-            "Compatibilidad",
-            "Coexistencia",
-            "Alta",
-            f"Se detectaron estilos globales directos sobre etiquetas HTML ({', '.join(set(global_selectors))}) en el bloque <style>.",
-            "Utilizar CSS encapsulado (CSS Modules, BEM o scoped styles) para evitar colisión de estilos con otros componentes del DOM.",
-            {"compatibilidad": 10},
-        )
-
-    # 5.2 Polución del objeto global window
-    script_texts = "".join(s.get_text() for s in scripts)
-    if "window." in script_texts:
-        assignments = re.findall(r"window\.[a-zA-Z0-9_]+\s*=", script_texts)
-        if len(assignments) > 0:
-            add_finding(
-                "Compatibilidad",
-                "Coexistencia",
-                "Alta",
-                "Se detectó polución del objeto global 'window' mediante scripts inline.",
-                "Encapsular las variables en funciones autoejecutables (IIFE) o variables locales dentro de módulos JavaScript.",
-                {"compatibilidad": 10},
-            )
-
-    # 5.3 Validación de esquemas API
-    has_fetch = "fetch(" in script_texts or "axios" in script_texts
-    has_schema_validation = any(
-        kw in script_texts.lower()
-        for kw in ["zod", "z.object", "validate", "yup", "schema", "joi"]
-    )
-    if has_fetch and not has_schema_validation:
-        add_finding(
-            "Compatibilidad",
-            "Interoperabilidad",
-            "Media",
-            "Se detectaron peticiones de red (fetch/axios) pero no se encuentra código de validación de esquemas (Zod/TypeScript).",
-            "Implementar validadores de esquemas como Zod para asegurar que los datos de entrada de la API cumplan con la estructura requerida.",
-            {"compatibilidad": 10},
-        )
-
-    # 6. FIABILIDAD
-    # 6.1 React SPA Error Boundaries
-    is_spa = any("react" in s.lower() for s in cdn_scripts) or soup.find(
-        id=["root", "app"]
-    )
-    has_error_handler = any(
-        kw in script_texts.lower()
-        for kw in ["onerror", "unhandledrejection", "errorboundary", "catch"]
-    )
-    if is_spa and not has_error_handler:
-        add_finding(
-            "Fiabilidad",
-            "Tolerancia a fallos",
-            "Alta",
-            "No se detectaron Error Boundaries ni manejadores de excepciones globales en el frontend de tipo Single Page Application (SPA).",
-            "Incorporar Error Boundaries en componentes jerárquicos clave de React para aislar y recuperar errores visuales.",
-            {"fiabilidad": 10},
-        )
-
-    # 6.2 Retry policies y timeouts en llamadas HTTP
-    if has_fetch:
-        has_timeout = "timeout" in script_texts.lower() or "abortcontroller" in script_texts.lower()
-        has_retry = "retry" in script_texts.lower()
-        if not (has_timeout or has_retry):
-            add_finding(
-                "Fiabilidad",
-                "Tolerancia a fallos",
-                "Media",
-                "Se detectaron llamadas HTTP sin políticas de reintento ni configuración de timeouts.",
-                "Configurar un tiempo límite de expiración (timeout) y reintentos automáticos para evitar llamadas colgadas por latencia de red.",
-                {"fiabilidad": 10},
-            )
-
-    # 7. SEGURIDAD FRONTEND
-    # 7.1 XSS vía innerHTML o dangerouslySetInnerHTML sin DOMPurify
-    has_unsafe_html = "innerhtml" in script_texts.lower() or "dangerouslysetinnerhtml" in script_texts.lower()
-    has_purify = "dompurify" in script_texts.lower() or "purify" in script_texts.lower()
-    if has_unsafe_html and not has_purify:
-        add_finding(
-            "Seguridad",
-            "Confidencialidad e integridad",
-            "Alta",
-            "Se detectó el uso de inserción directa de HTML dinámico (innerHTML) sin uso de librerías de sanitización como DOMPurify.",
-            "Sanitizar siempre los fragmentos de HTML dinámico con DOMPurify antes de cargarlos en el DOM para mitigar ataques XSS.",
-            {"seguridad": 15},
-        )
-
-    # 7.2 Almacenamiento sensible en localStorage/sessionStorage
-    has_storage = "localstorage" in script_texts.lower() or "sessionstorage" in script_texts.lower()
-    has_sensitive_keys = any(
-        k in script_texts.lower()
-        for k in ["jwt", "token", "password", "session", "cred"]
-    )
-    if has_storage and has_sensitive_keys:
-        add_finding(
-            "Seguridad",
-            "Confidencialidad",
-            "Alta",
-            "Se detectó el almacenamiento de información potencialmente sensible (tokens/jwt) en localStorage o sessionStorage.",
-            "Mudar el almacenamiento de tokens de sesión a cookies seguras con atributos HttpOnly, Secure y SameSite=Strict.",
-            {"seguridad": 15},
-        )
-
-    # 8. MANTENIBILIDAD
-    # 8.1 Modularidad
-    dom_signatures = []
-    for parent in soup.find_all(True):
-        children = parent.find_all(recursive=False)
-        if len(children) > 3:
-            sig = "-".join(c.name for c in children)
-            if sig not in ["li-li-li-li", "tr-tr-tr-tr", "option-option-option-option"]:
-                dom_signatures.append(sig)
-
-    duplicated_sigs = [s for s in set(dom_signatures) if dom_signatures.count(s) > 3]
-    if len(duplicated_sigs) > 0:
-        add_finding(
-            "Mantenibilidad",
-            "Modularidad",
-            "Media",
-            "Se detectó duplicación de estructuras complejas en el DOM que no están modularizadas.",
-            "Identificar patrones repetitivos en el marcado y modularizarlos en componentes de UI reutilizables.",
-            {"mantenibilidad": 10},
-        )
-
-    # 8.2 Acoplamiento excesivo de lógica HTTP en elementos visuales
-    body_tag = soup.find("body")
-    inline_body_scripts_with_fetch = []
-    if body_tag:
-        for s in body_tag.find_all("script"):
-            if "fetch(" in s.get_text() or "axios" in s.get_text():
-                inline_body_scripts_with_fetch.append(s)
-
-    if inline_body_scripts_with_fetch:
-        add_finding(
-            "Mantenibilidad",
-            "Capacidad de ser modificado",
-            "Media",
-            "Se detectaron scripts de comunicación HTTP directamente incrustados dentro de los contenedores visuales de la interfaz.",
-            "Desacoplar la lógica de red de las vistas. Centralizar las peticiones HTTP en módulos de servicios o hooks dedicados.",
-            {"mantenibilidad": 10},
-        )
-
-    # 8.3 Divitis y baja semántica
-    div_count = len(soup.find_all("div"))
-    semantic_count = len(
-        soup.find_all(
-            ["main", "section", "article", "header", "footer", "nav", "aside"]
-        )
-    )
-    if div_count > 25 and semantic_count < 5:
-        add_finding(
-            "Mantenibilidad",
-            "Modularidad",
-            "Media",
-            f"Se detectó un uso excesivo de etiquetas <div> ({div_count}) en relación a etiquetas semánticas ({semantic_count}).",
-            "Reemplazar contenedores genéricos <div> por etiquetas semánticas de HTML5 (section, article, header, footer) para mejorar la legibilidad del DOM.",
-            {"mantenibilidad": 10, "adecuacion_funcional": 5},
-        )
-
-    # 8.4 Estilos inline
-    inline_styles = soup.find_all(style=True)
-    if len(inline_styles) > 20:
-        add_finding(
-            "Mantenibilidad",
-            "Capacidad de ser modificado",
-            "Media",
-            f"Se detectaron {len(inline_styles)} elementos con estilos inline directos." + format_snippets(inline_styles, 2),
-            "Migrar estilos inline hacia clases en hojas de estilo CSS reutilizables para facilitar la mantenibilidad.",
-            {"mantenibilidad": min(15, len(inline_styles))},
-        )
-
-    # 8.5 IDs duplicados
-    duplicated_ids = []
-    seen_ids = set()
-    for tag in soup.find_all(attrs={"id": True}):
-        tag_id = tag.get("id")
-        if tag_id in seen_ids:
-            duplicated_ids.append(tag_id)
-        seen_ids.add(tag_id)
-
-    if duplicated_ids:
-        add_finding(
-            "Mantenibilidad",
-            "Analizabilidad",
-            "Media",
-            f"Se detectaron identificadores (id) duplicados en el DOM: {len(set(duplicated_ids))}." + " (Ejemplo: " + ", ".join(list(set(duplicated_ids))[:3]) + ")",
-            "Asegurar la unicidad de cada atributo 'id' en el documento HTML para cumplir con los estándares DOM y accesibilidad.",
-            {"mantenibilidad": 10, "accesibilidad": 5},
-        )
-
-    # 9. PORTABILIDAD Y ADAPTABILIDAD
-    # 9.1 Estructura base
-    if not soup.find("html") or not soup.find("body"):
-        add_finding(
-            "Portabilidad",
-            "Adaptabilidad",
-            "Media",
-            "El documento HTML está incompleto y carece de las etiquetas base estándar (html, body).",
-            "Completar la estructura básica del documento incluyendo las etiquetas html, head y body válidas.",
-            {"portabilidad": 10},
-        )
-
-    if not soup.find("head"):
-        add_finding(
-            "Portabilidad",
-            "Adaptabilidad",
-            "Media",
-            "No se detectó la sección <head> en el HTML.",
-            "Agregar el elemento <head> para contener los metadatos globales, título y recursos necesarios.",
-            {"portabilidad": 5},
-        )
-
-    # 9.2 Meta viewport
-    if not soup.find("meta", attrs={"name": "viewport"}):
-        add_finding(
-            "Portabilidad",
-            "Adaptabilidad",
-            "Alta",
-            "No se detectó la etiqueta <meta name='viewport'> para diseño responsive.",
-            "Agregar <meta name='viewport' content='width=device-width, initial-scale=1.0'> para habilitar el escalamiento responsive.",
-            {"compatibilidad": 15, "portabilidad": 10},
-        )
-
-    # 9.3 Diseños rígidos con ancho fijo en px
-    rigid_layouts = 0
-    for w in re.findall(r"width\s*:\s*(\d+)px", total_css):
-        if int(w) > 400:
-            rigid_layouts += 1
-
-    if rigid_layouts > 0:
-        add_finding(
-            "Portabilidad",
-            "Adaptabilidad",
-            "Alta",
-            f"Se detectaron {rigid_layouts} reglas de ancho rígido en píxeles (width: >400px) en la estructura.",
-            "Reemplazar anchos fijos en píxeles por unidades de diseño flexible (%, vw, rem, flex) para facilitar la portabilidad en diversos dispositivos.",
-            {"portabilidad": 10},
-        )
-
-    # 10. MÉTRICAS DE EJECUCIÓN (medidas por Playwright sobre la página original)
-    for dimension, sub, severity, text, recommendation, penalties in runtime_findings(runtime_metrics):
-        add_finding(dimension, sub, severity, text, recommendation, penalties)
-
-    # CALCULO DE PUNTAJES FINAL POR PROMEDIO REAL
-    # Sólo las características seleccionadas entran al promedio.
-    clamped_scores = {key: clamp(value) for key, value in scores.items() if key in selected}
-    global_score = round(sum(clamped_scores.values()) / len(clamped_scores))
-
-    # Escala de severidad 0–4 en cada hallazgo
-    for finding in findings:
-        grade = severity_grade(finding["severity"])
-        finding["severity_grade"] = grade["grade"]
-        finding["severity_grade_label"] = grade["label"]
+    soup = BeautifulSoup(html, "html.parser")
+    metrics = [m for m in compute_metrics(soup, runtime_metrics, evidence, expected_functions)
+               if m["characteristic"] in selected]
+    scores, not_evaluated = score_characteristics(metrics, selected)
+    global_score = round(sum(scores.values()) / len(scores)) if scores else 0
+    findings = findings_from_metrics(metrics)
+    decision = decision_criterion(global_score)
 
     return {
+        **base,
         "global_score": global_score,
-        "quality_level": get_level(global_score),
-        "scores": clamped_scores,
+        "quality_level": decision["category"],
+        "quality_decision": decision,
+        "scores": scores,
+        "not_evaluated": not_evaluated,
         "total_findings": len(findings),
         "findings": findings,
-        "engineering_tips": ["Optimizar el marcado HTML y refactorizar dependencias para lograr la conformidad."],
-        "strict_mode": True,
-        "quality_decision": decision_criterion(global_score),
-        "evaluated_characteristics": selected,
-        "metrics": compute_metrics(soup, html, runtime_metrics),
-        "runtime_metrics": runtime_metrics or None,
-        "evaluation_scope": evaluation_scope(selected),
-        "restrictions": evaluation_restrictions(bool(runtime_metrics)),
+        "engineering_tips": _engineering_tips(findings),
+        "metrics": metrics,
     }

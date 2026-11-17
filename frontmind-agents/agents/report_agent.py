@@ -1,7 +1,9 @@
 from datetime import datetime
 
 from services.iso_framework import (
+    CHARACTERISTICS,
     SEVERITY_GRADES,
+    compliance_of,
     decision_criterion,
     evaluation_restrictions,
     evaluation_scope,
@@ -25,24 +27,23 @@ class ReportAgent:
             worst_score = 101
             all_findings = []
             
-            total_dimension_scores = {}
+            dimension_values: dict[str, list] = {}
 
             for eval_item in evaluation_data:
                 # the item might be the direct result from ISOEvaluationAgent
                 inner_eval = eval_item.get("evaluation", eval_item)
                 score = inner_eval.get("global_score", 0)
                 findings = inner_eval.get("findings", [])
-                
-                # accumulate dimension scores
-                eval_scores = inner_eval.get("scores", {})
-                for k, v in eval_scores.items():
-                    total_dimension_scores[k] = total_dimension_scores.get(k, 0) + v
+
+                # Cada característica se promedia sólo entre las interfaces donde se evaluó
+                for k, v in (inner_eval.get("scores") or {}).items():
+                    if isinstance(v, (int, float)):
+                        dimension_values.setdefault(k, []).append(v)
 
                 total_score += score
                 total_findings += len(findings)
-                all_findings.extend(findings)
-
                 name = eval_item.get("name", inner_eval.get("name", "Desconocida"))
+                all_findings.extend({**f, "interface": name} for f in findings)
 
                 if score > best_score:
                     best_score = score
@@ -52,23 +53,8 @@ class ReportAgent:
                     worst_iface = name
 
             avg_score = round(total_score / total_interfaces) if total_interfaces > 0 else 0
-            
-            avg_scores = {}
-            if total_interfaces > 0:
-                for k, v in total_dimension_scores.items():
-                    avg_scores[k] = round(v / total_interfaces)
-            
-            # Determine quality level based on avg_score
-            if avg_score >= 90:
-                quality_level = "Excelente"
-            elif avg_score >= 80:
-                quality_level = "Alto"
-            elif avg_score >= 60:
-                quality_level = "Medio"
-            elif avg_score >= 40:
-                quality_level = "Bajo"
-            else:
-                quality_level = "Crítico"
+            avg_scores = {k: round(sum(v) / len(v)) for k, v in dimension_values.items()}
+            quality_level = decision_criterion(avg_score)["category"]
 
             severity_summary = self.build_severity_summary(all_findings)
             dimension_summary = self.build_dimension_summary(all_findings)
@@ -77,7 +63,7 @@ class ReportAgent:
             return {
                 "agent": "ReportAgent",
                 "status": "completed",
-                "standard": "ISO/IEC 25010",
+                "standard": "ISO/IEC 25010:2023",
                 "scope": "Frontend (Consolidado)",
                 "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "summary": {
@@ -122,7 +108,7 @@ class ReportAgent:
             return {
                 "agent": "ReportAgent",
                 "status": "completed",
-                "standard": "ISO/IEC 25010",
+                "standard": "ISO/IEC 25010:2023",
                 "scope": "Frontend",
                 "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "summary": {
@@ -147,15 +133,21 @@ class ReportAgent:
 
     def build_normative_section(self, global_score, findings, evaluations):
         evaluations = [e for e in evaluations if isinstance(e, dict)]
-        selected = normalize_selection(
-            next((e.get("evaluated_characteristics") for e in evaluations if e.get("evaluated_characteristics")), None)
-        )
-        has_runtime = any(e.get("runtime_metrics") for e in evaluations)
+        union: list[str] = []
+        for e in evaluations:
+            for key in e.get("evaluated_characteristics") or []:
+                if key not in union:
+                    union.append(key)
+        selected = normalize_selection(union or None)
+        has_runtime = any(e.get("evidence_received") or e.get("runtime_metrics") for e in evaluations)
+        evaluated = {k for e in evaluations for k in (e.get("scores") or {})}
         return {
             "quality_decision": decision_criterion(global_score),
             "severity_grade_summary": self.build_severity_grade_summary(findings),
             "metrics": self.aggregate_metrics(evaluations),
             "evaluated_characteristics": selected,
+            "characteristic_labels": {k: CHARACTERISTICS[k] for k in selected},
+            "not_evaluated": [k for k in selected if k not in evaluated],
             "evaluation_scope": evaluation_scope(selected),
             "restrictions": evaluation_restrictions(has_runtime),
         }
@@ -171,58 +163,55 @@ class ReportAgent:
     def aggregate_metrics(self, evaluations):
         """
         Consolida las métricas de varias interfaces:
-          - X = A/B  → X = ΣA / ΣB (proporción sobre el total del sistema)
-          - valores  → promedio de las interfaces donde se midieron
+          - proporciones y binarias → X = ΣA / ΣB (sobre el total del sistema)
+          - conteos                 → suma de ocurrencias
+          - valores máximos         → promedio de las interfaces medidas
         """
-        merged = {}
+        merged: dict[str, dict] = {}
         for evaluation in evaluations:
             for metric in evaluation.get("metrics") or []:
                 entry = merged.setdefault(metric["id"], {**metric, "_A": 0, "_B": 0, "_values": [], "interfaces": 0})
                 if metric.get("X") is None:
                     continue
                 entry["interfaces"] += 1
-                if metric.get("formula") == "X = A / B" and metric.get("B"):
-                    entry["_A"] += metric["A"]
-                    entry["_B"] += metric["B"]
+                if metric.get("kind") == "ratio":
+                    entry["_A"] += metric.get("A") or 0
+                    entry["_B"] += metric.get("B") or 0
+                elif metric.get("kind") == "binary":
+                    entry["_A"] += metric["X"]
+                    entry["_B"] += 1
                 else:
                     entry["_values"].append(metric["X"])
 
         result = []
         for entry in merged.values():
-            target_text = entry.get("target", "")
-            if entry.get("formula") == "X = A / B":
-                a, b = entry.pop("_A"), entry.pop("_B")
-                entry.pop("_values")
+            a, b, values = entry.pop("_A"), entry.pop("_B"), entry.pop("_values")
+            kind, target = entry.get("kind"), entry.get("target_value") or 1
+            if not entry["interfaces"]:
+                result.append(entry)
+                continue
+            if kind in ("ratio", "binary"):
                 x = round(a / b, 3) if b else None
-                target = float(target_text.split("≥")[-1]) if "≥" in target_text else None
-                entry.update({
-                    "A": a, "B": b, "X": x,
-                    "meets": (x >= target) if (x is not None and target is not None) else None,
-                    "severity_grade": grade_from_compliance(min(1.0, x / target)) if (x is not None and target) else None,
-                    "status": "medido" if x is not None else entry.get("status"),
-                })
+                if kind == "binary":
+                    entry["formula"] = "X = interfaces que cumplen / interfaces medidas"
+                entry.update({"A": a, "B": b, "X": x})
+                c = compliance_of("ratio", x, target if kind == "ratio" else 1.0)
+            elif kind == "count":
+                x = sum(values)
+                entry["X"] = x
+                c = compliance_of("count", x, 0)
             else:
-                values = entry.pop("_values")
-                entry.pop("_A"), entry.pop("_B")
-                if values:
-                    x = round(sum(values) / len(values), 3)
-                    entry["X"] = x
-                    entry["meets"] = all(self._meets_value(v, target_text) for v in values)
-                    entry["severity_grade"] = 0 if entry["meets"] else 3
+                x = round(sum(values) / len(values), 3)
+                entry["X"] = x
+                c = compliance_of("max", x, target)
+            entry.update({
+                "compliance": round(c, 3) if c is not None else None,
+                "meets": (c >= 0.999) if c is not None else None,
+                "severity_grade": grade_from_compliance(c),
+                "status": "medido" if entry.get("scored", True) else "informativo",
+            })
             result.append(entry)
         return result
-
-    @staticmethod
-    def _meets_value(value, target_text):
-        """Evalúa metas del tipo "X ≤ 800 ms" o "1 ≤ X < 15"."""
-        try:
-            if "X <" in target_text:
-                return value < float(target_text.split("X <")[-1].split()[0])
-            if "X ≤" in target_text:
-                return value <= float(target_text.split("X ≤")[-1].split()[0])
-        except (ValueError, IndexError):
-            pass
-        return True
 
     def build_severity_summary(self, findings):
         summary = {
@@ -274,7 +263,7 @@ class ReportAgent:
             return (
                 "La interfaz frontend presenta un nivel de calidad excelente. "
                 "Los hallazgos detectados son mínimos y no comprometen de forma "
-                "significativa la eficiencia, accesibilidad o mantenibilidad del artefacto evaluado."
+                "significativa su funcionalidad, seguridad, compatibilidad ni capacidad de interacción."
             )
 
         if global_score >= 80:
@@ -288,7 +277,7 @@ class ReportAgent:
             return (
                 "La interfaz frontend presenta un nivel de calidad medio. "
                 "Se identificaron deficiencias técnicas que deben corregirse para mejorar "
-                "la experiencia del usuario, la accesibilidad y la sostenibilidad del código."
+                "la interacción, la seguridad y la fiabilidad de la interfaz."
             )
 
         if global_score >= 40:

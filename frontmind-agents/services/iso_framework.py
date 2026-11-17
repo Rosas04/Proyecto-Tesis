@@ -1,15 +1,27 @@
 """
-services/iso_framework.py — Operacionalización de ISO/IEC 25010 para frontend.
+services/iso_framework.py — Operacionalización de ISO/IEC 25010:2023 para frontend.
 
-La norma es un modelo conceptual: no prescribe algoritmos de medición
-(restricción 1). Este módulo hace explícito el mapeo característica →
-subcaracterística → métrica medible, define la escala de severidad 0–4, el criterio de decisión 0–10, la
-selección de características y las condiciones de la evaluación y declara qué NO puede medirse
-de forma automática (restricciones 2–5).
+La norma es un modelo conceptual: no prescribe algoritmos de medición. Este
+módulo hace explícito el mapeo característica → subcaracterística → métrica,
+define cómo se calcula cada puntaje y declara qué NO puede medirse de forma
+automática.
 
-Las métricas siguen la forma X = A / B, adaptadas al
-artefacto que audita FrontMind: el DOM renderizado de una interfaz y las
-métricas de ejecución registradas por Playwright.
+Características evaluadas
+  Núcleo (siempre): Adecuación funcional, Capacidad de interacción, Compatibilidad,
+                    Flexibilidad, Seguridad y Fiabilidad.
+  Opcional:         Eficiencia de desempeño (sólo si se solicita).
+  Excluida:         Mantenibilidad: exige el código fuente y su historial, no la
+                    interfaz desplegada que audita FrontMind.
+
+Puntaje
+  Cada métrica produce un cumplimiento c ∈ [0, 1]:
+    proporción  X = A/B      → c = min(1, X / meta)
+    binaria     X ∈ {0, 1}   → c = X
+    conteo      X = nº fallos (meta 0)    → c = 1 / (1 + X)
+    máximo      X ≤ umbral               → c = min(1, umbral / X)
+  Puntaje de la característica = 100 · Σ(peso·c) / Σ(peso) de sus métricas
+  medidas. Una característica sin métricas medidas queda "no evaluada" y no
+  entra al puntaje global (promedio de las características evaluadas).
 """
 from __future__ import annotations
 
@@ -17,34 +29,57 @@ import re
 from typing import Any, Optional
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Características (claves internas usadas en los puntajes)
+# Características
 # ─────────────────────────────────────────────────────────────────────────────
 
 CHARACTERISTICS = {
     "adecuacion_funcional": "Adecuación funcional",
-    "eficiencia_desempeno": "Eficiencia de desempeño",
-    "usabilidad": "Usabilidad (capacidad de interacción)",
-    "accesibilidad": "Accesibilidad (subcaracterística de usabilidad, tratada aparte)",
-    "mantenibilidad": "Mantenibilidad",
+    "capacidad_interaccion": "Capacidad de interacción",
     "compatibilidad": "Compatibilidad",
+    "flexibilidad": "Flexibilidad",
     "seguridad": "Seguridad",
-    "portabilidad": "Portabilidad (flexibilidad en ISO/IEC 25010:2023)",
+    "fiabilidad": "Fiabilidad",
+    "eficiencia_desempeno": "Eficiencia de desempeño",
 }
+CORE_CHARACTERISTICS = [
+    "adecuacion_funcional", "capacidad_interaccion", "compatibilidad",
+    "flexibilidad", "seguridad", "fiabilidad",
+]
+OPTIONAL_CHARACTERISTICS = ["eficiencia_desempeno"]
+
+# Claves de versiones anteriores (ISO/IEC 25010:2011 y FrontMind ≤ 1.1)
+LEGACY_ALIASES = {
+    "usabilidad": "capacidad_interaccion",
+    "accesibilidad": "capacidad_interaccion",
+    "portabilidad": "flexibilidad",
+}
+
+
+def normalize_selection(characteristics: Optional[list[str]]) -> list[str]:
+    """Subconjunto priorizado. Vacío/None = las seis características núcleo."""
+    if not characteristics:
+        return list(CORE_CHARACTERISTICS)
+    selected: list[str] = []
+    for c in characteristics:
+        key = LEGACY_ALIASES.get(c, c)
+        if key in CHARACTERISTICS and key not in selected:
+            selected.append(key)
+    return [c for c in CHARACTERISTICS if c in selected] or list(CORE_CHARACTERISTICS)
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Escala de severidad (0–4) y criterio de decisión (0–10)
 # ─────────────────────────────────────────────────────────────────────────────
 
 SEVERITY_GRADES = {
-    0: {"label": "No", "criterion": "Cumplimiento satisfactorio (> 90 %)"},
+    0: {"label": "No", "criterion": "Cumplimiento satisfactorio (≥ 90 %)"},
     1: {"label": "Cosmético", "criterion": "Defecto menor que no impide la operación (51 % – 89 %)"},
     2: {"label": "Menor", "criterion": "Inconveniente local que afecta la fluidez (11 % – 50 %)"},
     3: {"label": "Mayor", "criterion": "Fallo grave que dificulta completar tareas clave (1 % – 10 %)"},
     4: {"label": "Catastrófico", "criterion": "Bloqueo crítico o incumplimiento total (< 1 %)"},
 }
-
-# Severidad cualitativa usada por las reglas → grado 0–4
-_SEVERITY_TO_GRADE = {"Crítica": 4, "Alta": 3, "Media": 2, "Baja": 1}
+_GRADE_TO_SEVERITY = {4: "Crítica", 3: "Alta", 2: "Media", 1: "Baja"}
+_SEVERITY_TO_GRADE = {v: k for k, v in _GRADE_TO_SEVERITY.items()}
 
 
 def severity_grade(severity: str) -> dict:
@@ -53,7 +88,7 @@ def severity_grade(severity: str) -> dict:
 
 
 def grade_from_compliance(ratio: Optional[float]) -> Optional[int]:
-    """Grado 0–4 a partir del porcentaje de cumplimiento de una métrica X = A/B."""
+    """Grado 0–4 a partir del cumplimiento (0–1) de una métrica."""
     if ratio is None:
         return None
     pct = ratio * 100
@@ -72,7 +107,6 @@ def decision_criterion(global_score_100: float) -> dict:
     """
     Criterio de decisión sobre escala 0–10:
       [9.0 – 10.0] Alta · ]6.0 – 9.0[ Buena · ]2.0 – 6.0] Regular · [0.0 – 2.0] Mala
-    (9.0 se asigna a "Alta" para resolver el solapamiento de los intervalos.)
     """
     score_10 = round(max(0.0, min(100.0, float(global_score_100))) / 10, 1)
     if score_10 >= 9.0:
@@ -80,14 +114,14 @@ def decision_criterion(global_score_100: float) -> dict:
     elif score_10 > 6.0:
         category, meaning = "Buena calidad", "Cumplimiento adecuado con observaciones menores."
     elif score_10 > 2.0:
-        category, meaning = "Regular calidad", "Presencia de deuda técnica o barreras moderadas."
+        category, meaning = "Regular calidad", "Presencia de barreras o defectos moderados."
     else:
         category, meaning = "Mala calidad", "Deficiencias críticas que requieren reestructuración."
     return {"score_10": score_10, "category": category, "meaning": meaning}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Alcance: qué se mide, cómo y qué queda fuera (restricciones 3, 4 y 5)
+# Alcance: subcaracterísticas, método y límites
 # ─────────────────────────────────────────────────────────────────────────────
 
 AUTOMATED, PARTIAL, MANUAL = "automatizada", "parcial (indicador aproximado)", "no automatizable"
@@ -95,89 +129,114 @@ AUTOMATED, PARTIAL, MANUAL = "automatizada", "parcial (indicador aproximado)", "
 QUALITY_MODEL: list[dict[str, Any]] = [
     # Adecuación funcional
     {"characteristic": "adecuacion_funcional", "sub": "Completitud funcional", "automation": PARTIAL,
-     "method": "Presencia de estructura principal (<main>, <h1>, controles, estados de carga/error).",
-     "limit": "Sin la especificación de requisitos no puede verificarse que se cubran todas las tareas del usuario."},
-    {"characteristic": "adecuacion_funcional", "sub": "Exactitud funcional", "automation": MANUAL,
-     "method": "Pruebas funcionales con casos y resultados esperados.",
-     "limit": "Requiere oráculos de prueba y datos esperados; no se infiere del DOM."},
+     "method": "AF-01: funciones esperadas (declaradas por el evaluador) presentes en la interfaz.",
+     "limit": "Requiere la lista de funciones esperadas; sin ella no se evalúa."},
+    {"characteristic": "adecuacion_funcional", "sub": "Corrección funcional", "automation": AUTOMATED,
+     "method": "AF-02 enlaces internos que responden sin error; AF-03 imágenes de contenido que cargan.",
+     "limit": "No verifica que los cálculos o datos mostrados sean correctos (requiere oráculos de prueba)."},
     {"characteristic": "adecuacion_funcional", "sub": "Pertinencia funcional", "automation": PARTIAL,
-     "method": "Navegación (<nav>) y controles interactivos disponibles.",
-     "limit": "Contar los pasos necesarios para una tarea requiere escenarios de uso definidos."},
-    # Eficiencia de desempeño
-    {"characteristic": "eficiencia_desempeno", "sub": "Comportamiento temporal", "automation": AUTOMATED,
-     "method": "TTFB, LCP y carga medidos con Playwright (Chromium) sobre la página original.",
-     "limit": "Medido desde el servidor de evaluación: depende de su red y hardware, no del dispositivo del usuario."},
-    {"characteristic": "eficiencia_desempeno", "sub": "Utilización de recursos", "automation": AUTOMATED,
-     "method": "Bytes transferidos, número de peticiones y memoria JS del cliente (Playwright).",
-     "limit": "transferSize es 0 para recursos de otro origen sin Timing-Allow-Origin; la CPU no se mide."},
-    {"characteristic": "eficiencia_desempeno", "sub": "Capacidad", "automation": MANUAL,
-     "method": "Pruebas de carga y concurrencia (p. ej. Locust).",
-     "limit": "Requiere generar carga sobre el sistema auditado, fuera del alcance de una auditoría pasiva."},
-    # Usabilidad / capacidad de interacción
-    {"characteristic": "usabilidad", "sub": "Inteligibilidad (reconocimiento de adecuación)", "automation": MANUAL,
-     "method": "Cuestionarios o juicio de expertos.",
-     "limit": "Depende de la percepción del usuario sobre sus propias necesidades."},
-    {"characteristic": "usabilidad", "sub": "Capacidad de aprendizaje", "automation": MANUAL,
-     "method": "Tiempo para completar la tarea correctamente en pruebas con usuarios.",
-     "limit": "Requiere participantes reales y cronometraje de tareas."},
-    {"characteristic": "usabilidad", "sub": "Operabilidad", "automation": PARTIAL,
-     "method": "Controles operables, foco de teclado y adaptación a 3 resoluciones.",
-     "limit": "Los pasos por unidad de tiempo requieren observar tareas reales."},
-    {"characteristic": "usabilidad", "sub": "Protección contra errores del usuario", "automation": AUTOMATED,
-     "method": "Proporción de campos con validación declarativa y mensajes de estado (aria-live/role=alert).",
+     "method": "AF-04: funciones esperadas disponibles como control operable (enlace, botón o campo).",
+     "limit": "Requiere la lista de funciones esperadas; no mide el número de pasos de una tarea."},
+    # Capacidad de interacción
+    {"characteristic": "capacidad_interaccion", "sub": "Reconocibilidad de adecuación", "automation": MANUAL,
+     "method": "Cuestionarios o juicio de expertos.", "limit": "Depende de la percepción del usuario."},
+    {"characteristic": "capacidad_interaccion", "sub": "Aprendibilidad", "automation": MANUAL,
+     "method": "Tiempo para completar tareas en pruebas con usuarios.", "limit": "Requiere participantes reales."},
+    {"characteristic": "capacidad_interaccion", "sub": "Operabilidad", "automation": AUTOMATED,
+     "method": "CI-08 objetivos táctiles ≥ 24 px (WCAG 2.5.8), CI-09 orden de foco (2.4.3), CI-15 texto legible en móvil.",
+     "limit": "No mide el esfuerzo real de operación de una tarea."},
+    {"characteristic": "capacidad_interaccion", "sub": "Protección contra errores del usuario", "automation": AUTOMATED,
+     "method": "CI-10 validación declarativa, CI-11 autocompletado de datos personales (WCAG 1.3.5).",
      "limit": "No mide la tasa real de recuperación ante entradas inválidas."},
-    {"characteristic": "usabilidad", "sub": "Estética de la interfaz", "automation": PARTIAL,
-     "method": "Inspección objetiva: uniformidad de paleta, variables CSS, longitud de párrafos.",
-     "limit": "El agrado visual es subjetivo: requiere cuestionarios (p. ej. SUS) o juicio experto."},
-    {"characteristic": "accesibilidad", "sub": "Accesibilidad técnica (WCAG: perceptible, operable, comprensible, robusto)",
-     "automation": AUTOMATED,
-     "method": "Texto alternativo, etiquetas, nombres accesibles, idioma, contraste, orden de foco.",
-     "limit": "Las pruebas automáticas detectan sólo una parte de los criterios WCAG; se recomienda revisión con lector de pantalla."},
-    # Mantenibilidad
-    {"characteristic": "mantenibilidad", "sub": "Modularidad", "automation": PARTIAL,
-     "method": "Proporción de elementos semánticos y estilos desacoplados en el DOM.",
-     "limit": "MS1M1/MS1M2 (independencia y acoplamiento de componentes) requieren el código fuente y su grafo de dependencias."},
-    {"characteristic": "mantenibilidad", "sub": "Reusabilidad", "automation": MANUAL,
-     "method": "MS2M1: elementos reutilizados / elementos de la biblioteca.",
-     "limit": "Requiere el repositorio y la biblioteca de componentes del proyecto."},
-    {"characteristic": "mantenibilidad", "sub": "Analizabilidad", "automation": PARTIAL,
-     "method": "Unicidad de identificadores y estructura del DOM.",
-     "limit": "MS3M1/MS3M2 (pistas de auditoría y diagnóstico) requieren acceso a logs y especificación."},
-    {"characteristic": "mantenibilidad", "sub": "Capacidad de ser modificado", "automation": PARTIAL,
-     "method": "MS4M1: complejidad ciclomática aproximada de los scripts embebidos (X = A + 1).",
-     "limit": "En apps empaquetadas el JS está minificado; MS4M3 requiere historial de defectos."},
-    {"characteristic": "mantenibilidad", "sub": "Capacidad de ser probado", "automation": MANUAL,
-     "method": "MS5M1/MS5M2: cobertura y autonomía de las pruebas.",
-     "limit": "Requiere el código fuente y la suite de pruebas."},
+    {"characteristic": "capacidad_interaccion", "sub": "Compromiso del usuario", "automation": MANUAL,
+     "method": "Cuestionarios (p. ej. SUS, UEQ).", "limit": "Atributo subjetivo."},
+    {"characteristic": "capacidad_interaccion", "sub": "Inclusividad", "automation": AUTOMATED,
+     "method": "CI-01…CI-07: texto alternativo, etiquetas, nombres accesibles, idioma, contraste y zoom (WCAG 2.2 AA).",
+     "limit": "Las pruebas automáticas cubren sólo una parte de WCAG; se recomienda revisión con lector de pantalla."},
+    {"characteristic": "capacidad_interaccion", "sub": "Asistencia al usuario", "automation": PARTIAL,
+     "method": "CI-12: región de mensajes de estado en interfaces con formularios (WCAG 4.1.3).",
+     "limit": "No evalúa la calidad de la ayuda ofrecida."},
+    {"characteristic": "capacidad_interaccion", "sub": "Autodescriptividad", "automation": AUTOMATED,
+     "method": "CI-13 título de página (WCAG 2.4.2), CI-14 encabezado principal.",
+     "limit": "No evalúa si el texto es comprensible."},
     # Compatibilidad
-    {"characteristic": "compatibilidad", "sub": "Coexistencia e interoperabilidad", "automation": PARTIAL,
-     "method": "Estilos globales, polución de window, viewport responsive.",
-     "limit": "No se ejecuta en varios navegadores; sólo Chromium."},
+    {"characteristic": "compatibilidad", "sub": "Coexistencia", "automation": PARTIAL,
+     "method": "CO-04: variables globales añadidas al entorno compartido del navegador.",
+     "limit": "No se prueba junto a otros productos concretos (extensiones, widgets)."},
+    {"characteristic": "compatibilidad", "sub": "Interoperabilidad", "automation": AUTOMATED,
+     "method": "CO-01 peticiones a API exitosas; CO-02 carga sin errores nuevos en Chromium, Firefox y WebKit; "
+               "CO-03 diseño coherente entre motores.",
+     "limit": "Navegadores de escritorio en modo headless; no cubre versiones antiguas ni navegadores móviles reales."},
+    # Flexibilidad
+    {"characteristic": "flexibilidad", "sub": "Adaptabilidad", "automation": AUTOMATED,
+     "method": "FL-01 meta viewport, FL-02 sin desbordamiento en 1366/768/390 px, FL-03 reflow a 320 px (WCAG 1.4.10).",
+     "limit": "Resoluciones simuladas en un navegador headless."},
+    {"characteristic": "flexibilidad", "sub": "Escalabilidad", "automation": MANUAL,
+     "method": "Pruebas de carga creciente.", "limit": "Requiere generar carga sobre el sistema auditado."},
+    {"characteristic": "flexibilidad", "sub": "Instalabilidad", "automation": PARTIAL,
+     "method": "FL-04 (informativa): manifiesto de aplicación web instalable.",
+     "limit": "Sólo aplica si el sistema pretende instalarse (PWA); no puntúa."},
+    {"characteristic": "flexibilidad", "sub": "Reemplazabilidad", "automation": MANUAL,
+     "method": "Análisis de dependencias y contratos de integración.", "limit": "Requiere documentación del sistema."},
     # Seguridad
-    {"characteristic": "seguridad", "sub": "Confidencialidad e integridad (cliente)", "automation": PARTIAL,
-     "method": "Patrones inseguros en el HTML (innerHTML sin sanitizar, datos sensibles en storage).",
-     "limit": "No es una prueba de penetración; no evalúa el backend ni la autenticación del sistema auditado."},
-    # Portabilidad
-    {"characteristic": "portabilidad", "sub": "Adaptabilidad", "automation": AUTOMATED,
-     "method": "Estructura base, meta viewport y anchos rígidos; capturas en 1366, 768 y 390 px.",
-     "limit": "Instalabilidad y reemplazabilidad no aplican a una interfaz web desplegada."},
+    {"characteristic": "seguridad", "sub": "Confidencialidad", "automation": AUTOMATED,
+     "method": "SE-01 HTTPS, SE-02 certificado válido, SE-03 HSTS, SE-04 redirección HTTP→HTTPS, SE-05 formularios de "
+               "contraseña seguros, SE-06 sin contenido mixto, SE-07 cookies Secure, SE-08 credenciales fuera de Web "
+               "Storage, SE-13 Referrer-Policy.",
+     "limit": "Observación pasiva de la interfaz; no es una prueba de penetración."},
+    {"characteristic": "seguridad", "sub": "Integridad", "automation": AUTOMATED,
+     "method": "SE-09 Content-Security-Policy, SE-10 protección anti-clickjacking, SE-11 nosniff, SE-12 SRI en scripts de terceros.",
+     "limit": "Comprueba la presencia de la política, no su solidez completa."},
+    {"characteristic": "seguridad", "sub": "No repudio, responsabilidad y autenticidad", "automation": MANUAL,
+     "method": "Revisión de registros de auditoría y del mecanismo de autenticación.",
+     "limit": "Ocurre en el servidor; no es observable desde la interfaz."},
+    {"characteristic": "seguridad", "sub": "Resistencia", "automation": MANUAL,
+     "method": "Pruebas de penetración autorizadas.", "limit": "Fuera del alcance de una auditoría pasiva."},
+    # Fiabilidad
+    {"characteristic": "fiabilidad", "sub": "Disponibilidad", "automation": AUTOMATED,
+     "method": "FI-01: la interfaz responde sin error HTTP.",
+     "limit": "Medición puntual; la disponibilidad sostenida requiere monitoreo en el tiempo."},
+    {"characteristic": "fiabilidad", "sub": "Ausencia de fallos", "automation": AUTOMATED,
+     "method": "FI-02 errores JavaScript no capturados, FI-03 errores en consola.",
+     "limit": "Sólo detecta fallos que ocurren al cargar la interfaz, no durante tareas."},
+    {"characteristic": "fiabilidad", "sub": "Tolerancia a fallos", "automation": AUTOMATED,
+     "method": "FI-04: recursos (scripts, estilos, imágenes, API) cargados sin error.",
+     "limit": "No inyecta fallos de red para observar la degradación."},
+    {"characteristic": "fiabilidad", "sub": "Recuperabilidad", "automation": MANUAL,
+     "method": "Pruebas de recuperación ante caídas.", "limit": "Requiere provocar fallos en el sistema."},
+    # Eficiencia (opcional)
+    {"characteristic": "eficiencia_desempeno", "sub": "Comportamiento temporal", "automation": AUTOMATED,
+     "method": "EF-01 TTFB, EF-02 LCP, EF-03 CLS medidos con Playwright.",
+     "limit": "Medido desde el servidor de evaluación, no desde el dispositivo del usuario."},
+    {"characteristic": "eficiencia_desempeno", "sub": "Utilización de recursos", "automation": AUTOMATED,
+     "method": "EF-04 bytes transferidos, EF-05 peticiones, EF-06 memoria JS.",
+     "limit": "transferSize es 0 en recursos de otro origen sin Timing-Allow-Origin."},
+    {"characteristic": "eficiencia_desempeno", "sub": "Capacidad", "automation": MANUAL,
+     "method": "Pruebas de carga y concurrencia.", "limit": "Requiere generar carga sobre el sistema auditado."},
 ]
 
-# Características de la norma no contempladas o fuera de alcance (restricción 4)
 OUT_OF_SCOPE = [
-    {"characteristic": "Fiabilidad", "reason": "Madurez, disponibilidad y tolerancia a fallos requieren monitoreo en el tiempo, no una captura puntual."},
-    {"characteristic": "Seguridad física (Safety, ISO/IEC 25010:2023)", "reason": "No aplica a interfaces web sin riesgo físico para personas o entorno."},
-    {"characteristic": "Calidad en uso (efectividad, eficiencia, satisfacción)", "reason": "Requiere usuarios reales, cuestionarios y tareas observadas."},
-    {"characteristic": "Calidad de la información producida", "reason": "La norma no la contempla directamente y depende del dominio de los datos."},
+    {"characteristic": "Mantenibilidad",
+     "reason": "Sus métricas (modularidad, reusabilidad, analizabilidad, capacidad de prueba) requieren el "
+               "código fuente, el grafo de dependencias y el historial de defectos, no la interfaz desplegada."},
+    {"characteristic": "Seguridad física (Safety, ISO/IEC 25010:2023)",
+     "reason": "No aplica a interfaces web sin riesgo físico para personas o entorno."},
+    {"characteristic": "Calidad en uso (efectividad, eficiencia, satisfacción)",
+     "reason": "Requiere usuarios reales, cuestionarios y tareas observadas."},
 ]
 
 
 def evaluation_scope(selected: list[str]) -> dict:
     items = [
         {**item, "characteristic_label": CHARACTERISTICS[item["characteristic"]]}
-        for item in QUALITY_MODEL
-        if item["characteristic"] in selected
+        for item in QUALITY_MODEL if item["characteristic"] in selected
     ]
+    out_of_scope = list(OUT_OF_SCOPE)
+    if "eficiencia_desempeno" not in selected:
+        out_of_scope.append({
+            "characteristic": "Eficiencia de desempeño (opcional)",
+            "reason": "No se seleccionó en esta evaluación; puede incluirse a pedido.",
+        })
     return {
         "selected_characteristics": [CHARACTERISTICS[c] for c in selected],
         "subcharacteristics": items,
@@ -187,271 +246,166 @@ def evaluation_scope(selected: list[str]) -> dict:
             "no_automatizable": sum(1 for i in items if i["automation"] == MANUAL),
             "total": len(items),
         },
-        "out_of_scope": OUT_OF_SCOPE,
+        "out_of_scope": out_of_scope,
     }
 
 
-def evaluation_restrictions(has_runtime_metrics: bool) -> list[dict]:
-    """Condiciones y límites bajo los que se realizó la evaluación."""
+def evaluation_restrictions(has_runtime_evidence: bool) -> list[dict]:
     return [
         {"type": "Herramientas y metodología",
-         "detail": "Análisis estático del DOM (BeautifulSoup) y ejecución en Chromium headless (Playwright). "
-                   "Las reglas son una operacionalización propia de la norma, que no prescribe algoritmos."},
+         "detail": "Análisis del DOM renderizado (BeautifulSoup) y observación en ejecución con Playwright "
+                   "(Chromium, Firefox y WebKit). Las métricas son una operacionalización propia de la norma."},
         {"type": "Artefacto evaluado",
-         "detail": "HTML renderizado de cada interfaz (o su réplica). No se analiza el repositorio fuente, "
-                   "por lo que las métricas de modularidad, reusabilidad y testabilidad son parciales o no medibles."},
+         "detail": "DOM original de cada interfaz capturada (no su réplica). No se analiza el código fuente."},
         {"type": "Entorno de prueba",
-         "detail": "Resoluciones 1366×768, 768×1024 y 390×844 en un único navegador (Chromium). "
-                   + ("Las métricas de desempeño se midieron una vez desde el servidor de evaluación."
-                      if has_runtime_metrics else
-                      "No se recibieron métricas de ejecución: el comportamiento temporal se estima con indicadores estáticos.")},
+         "detail": "Resoluciones 1366×768, 768×1024, 390×844 y 320×640 en navegadores headless. "
+                   + ("Las evidencias de ejecución se midieron una vez desde el servidor de evaluación."
+                      if has_runtime_evidence else
+                      "No se recibieron evidencias de ejecución: las métricas que las requieren figuran como no medidas.")},
         {"type": "Tiempo y recursos",
-         "detail": "Máximo de interfaces configurable (por defecto 10), tiempo límite por página y hasta 2 capturas simultáneas."},
+         "detail": "Máximo de interfaces configurable (por defecto 10), hasta 15 enlaces verificados por interfaz "
+                   "y compatibilidad multinavegador en las primeras 5 interfaces."},
         {"type": "Atributos subjetivos",
-         "detail": "Estética, satisfacción y facilidad de aprendizaje se reportan como indicadores aproximados; "
-                   "su validación requiere cuestionarios o juicio de expertos."},
+         "detail": "Aprendibilidad, compromiso y reconocibilidad requieren cuestionarios o juicio experto y no se puntúan."},
         {"type": "Selección de características",
-         "detail": "Se evalúa un subconjunto priorizado de características; las no seleccionadas o fuera de alcance "
-                   "no influyen en el puntaje global."},
+         "detail": "Se evalúan Adecuación funcional, Capacidad de interacción, Compatibilidad, Flexibilidad, Seguridad "
+                   "y Fiabilidad; Eficiencia de desempeño es opcional. Las características sin métricas medidas no "
+                   "influyen en el puntaje global."},
     ]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Métricas X = A / B
+# Construcción de métricas
 # ─────────────────────────────────────────────────────────────────────────────
 
-_NON_LABELED_INPUT_TYPES = {"hidden", "submit", "button", "reset", "image"}
-_VALIDATION_TYPES = {"email", "number", "url", "tel", "date", "datetime-local", "month", "week", "time"}
-_SEMANTIC_TAGS = ["main", "nav", "header", "footer", "section", "article", "aside"]
-_JS_TYPES = {"", "text/javascript", "application/javascript", "module"}
-_DECISION_RE = re.compile(r"\bif\b|\bfor\b|\bwhile\b|\bcase\b|\bcatch\b|&&|\|\||\?\?|\?(?![.?])")
-_FUNCTION_RE = re.compile(r"\bfunction\b|=>")
+_FORMULAS = {
+    "ratio": "X = A / B",
+    "binary": "X = 1 si cumple, 0 si no",
+    "count": "X = número de ocurrencias",
+    "max": "X = valor medido",
+}
 
 
-def _ratio_metric(mid, characteristic, sub, name, a, b, a_desc, b_desc, target=0.9, reference="Operacionalización ISO/IEC 25010"):
-    x = (a / b) if b else None
+def compliance_of(kind: str, x: Optional[float], target: float) -> Optional[float]:
+    if x is None:
+        return None
+    if kind == "ratio":
+        return min(1.0, x / target) if target else 1.0
+    if kind == "binary":
+        return float(x)
+    if kind == "count":
+        return 1.0 / (1.0 + x)
+    if kind == "max":
+        return 1.0 if x <= target else (target / x if x else 0.0)
+    return None
+
+
+def target_text(kind: str, target: float, unit: str = "") -> str:
+    suffix = f" {unit}" if unit else ""
+    if kind == "ratio":
+        return f"X ≥ {target:g}"
+    if kind == "binary":
+        return "X = 1"
+    if kind == "count":
+        return "X = 0"
+    return f"X ≤ {target:g}{suffix}"
+
+
+def make_metric(mid: str, characteristic: str, sub: str, name: str, *, kind: str, target: float = 1.0,
+                x: Optional[float] = None, a: Optional[float] = None, b: Optional[float] = None,
+                unit: str = "", reference: str = "", weight: float = 1.0, scored: bool = True,
+                not_measured: str = "no medido", finding: str = "", recommendation: str = "",
+                examples: Optional[list[str]] = None) -> dict:
+    if kind == "ratio":
+        x = round(a / b, 3) if (a is not None and b) else None
+    c = compliance_of(kind, x, target)
+    measured = x is not None
+    meets = (c >= 0.999) if measured else None
     return {
-        "id": mid, "characteristic": characteristic, "subcharacteristic": sub, "name": name,
-        "formula": "X = A / B", "A": a, "B": b, "A_description": a_desc, "B_description": b_desc,
-        "X": round(x, 3) if x is not None else None,
-        "target": f"X ≥ {target}",
-        "meets": (x >= target) if x is not None else None,
-        # Grado 0–4 según el cumplimiento relativo a la meta (X / meta, máx. 1)
-        "severity_grade": grade_from_compliance(min(1.0, x / target)) if x is not None and target else None,
-        "status": "medido" if x is not None else "no aplica (B = 0)",
+        "id": mid, "characteristic": characteristic, "characteristic_label": CHARACTERISTICS[characteristic],
+        "subcharacteristic": sub, "name": name, "kind": kind, "formula": _FORMULAS[kind],
+        "A": a if kind == "ratio" else None, "B": b if kind == "ratio" else None,
+        "X": x, "unit": unit, "target": target_text(kind, target, unit), "target_value": target,
+        "compliance": round(c, 3) if c is not None else None,
+        "meets": meets, "severity_grade": grade_from_compliance(c) if measured else None,
+        "weight": weight, "scored": scored,
+        "status": ("medido" if scored else "informativo") if measured else not_measured,
         "reference": reference,
+        "finding": finding, "recommendation": recommendation, "examples": examples or [],
     }
 
 
-def _value_metric(mid, characteristic, sub, name, value, unit, target_text, meets, reference, formula="X = valor medido"):
-    return {
-        "id": mid, "characteristic": characteristic, "subcharacteristic": sub, "name": name,
-        "formula": formula, "X": value, "unit": unit, "target": target_text,
-        "meets": meets if value is not None else None,
-        "severity_grade": (0 if meets else 3) if value is not None else None,
-        "status": "medido" if value is not None else "no medido",
-        "reference": reference,
-    }
+# Impacto de cada métrica: (severidad máxima 1–4, peso en el puntaje).
+# La severidad de un hallazgo es el grado por cumplimiento (0–4) acotado por la
+# severidad máxima: p. ej. la falta de Referrer-Policy nunca es "Crítica",
+# mientras que una interfaz sin HTTPS sí puede serlo.
+METRIC_IMPACT: dict[str, tuple[int, float]] = {
+    "AF-01": (3, 2.0), "AF-02": (3, 1.5), "AF-03": (2, 1.0), "AF-04": (3, 1.5),
+    "CI-01": (3, 1.0), "CI-02": (3, 1.0), "CI-03": (3, 1.0), "CI-04": (3, 1.0), "CI-05": (2, 0.5),
+    "CI-06": (3, 1.0), "CI-07": (3, 1.0), "CI-08": (2, 1.0), "CI-09": (2, 0.5), "CI-10": (2, 1.0),
+    "CI-11": (2, 0.5), "CI-12": (2, 0.5), "CI-13": (2, 0.5), "CI-14": (1, 0.5), "CI-15": (2, 1.0),
+    "CO-01": (3, 1.5), "CO-02": (3, 2.0), "CO-03": (2, 1.0), "CO-04": (1, 0.5),
+    "FL-01": (3, 1.0), "FL-02": (3, 2.0), "FL-03": (2, 1.0), "FL-04": (1, 0.0),
+    "SE-01": (4, 3.0), "SE-02": (4, 2.0), "SE-03": (2, 1.0), "SE-04": (2, 1.0), "SE-05": (4, 3.0),
+    "SE-06": (3, 1.5), "SE-07": (2, 1.0), "SE-08": (3, 1.5), "SE-09": (2, 1.0), "SE-10": (2, 1.0),
+    "SE-11": (1, 0.5), "SE-12": (1, 0.5), "SE-13": (1, 0.5),
+    "FI-01": (4, 2.0), "FI-02": (3, 1.5), "FI-03": (1, 0.5), "FI-04": (2, 1.0),
+    "EF-01": (2, 1.0), "EF-02": (2, 1.0), "EF-03": (2, 1.0), "EF-04": (2, 1.0), "EF-05": (1, 0.5), "EF-06": (1, 0.5),
+}
 
 
-def _has_accessible_name(el) -> bool:
-    return bool(el.get_text(strip=True) or el.get("aria-label") or el.get("aria-labelledby") or el.get("title")
-                or (el.find("img") and el.find("img").get("alt")))
-
-
-def _cyclomatic_complexity(soup) -> tuple[Optional[int], int]:
-    """MS4M1 aproximada: (máxima complejidad por bloque de script, nº de funciones)."""
-    worst = None
-    functions = 0
-    for script in soup.find_all("script"):
-        if script.get("src") or (script.get("type") or "").lower() not in _JS_TYPES:
-            continue
-        code = script.string or script.get_text() or ""
-        if not code.strip():
-            continue
-        decisions = len(_DECISION_RE.findall(code))
-        n_funcs = max(1, len(_FUNCTION_RE.findall(code)))
-        functions += n_funcs
-        complexity = round(decisions / n_funcs) + 1   # X = A + 1 por función (promedio del bloque)
-        worst = complexity if worst is None else max(worst, complexity)
-    return worst, functions
-
-
-def compute_metrics(soup, html: str, runtime: Optional[dict] = None) -> list[dict]:
-    metrics: list[dict] = []
-
-    # ── Accesibilidad (WCAG) ────────────────────────────────────────────────
-    images = soup.find_all("img")
-    metrics.append(_ratio_metric(
-        "ACC-01", "accesibilidad", "Perceptible", "Imágenes con texto alternativo",
-        sum(1 for i in images if i.has_attr("alt")), len(images),
-        "imágenes con atributo alt", "imágenes totales", reference="WCAG 2.2 · 1.1.1"))
-
-    labeled_ids = {lbl.get("for") for lbl in soup.find_all("label") if lbl.get("for")}
-    controls = [c for c in soup.find_all(["input", "select", "textarea"])
-                if (c.get("type") or "").lower() not in _NON_LABELED_INPUT_TYPES]
-    metrics.append(_ratio_metric(
-        "ACC-02", "accesibilidad", "Comprensible", "Controles de formulario etiquetados",
-        sum(1 for c in controls if (c.get("id") in labeled_ids) or c.find_parent("label")
-            or c.get("aria-label") or c.get("aria-labelledby") or c.get("title")),
-        len(controls), "controles con etiqueta o nombre accesible", "controles de formulario",
-        reference="WCAG 2.2 · 1.3.1 / 3.3.2"))
-
-    buttons = soup.find_all("button") + soup.find_all(attrs={"role": "button"})
-    metrics.append(_ratio_metric(
-        "ACC-03", "accesibilidad", "Operable", "Botones con nombre accesible",
-        sum(1 for b in buttons if _has_accessible_name(b)), len(buttons),
-        "botones con texto/aria-label", "botones", reference="WCAG 2.2 · 4.1.2"))
-
-    links = soup.find_all("a", href=True)
-    metrics.append(_ratio_metric(
-        "ACC-04", "accesibilidad", "Operable", "Enlaces con texto accesible",
-        sum(1 for a in links if _has_accessible_name(a)), len(links),
-        "enlaces con texto/aria-label", "enlaces", reference="WCAG 2.2 · 2.4.4"))
-
-    html_tag = soup.find("html")
-    metrics.append(_ratio_metric(
-        "ACC-05", "accesibilidad", "Comprensible", "Idioma del documento declarado",
-        1 if (html_tag and html_tag.get("lang")) else 0, 1,
-        "documento con atributo lang", "documento", target=1.0, reference="WCAG 2.2 · 3.1.1"))
-
-    checked = (runtime or {}).get("contrast_checked")
-    if isinstance(checked, int) and checked > 0:
-        failures = (runtime or {}).get("contrast_failures") or 0
-        metrics.append(_ratio_metric(
-            "ACC-06", "accesibilidad", "Perceptible", "Texto con contraste suficiente",
-            checked - failures, checked, "elementos de texto con contraste ≥ 4.5:1 (3:1 grande)",
-            "elementos de texto evaluados (estilos computados)", reference="WCAG 2.2 · 1.4.3"))
-
-    # ── Usabilidad: protección contra errores del usuario ───────────────────
-    inputs = [c for c in controls]
-    metrics.append(_ratio_metric(
-        "USA-01", "usabilidad", "Protección contra errores del usuario", "Campos con validación declarativa",
-        sum(1 for c in inputs if c.has_attr("required") or c.has_attr("pattern") or c.has_attr("min")
-            or c.has_attr("max") or c.has_attr("maxlength")
-            or (c.get("type") or "").lower() in _VALIDATION_TYPES),
-        len(inputs), "campos con required/pattern/tipo validado", "campos de entrada", target=0.5))
-
-    has_status = bool(soup.find(attrs={"aria-live": True}) or soup.find(attrs={"role": re.compile("^(alert|status)$")}))
-    metrics.append(_ratio_metric(
-        "USA-02", "usabilidad", "Protección contra errores del usuario", "Mecanismo de mensajes de estado",
-        1 if has_status else 0, 1 if inputs else 0,
-        "región aria-live o role=alert/status", "interfaz con formularios", target=1.0))
-
-    # ── Mantenibilidad ─────────────────────────────────────────────────────
-    semantic = sum(len(soup.find_all(t)) for t in _SEMANTIC_TAGS)
-    divs = len(soup.find_all("div"))
-    metrics.append(_ratio_metric(
-        "MAN-01", "mantenibilidad", "Modularidad", "Proporción de contenedores semánticos",
-        semantic, semantic + divs, "contenedores semánticos HTML5", "contenedores totales (semánticos + div)",
-        target=0.1))
-
-    ids = [el.get("id") for el in soup.find_all(attrs={"id": True})]
-    metrics.append(_ratio_metric(
-        "MAN-02", "mantenibilidad", "Analizabilidad", "Unicidad de identificadores",
-        len(set(ids)), len(ids), "identificadores únicos", "identificadores declarados", target=1.0))
-
-    all_elements = soup.find_all(True)
-    metrics.append(_ratio_metric(
-        "MAN-03", "mantenibilidad", "Capacidad de ser modificado", "Elementos sin estilos inline",
-        sum(1 for el in all_elements if not el.get("style")), len(all_elements),
-        "elementos sin atributo style", "elementos del DOM", target=0.9))
-
-    complexity, n_functions = _cyclomatic_complexity(soup)
-    cc = _value_metric(
-        "MS4M1", "mantenibilidad", "Capacidad de ser modificado", "Complejidad ciclomática (aprox.)",
-        complexity, "", "1 ≤ X < 15", (complexity is not None and 1 <= complexity < 15),
-        "Operacionalización ISO/IEC 25010", formula="X = A + 1 (A = ramificaciones por función)")
-    cc["functions_analyzed"] = n_functions
-    if complexity is None:
-        cc["status"] = "no aplica (sin scripts embebidos)"
-    metrics.append(cc)
-
-    # ── Compatibilidad / portabilidad ──────────────────────────────────────
-    metrics.append(_ratio_metric(
-        "POR-01", "portabilidad", "Adaptabilidad", "Viewport responsive declarado",
-        1 if soup.find("meta", attrs={"name": "viewport"}) else 0, 1,
-        "meta viewport presente", "documento", target=1.0))
-
-    # ── Eficiencia de desempeño (medida en ejecución) ──────────────────────
-    rt = runtime or {}
-
-    def num(key):
-        v = rt.get(key)
-        return v if isinstance(v, (int, float)) else None
-
-    ttfb, lcp, cls = num("ttfb_ms"), num("lcp_ms"), num("cls")
-    transfer, requests, heap = num("transfer_bytes"), num("requests"), num("js_heap_mb")
-    ref = "Core Web Vitals (umbral 'bueno')"
-    metrics += [
-        _value_metric("EFI-01", "eficiencia_desempeno", "Comportamiento temporal", "Tiempo hasta el primer byte (TTFB)",
-                      round(ttfb) if ttfb is not None else None, "ms", "X ≤ 800 ms",
-                      ttfb is not None and ttfb <= 800, ref),
-        _value_metric("EFI-02", "eficiencia_desempeno", "Comportamiento temporal", "Largest Contentful Paint (LCP)",
-                      round(lcp) if lcp is not None else None, "ms", "X ≤ 2500 ms",
-                      lcp is not None and lcp <= 2500, ref),
-        _value_metric("EFI-03", "eficiencia_desempeno", "Comportamiento temporal", "Cumulative Layout Shift (CLS)",
-                      cls, "", "X ≤ 0.1", cls is not None and cls <= 0.1, ref),
-        _value_metric("EFI-04", "eficiencia_desempeno", "Utilización de recursos", "Datos transferidos",
-                      round(transfer / 1024) if transfer is not None else None, "KB", "X ≤ 3000 KB",
-                      transfer is not None and transfer <= 3_000 * 1024, "Referencia práctica de peso de página"),
-        _value_metric("EFI-05", "eficiencia_desempeno", "Utilización de recursos", "Peticiones de red",
-                      requests, "", "X ≤ 100", requests is not None and requests <= 100, "Referencia práctica"),
-        _value_metric("EFI-06", "eficiencia_desempeno", "Utilización de recursos", "Memoria JS del cliente",
-                      heap, "MB", "X ≤ 50 MB", heap is not None and heap <= 50, "Referencia práctica"),
-    ]
+def apply_impact(metrics: list[dict]) -> list[dict]:
+    for m in metrics:
+        max_grade, weight = METRIC_IMPACT.get(m["id"], (4, m["weight"]))
+        m["weight"] = weight
+        m["max_severity"] = max_grade
+        if m["severity_grade"]:
+            m["severity_grade"] = min(m["severity_grade"], max_grade)
     return metrics
 
 
-def runtime_findings(runtime: Optional[dict]) -> list[tuple[str, str, str, str, str, dict]]:
-    """Hallazgos basados en mediciones reales (sólo si se recibieron métricas de ejecución)."""
-    if not runtime:
-        return []
-    out = []
-
-    def num(key):
-        v = runtime.get(key)
-        return v if isinstance(v, (int, float)) else None
-
-    ttfb, lcp, cls, transfer = num("ttfb_ms"), num("lcp_ms"), num("cls"), num("transfer_bytes")
-    if lcp is not None and lcp > 2500:
-        sev, pen = ("Alta", 15) if lcp > 4000 else ("Media", 8)
-        out.append(("Eficiencia de desempeño", "Comportamiento temporal", sev,
-                     f"LCP medido de {lcp / 1000:.1f} s (umbral recomendado ≤ 2.5 s).",
-                     "Optimizar la imagen o bloque principal (tamaño, formato, preload) y reducir el JS que bloquea el render.",
-                     {"eficiencia_desempeno": pen}))
-    if ttfb is not None and ttfb > 800:
-        sev, pen = ("Alta", 10) if ttfb > 1800 else ("Media", 5)
-        out.append(("Eficiencia de desempeño", "Comportamiento temporal", sev,
-                    f"TTFB medido de {round(ttfb)} ms (umbral recomendado ≤ 800 ms).",
-                    "Revisar el tiempo de respuesta del servidor, aplicar caché o CDN.",
-                    {"eficiencia_desempeno": pen}))
-    if cls is not None and cls > 0.1:
-        sev, pen = ("Alta", 10) if cls > 0.25 else ("Media", 5)
-        out.append(("Usabilidad", "Operabilidad", sev,
-                    f"CLS medido de {cls} (umbral recomendado ≤ 0.1).",
-                    "Reservar espacio para imágenes, anuncios y contenido dinámico (width/height o aspect-ratio).",
-                    {"usabilidad": pen, "eficiencia_desempeno": 3}))
-    checked, failures = num("contrast_checked"), num("contrast_failures")
-    if checked and failures:
-        ratio = failures / checked
-        sev, pen = ("Alta", 15) if ratio > 0.2 else ("Media", 8)
-        out.append(("Accesibilidad", "Perceptible (WCAG 1.4.3)", sev,
-                    f"{int(failures)} de {int(checked)} elementos de texto no alcanzan el contraste mínimo "
-                    "(4.5:1, o 3:1 en texto grande) según los estilos computados.",
-                    "Oscurecer el color del texto o aclarar el fondo hasta cumplir 4.5:1 (3:1 en texto ≥ 24 px o ≥ 18.66 px en negrita).",
-                    {"accesibilidad": pen, "usabilidad": 5}))
-    if transfer is not None and transfer > 3_000 * 1024:
-        out.append(("Eficiencia de desempeño", "Utilización de recursos", "Media",
-                    f"La página transfiere {round(transfer / 1024 / 1024, 1)} MB.",
-                    "Comprimir imágenes, dividir el bundle y cargar recursos bajo demanda.",
-                    {"eficiencia_desempeno": 8}))
-    return out
+def score_characteristics(metrics: list[dict], selected: list[str]) -> tuple[dict, list[str]]:
+    """Puntaje 0–100 por característica (promedio ponderado de cumplimientos)."""
+    scores, not_evaluated = {}, []
+    for key in selected:
+        own = [m for m in metrics if m["characteristic"] == key and m["scored"] and m["compliance"] is not None]
+        weight = sum(m["weight"] for m in own)
+        if not own or weight == 0:
+            not_evaluated.append(key)
+            continue
+        scores[key] = round(100 * sum(m["weight"] * m["compliance"] for m in own) / weight)
+    return scores, not_evaluated
 
 
-def normalize_selection(characteristics: Optional[list[str]]) -> list[str]:
-    """Subconjunto priorizado de características (restricción 5). Vacío/None = todas."""
-    if not characteristics:
-        return list(CHARACTERISTICS)
-    selected = [c for c in characteristics if c in CHARACTERISTICS]
-    return selected or list(CHARACTERISTICS)
+def findings_from_metrics(metrics: list[dict]) -> list[dict]:
+    """Un hallazgo por métrica medida que no alcanza su meta (trazable a la métrica)."""
+    findings = []
+    for m in metrics:
+        if not m["scored"] or m["meets"] is not False:
+            continue
+        grade = max(1, m["severity_grade"] or 1)
+        severity = _GRADE_TO_SEVERITY[grade]
+        detail = m["finding"]
+        if m["examples"]:
+            detail += " (Ejemplo: " + ", ".join(m["examples"][:3]) + ")"
+        findings.append({
+            "metric_id": m["id"],
+            "dimension": m["characteristic_label"],
+            "subdimension": m["subcharacteristic"],
+            "severity": severity,
+            "severity_grade": grade,
+            "severity_grade_label": SEVERITY_GRADES[grade]["label"],
+            "finding": detail,
+            "recommendation": m["recommendation"],
+            "reference": m["reference"],
+        })
+    order = {"Crítica": 0, "Alta": 1, "Media": 2, "Baja": 3}
+    findings.sort(key=lambda f: order[f["severity"]])
+    return findings
+
+
+_SPACE_RE = re.compile(r"\s+")
+
+
+def normalize_text(value: str) -> str:
+    return _SPACE_RE.sub(" ", (value or "").strip().lower())

@@ -14,6 +14,7 @@ Controles de seguridad:
 """
 from __future__ import annotations
 
+import json
 import logging
 import os
 import re
@@ -22,7 +23,7 @@ import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Annotated, Literal, Optional
 
 import httpx
 from dotenv import load_dotenv
@@ -31,7 +32,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from agents.capture_agent import CaptureAgent
 from agents.html_replication_agent import HtmlReplicationAgent
@@ -114,16 +115,31 @@ class RuntimeMetrics(BaseModel):
 
 
 Characteristic = Literal[
-    "adecuacion_funcional", "eficiencia_desempeno", "usabilidad", "accesibilidad",
-    "mantenibilidad", "compatibilidad", "seguridad", "portabilidad",
+    "adecuacion_funcional", "capacidad_interaccion", "compatibilidad", "flexibilidad",
+    "seguridad", "fiabilidad", "eficiencia_desempeno",
+    # Claves anteriores (se traducen a las de ISO/IEC 25010:2023)
+    "usabilidad", "accesibilidad", "portabilidad",
 ]
+
+MAX_EVIDENCE_CHARS = 300_000
 
 
 class IsoRequest(BaseModel):
     html: str = Field(max_length=MAX_HTML_CHARS)
     runtime_metrics: Optional[RuntimeMetrics] = None
-    # Subconjunto priorizado de características; vacío = todas
-    characteristics: Optional[list[Characteristic]] = Field(default=None, max_length=8)
+    # Evidencias de ejecución de la interfaz (services/evidence_collector.py)
+    evidence: Optional[dict] = None
+    # Subconjunto priorizado de características; vacío = las seis núcleo
+    characteristics: Optional[list[Characteristic]] = Field(default=None, max_length=10)
+    # Funciones que la interfaz debe ofrecer (completitud y pertinencia funcional)
+    expected_functions: Optional[list[Annotated[str, Field(max_length=200)]]] = Field(default=None, max_length=50)
+
+    @field_validator("evidence")
+    @classmethod
+    def _limit_evidence(cls, value):
+        if value is not None and len(json.dumps(value, default=str)) > MAX_EVIDENCE_CHARS:
+            raise ValueError("evidence excede el tamaño máximo permitido.")
+        return value
 
 
 class ReportRequest(BaseModel):
@@ -371,7 +387,13 @@ def evaluate_iso(request: IsoRequest):
     try:
         agent = ISOEvaluationAgent()
         runtime = request.runtime_metrics.model_dump(exclude_none=True) if request.runtime_metrics else None
-        return agent.run(request.html, runtime_metrics=runtime or None, characteristics=request.characteristics)
+        return agent.run(
+            request.html,
+            runtime_metrics=runtime or None,
+            characteristics=request.characteristics,
+            evidence=request.evidence,
+            expected_functions=request.expected_functions,
+        )
     except Exception:
         logger.exception("Error en /evaluate/iso")
         raise HTTPException(status_code=500, detail="Error interno al procesar la solicitud.")

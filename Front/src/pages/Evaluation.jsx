@@ -4,7 +4,18 @@ import Sidebar from "../components/Sidebar";
 import { evaluateHtml } from "../services/api";
 import { storageService } from "../services/storageService";
 import NormativeSection from "../components/NormativeSection";
+import { CORE_CHARACTERISTICS, characteristicRows } from "../utils/isoCharacteristics";
 import "./Evaluation.css";
+
+const EXPECTED_KEY = "expectedFunctions";
+
+function readExpected() {
+  try {
+    return localStorage.getItem(EXPECTED_KEY) || "";
+  } catch {
+    return "";
+  }
+}
 
 export default function Evaluation() {
   const navigate = useNavigate();
@@ -17,6 +28,8 @@ export default function Evaluation() {
   const [, setCaptureResult] = useState(null);
   const [selectedIface, setSelectedIface] = useState(null);
   const [, setEvaluationCache] = useState({});
+  const [includeEfficiency, setIncludeEfficiency] = useState(false);
+  const [expectedText, setExpectedText] = useState(readExpected);
 
   const hasCalled = useRef(false);
 
@@ -69,19 +82,27 @@ export default function Evaluation() {
     if (hasCalled.current) return;
     hasCalled.current = true;
 
-    runEvaluation(savedHtml, cacheKey);
+    runEvaluation(savedHtml, cacheKey, initialIface);
   }, []);
 
-  const runEvaluation = async (html, cacheKey) => {
+  const runEvaluation = async (html, cacheKey, iface = selectedIface, options = {}) => {
     try {
       setLoading(true);
       setError("");
 
-      // Métricas de ejecución de la página original (interfaz seleccionada o principal)
+      // Métricas y evidencias de ejecución de la interfaz evaluada (o de la principal)
       const capture = storageService.getCaptureResult();
       const runtimeMetrics =
-        capture?.selected_interface?.performance_metrics || capture?.performance_metrics || null;
-      const result = await evaluateHtml(html, runtimeMetrics);
+        iface?.performance_metrics || capture?.selected_interface?.performance_metrics
+        || capture?.performance_metrics || null;
+      const evidence =
+        iface?.quality_evidence || capture?.selected_interface?.quality_evidence
+        || capture?.quality_evidence || null;
+      const withEfficiency = options.includeEfficiency ?? includeEfficiency;
+      const characteristics = withEfficiency ? [...CORE_CHARACTERISTICS, "eficiencia_desempeno"] : null;
+      const expected = (options.expectedText ?? expectedText)
+        .split(/\r?\n/).map((line) => line.trim()).filter(Boolean).slice(0, 50);
+      const result = await evaluateHtml(html, runtimeMetrics, characteristics, evidence, expected);
 
       // Assign the interface name to the evaluation result so the ReportAgent knows it
       if (result && result.evaluation) {
@@ -128,48 +149,7 @@ export default function Evaluation() {
   const qualityLevel = evaluation?.quality_level || "No calculado";
   const totalFindings = evaluation?.total_findings ?? findings.length;
 
-  const scoreItems = [
-    {
-      label: "Adecuación funcional",
-      key: "adecuacion_funcional",
-      value: scores.adecuacion_funcional ?? 0,
-    },
-    {
-      label: "Eficiencia de desempeño",
-      key: "eficiencia_desempeno",
-      value: scores.eficiencia_desempeno ?? 0,
-    },
-    {
-      label: "Usabilidad",
-      key: "usabilidad",
-      value: scores.usabilidad ?? 0,
-    },
-    {
-      label: "Accesibilidad",
-      key: "accesibilidad",
-      value: scores.accesibilidad ?? 0,
-    },
-    {
-      label: "Mantenibilidad",
-      key: "mantenibilidad",
-      value: scores.mantenibilidad ?? 0,
-    },
-    {
-      label: "Compatibilidad",
-      key: "compatibilidad",
-      value: scores.compatibilidad ?? 0,
-    },
-    {
-      label: "Seguridad",
-      key: "seguridad",
-      value: scores.seguridad ?? 0,
-    },
-    {
-      label: "Portabilidad",
-      key: "portabilidad",
-      value: scores.portabilidad ?? 0,
-    },
-  ];
+  const scoreItems = characteristicRows(scores, evaluation?.not_evaluated || []);
 
   const severityCount = useMemo(() => {
     const result = {
@@ -214,8 +194,13 @@ export default function Evaluation() {
 
   const reevaluate = () => {
     storageService.removeItem("isoEvaluation");
+    try {
+      localStorage.setItem(EXPECTED_KEY, expectedText);
+    } catch {
+      // localStorage no disponible: el texto sólo se usa en esta evaluación
+    }
     const cacheKey = selectedIface ? selectedIface.file_name : "combined";
-    runEvaluation(htmlToEvaluate, cacheKey);
+    runEvaluation(htmlToEvaluate, cacheKey, selectedIface);
   };
 
   return (
@@ -267,10 +252,10 @@ export default function Evaluation() {
                   <span className="result-label">PUNTAJE GLOBAL</span>
                   <h2>{qualityLevel}</h2>
                   <p>
-                    El proyecto globalmente alcanza un nivel de calidad
-                    frontend {qualityLevel.toLowerCase()}, considerando eficiencia,
-                    usabilidad, accesibilidad, mantenibilidad, compatibilidad,
-                    seguridad y portabilidad.
+                    Nivel de calidad: {qualityLevel.toLowerCase()}. Promedio de las
+                    características evaluadas de ISO/IEC 25010:2023 (adecuación
+                    funcional, capacidad de interacción, compatibilidad, flexibilidad,
+                    seguridad y fiabilidad{includeEfficiency ? " y eficiencia de desempeño" : ""}).
                   </p>
                 </div>
               </div>
@@ -306,9 +291,42 @@ export default function Evaluation() {
 
             <section className="scores-section card">
               <div className="section-header">
+                <h2>Parámetros de la evaluación</h2>
+                <p>
+                  La completitud y pertinencia funcional sólo pueden medirse frente a una especificación:
+                  escriba las funciones que la interfaz debe ofrecer (una por línea, p. ej. «Iniciar sesión»).
+                </p>
+              </div>
+              <label htmlFor="expected-functions" style={{ display: "block", fontWeight: 600, marginBottom: 6 }}>
+                Funciones esperadas
+              </label>
+              <textarea
+                id="expected-functions"
+                rows={4}
+                value={expectedText}
+                onChange={(event) => setExpectedText(event.target.value)}
+                placeholder={"Iniciar sesión\nRegistrarse\nBuscar"}
+                style={{ width: "100%", boxSizing: "border-box", padding: 10, borderRadius: 8, border: "1px solid #cbd5e1", fontFamily: "inherit" }}
+              />
+              <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12 }}>
+                <input
+                  type="checkbox"
+                  checked={includeEfficiency}
+                  onChange={(event) => setIncludeEfficiency(event.target.checked)}
+                />
+                Incluir eficiencia de desempeño (opcional)
+              </label>
+              <button className="secondary-btn" type="button" onClick={reevaluate} style={{ width: "auto", marginTop: 12 }}>
+                Aplicar y reevaluar
+              </button>
+            </section>
+
+            <section className="scores-section card">
+              <div className="section-header">
                 <h2>Puntajes por dimensión ISO/IEC 25010</h2>
                 <p>
-                  Cada dimensión evalúa un aspecto específico de la calidad del frontend, con un puntaje en base a los criterios definidos por la norma.
+                  Cada puntaje es el promedio ponderado del cumplimiento de sus métricas medidas.
+                  Una característica sin evidencia suficiente figura como «No evaluada» y no entra al puntaje global.
                 </p>
               </div>
 
@@ -317,13 +335,13 @@ export default function Evaluation() {
                   <div className="score-row" key={item.key}>
                     <div className="score-row-label">
                       <strong>{item.label}</strong>
-                      <span>{item.value}/100</span>
+                      <span>{item.value === null ? "No evaluada" : `${item.value}/100`}</span>
                     </div>
 
                     <div className="score-bar">
                       <div
                         className="score-bar-fill"
-                        style={{ width: `${item.value}%`, background: "#1e3a8a" }}
+                        style={{ width: `${item.value ?? 0}%`, background: "#1e3a8a" }}
                       />
                     </div>
                   </div>
@@ -356,7 +374,7 @@ export default function Evaluation() {
                     <tbody>
                       {findings.map((item, index) => (
                         <tr key={index}>
-                          <td>{index + 1}</td>
+                          <td>{item.metric_id || index + 1}</td>
                           <td>{item.dimension || "No especificada"}</td>
                           <td>{item.subdimension || "No especificada"}</td>
                           <td>

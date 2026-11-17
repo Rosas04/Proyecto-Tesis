@@ -160,6 +160,7 @@ export default function Capture() {
             route_index: selectedIface.route_index,
             dom_metrics: selectedIface.dom_metrics,
             performance_metrics: selectedIface.performance_metrics,
+            quality_evidence: selectedIface.quality_evidence,
             captures: selectedIface.captures,
           },
         } : {}),
