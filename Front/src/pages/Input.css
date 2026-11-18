@@ -1194,3 +1194,79 @@
 .spin-icon {
   animation: spin 1s linear infinite;
 }
+
+/* ── Sin scroll de página: todo cabe en la pantalla ─────────────────────
+   El formulario se desplaza dentro de su tarjeta (con el botón siempre
+   visible) y el flujo del agente ocupa la altura disponible. */
+@media (min-width: 1025px) {
+  .layout:has(.input-main) {
+    height: 100vh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .input-main {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-sizing: border-box;
+    padding-bottom: 20px;
+  }
+
+  .input-main .page-header,
+  .input-main .tabs-header-container {
+    flex-shrink: 0;
+  }
+
+  .input-main .tabs-header-container {
+    margin-bottom: 16px;
+  }
+
+  .input-grid {
+    flex: 1;
+    min-height: 0;
+    align-items: stretch;
+  }
+
+  .input-left-col {
+    min-height: 0;
+  }
+
+  .input-left-col .info-card.side-card {
+    flex-shrink: 0;
+  }
+
+  .input-card.card {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .input-card-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    margin: -4px -8px 0;
+    padding: 4px 8px 0;
+    scrollbar-width: thin;
+  }
+
+  .input-card .page-actions-full,
+  .input-card .error-box {
+    flex-shrink: 0;
+  }
+
+  .terminal-card {
+    position: static;
+    height: auto;
+    min-height: 0;
+  }
+}
+
+/* En pantallas bajas, la tarjeta informativa cede su espacio al formulario. */
+@media (min-width: 1025px) and (max-height: 820px) {
+  .input-left-col .info-card.side-card {
+    display: none;
+  }
+}

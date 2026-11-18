@@ -271,6 +271,8 @@ export default function Input() {
         <section className="input-grid">
           <div className="input-left-col">
           <div className="input-card card">
+            {/* Zona del formulario: se desplaza por dentro; el botón queda fijo abajo */}
+            <div className="input-card-scroll">
             {/* ── URL panel ────────────────────────────── */}
             {activeTab === "url" && (
               <div className="input-panel">
@@ -601,6 +603,8 @@ export default function Input() {
               </div>
             )}
 
+            </div>
+
             {/* ── Error ───────────────────────── */}
             {backendDown && !error && <div className="error-box">{backendDown}</div>}
             {error && <div className="error-box">{error}</div>}
@@ -644,6 +648,7 @@ export default function Input() {
             </div>
           </div>
 
+            {!(activeTab === "url" && useCredentials) && (
             <div className="info-card side-card">
               <div className="info-header">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
@@ -661,6 +666,7 @@ export default function Input() {
                 <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="16 10 11 15 8 12"></polyline></svg> Portabilidad</li>
               </ul>
             </div>
+            )}
             
           </div>
 
