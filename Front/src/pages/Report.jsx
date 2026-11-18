@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { jsPDF } from "jspdf";
 import Sidebar from "../components/Sidebar";
 import { generateReport } from "../services/api";
 import { storageService } from "../services/storageService";
-import { getQualityLevel, toScore } from "../utils/qualityLevel";
-import NormativeSection from "../components/NormativeSection";
+import ReportView from "../components/ReportView";
 import { useAuth } from "../context/AuthContext";
 import { addAnalysisRun } from "../services/historyService";
 import html2canvas from "html2canvas";
@@ -155,28 +154,10 @@ export default function Report() {
     }
   };
 
-  const summary = useMemo(() => reportResult?.summary || {}, [reportResult]);
-  const scoreValue = toScore(summary.global_score);
-  const scores = useMemo(() => reportResult?.scores || {}, [reportResult]);
-  const findings = useMemo(
-    () => (Array.isArray(reportResult?.findings) ? reportResult.findings : []),
-    [reportResult]
-  );
   const sourceLabel =
     inputType === "zip"
       ? inputZip || "Proyecto ZIP"
       : inputUrl || "No especificada";
-
-  const scoreLabels = {
-    adecuacion_funcional: "Adecuación funcional",
-    eficiencia_desempeno: "Eficiencia de desempeño",
-    usabilidad: "Usabilidad",
-    accesibilidad: "Accesibilidad",
-    mantenibilidad: "Mantenibilidad",
-    compatibilidad: "Compatibilidad",
-    seguridad: "Seguridad",
-    portabilidad: "Portabilidad",
-  };
 
   const goBack = () => {
     navigate("/evaluation");
@@ -240,13 +221,6 @@ export default function Report() {
   };
 
 
-  const getBadgeClassUI = (severity) => {
-    const s = severity?.toLowerCase() || '';
-    if (s.includes('crític') || s.includes('alta') || s.includes('alto')) return 'badge-alta';
-    if (s.includes('media') || s.includes('medio')) return 'badge-media';
-    return 'badge-baja';
-  };
-
   return (
     <div className="layout">
       <Sidebar />
@@ -261,183 +235,25 @@ export default function Report() {
           />
         )}
         
-        <div className="report-ui-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '30px' }}>
-          <div className="report-ui-title">
-            <h1 style={{ margin: 0, fontSize: '24px', color: '#0f172a', fontWeight: '800' }}>Reporte técnico de calidad frontend</h1>
-            <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '14px' }}>Evaluación basada en ISO/IEC 25010</p>
-          </div>
-          <div className="report-ui-actions" style={{ display: 'flex', gap: '12px' }}>
-            <button className="primary-btn" onClick={downloadPdf} disabled={generatingPdf} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#0f172a', color: 'white', padding: '10px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '600' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-              {generatingPdf ? "Generando..." : "Descargar reporte"}
-            </button>
-          </div>
-        </div>
-
         {error && <div className="error-box">{error}</div>}
         {loading && <div className="loading-box">Generando reporte técnico consolidado. Espere unos segundos...</div>}
 
         {!loading && reportResult && (
-          <div className="report-ui-content">
-            <div className="pdf-grid-2col" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px' }}>
-              
-              <div className="pdf-col" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                
-                {/* Resumen ejecutivo */}
-                <div className="pdf-card" style={{ background: '#fff', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                  <h3 className="card-title" style={{ margin: '0 0 20px 0', fontSize: '16px', color: '#0f172a', fontWeight: '700' }}>Resumen ejecutivo</h3>
-                  <div className="exec-summary-content" style={{ display: 'flex', gap: '24px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <div className="score-circle-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                      <svg width="120" height="120" viewBox="0 0 120 120">
-                        <circle cx="60" cy="60" r="50" fill="none" stroke="#e2e8f0" strokeWidth="8" />
-                        <circle cx="60" cy="60" r="50" fill="none" stroke={getQualityLevel(scoreValue).color} strokeWidth="8" strokeDasharray={2 * Math.PI * 50} strokeDashoffset={(2 * Math.PI * 50) - ((scoreValue ?? 0) / 100) * (2 * Math.PI * 50)} transform="rotate(-90 60 60)" strokeLinecap="round" />
-                        <text x="60" y="55" textAnchor="middle" fontSize="28" fontWeight="800" fill="#0f172a">{scoreValue ?? "N/D"}<tspan fontSize="14" fill="#64748b">/100</tspan></text>
-                      </svg>
-                      <div className="score-label" style={{ backgroundColor: getQualityLevel(scoreValue).color, color: 'white', padding: '4px 16px', borderRadius: '99px', fontSize: '12px', fontWeight: '600' }}>{(summary.quality_level || getQualityLevel(scoreValue).label)}</div>
-                    </div>
-                    <div className="exec-text" style={{ flex: 1, minWidth: '200px', fontSize: '13px', color: '#475569', lineHeight: '1.6' }}>
-                      <p style={{ margin: '0 0 16px 0' }}>{reportResult?.technical_conclusion || "No se pudo determinar una conclusión técnica para esta evaluación."}</p>
-                      <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', color: '#0f172a', fontWeight: '700' }}>Alcance de la evaluación</h4>
-                      <p style={{ margin: 0 }}>Se evaluaron las interfaces frontend del proyecto según los criterios de la norma ISO/IEC 25010.</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Resumen de hallazgos */}
-                <div className="pdf-card" style={{ background: '#fff', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                  <h3 className="card-title" style={{ margin: '0 0 20px 0', fontSize: '16px', color: '#0f172a', fontWeight: '700' }}>Resumen de hallazgos</h3>
-                  <div className="findings-summary" style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                    <div className="findings-total" style={{ flex: '1', minWidth: '100px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', padding: '16px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                      <span className="total-num" style={{ display: 'block', fontSize: '28px', fontWeight: '800', color: '#0f172a' }}>{summary.total_findings ?? findings.length}</span>
-                      <span className="total-label" style={{ fontSize: '12px', color: '#64748b', fontWeight: '500' }}>Total hallazgos</span>
-                    </div>
-                    <div className="findings-counts" style={{ flex: '2', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-                      <div className="count-box" style={{ background: '#fff', border: '1px solid #fee2e2', borderRadius: '10px', padding: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                        <span className="count-title" style={{ fontSize: '11px', fontWeight: '600', color: '#b91c1c' }}>Críticos</span>
-                        <span className="count-val" style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a' }}>{summary.severity_summary?.['Crítica'] || 0}</span>
-                      </div>
-                      <div className="count-box" style={{ background: '#fff', border: '1px solid #ffedd5', borderRadius: '10px', padding: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                        <span className="count-title" style={{ fontSize: '11px', fontWeight: '600', color: '#c2410c' }}>Altos</span>
-                        <span className="count-val" style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a' }}>{summary.severity_summary?.['Alta'] || 0}</span>
-                      </div>
-                      <div className="count-box" style={{ background: '#fff', border: '1px solid #fef3c7', borderRadius: '10px', padding: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                        <span className="count-title" style={{ fontSize: '11px', fontWeight: '600', color: '#b45309' }}>Medios</span>
-                        <span className="count-val" style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a' }}>{summary.severity_summary?.['Media'] || 0}</span>
-                      </div>
-                      <div className="count-box" style={{ background: '#fff', border: '1px solid #d1fae5', borderRadius: '10px', padding: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                        <span className="count-title" style={{ fontSize: '11px', fontWeight: '600', color: '#047857' }}>Bajos</span>
-                        <span className="count-val" style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a' }}>{summary.severity_summary?.['Baja'] || 0}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-
-              <div className="pdf-col" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                
-                {/* Ficha del proyecto */}
-                <div className="pdf-card" style={{ background: '#fff', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                  <h3 className="card-title" style={{ margin: '0 0 20px 0', fontSize: '16px', color: '#0f172a', fontWeight: '700' }}>Ficha del proyecto</h3>
-                  <table className="info-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <tbody>
-                      <tr>
-                        <td className="info-lbl" style={{ fontSize: '13px', color: '#475569', fontWeight: '500', padding: '12px 0', borderBottom: '1px solid #f1f5f9' }}>URL evaluada</td>
-                        <td className="info-val" style={{ fontSize: '13px', color: '#0f172a', fontWeight: '600', textAlign: 'right', borderBottom: '1px solid #f1f5f9' }}>{sourceLabel}</td>
-                      </tr>
-                      <tr>
-                        <td className="info-lbl" style={{ fontSize: '13px', color: '#475569', fontWeight: '500', padding: '12px 0', borderBottom: '1px solid #f1f5f9' }}>Tipo de evaluación</td>
-                        <td className="info-val" style={{ fontSize: '13px', color: '#0f172a', fontWeight: '600', textAlign: 'right', borderBottom: '1px solid #f1f5f9' }}>{inputType?.toUpperCase() || 'URL'}</td>
-                      </tr>
-                      <tr>
-                        <td className="info-lbl" style={{ fontSize: '13px', color: '#475569', fontWeight: '500', padding: '12px 0', borderBottom: '1px solid #f1f5f9' }}>Fecha de evaluación</td>
-                        <td className="info-val" style={{ fontSize: '13px', color: '#0f172a', fontWeight: '600', textAlign: 'right', borderBottom: '1px solid #f1f5f9' }}>{reportResult.generated_at || "No especificado"}</td>
-                      </tr>
-                      <tr>
-                        <td className="info-lbl" style={{ fontSize: '13px', color: '#475569', fontWeight: '500', padding: '12px 0', borderBottom: '1px solid #f1f5f9' }}>Interfaces evaluadas</td>
-                        <td className="info-val" style={{ fontSize: '13px', color: '#0f172a', fontWeight: '600', textAlign: 'right', borderBottom: '1px solid #f1f5f9' }}>{summary.total_interfaces ?? 3}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Resultados ISO/IEC 25010 */}
-                <div className="pdf-card" style={{ background: '#fff', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                  <h3 className="card-title" style={{ margin: '0 0 20px 0', fontSize: '16px', color: '#0f172a', fontWeight: '700' }}>Resultados ISO/IEC 25010</h3>
-                  <div className="chars-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {Object.entries(scoreLabels).map(([key, label], idx) => {
-                       const score = typeof scores[key] === "number" ? scores[key] : null;
-                       return (
-                      <div className="char-item" key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div className="char-name" style={{ width: '150px', fontSize: '12px', color: '#475569', fontWeight: '500' }}>{label}</div>
-                        <div className="char-bar-bg" style={{ flex: 1, height: '8px', background: '#e2e8f0', borderRadius: '99px', overflow: 'hidden' }}>
-                          <div className="char-bar-fill" style={{ height: '100%', borderRadius: '99px', width: `${score ?? 0}%`, backgroundColor: '#334155' }}></div>
-                        </div>
-                        <div className="char-score" style={{ width: '40px', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: '#64748b' }}>{score === null ? "N/D" : `${score}/100`}</div>
-                      </div>
-                    )})}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Findings detail */}
-            <div className="pdf-card mt-30" style={{ background: '#fff', padding: '0', borderRadius: '12px', border: '1px solid #e2e8f0', marginTop: '24px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-              <div style={{ padding: '24px', borderBottom: '1px solid #e2e8f0' }}>
-                <h3 className="card-title" style={{ margin: 0, fontSize: '16px', color: '#0f172a', fontWeight: '700' }}>Detalle de hallazgos técnicos</h3>
-              </div>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                  <thead>
-                    <tr>
-                      <th style={{ background: '#f8fafc', padding: '12px 16px', fontSize: '12px', fontWeight: '600', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>ID</th>
-                      <th style={{ background: '#f8fafc', padding: '12px 16px', fontSize: '12px', fontWeight: '600', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>Dimensión</th>
-                      <th style={{ background: '#f8fafc', padding: '12px 16px', fontSize: '12px', fontWeight: '600', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>Descripción</th>
-                      <th style={{ background: '#f8fafc', padding: '12px 16px', fontSize: '12px', fontWeight: '600', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>Severidad</th>
-                      <th style={{ background: '#f8fafc', padding: '12px 16px', fontSize: '12px', fontWeight: '600', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>Recomendación</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {findings.length > 0 ? findings.map((f, i) => (
-                      <tr key={i}>
-                        <td style={{ padding: '16px', fontSize: '13px', color: '#475569', borderBottom: '1px solid #f1f5f9' }}>H-{String(i+1).padStart(2, '0')}</td>
-                        <td style={{ padding: '16px', fontSize: '13px', color: '#475569', borderBottom: '1px solid #f1f5f9' }}>{f.dimension || 'Accesibilidad'}</td>
-                        <td style={{ padding: '16px', fontSize: '13px', color: '#0f172a', borderBottom: '1px solid #f1f5f9' }}>{f.finding?.replace('[VIOLACIÓN]', '') || 'N/A'}</td>
-                        <td style={{ padding: '16px', fontSize: '13px', color: '#334155', borderBottom: '1px solid #f1f5f9' }}>
-                          <span style={{ 
-                            padding: '4px 10px', 
-                            borderRadius: '99px', 
-                            fontSize: '11px', 
-                            fontWeight: '600',
-                            backgroundColor: getBadgeClassUI(f.severity).includes('alta') ? '#fee2e2' : getBadgeClassUI(f.severity).includes('media') ? '#fef3c7' : '#d1fae5',
-                            color: getBadgeClassUI(f.severity).includes('alta') ? '#b91c1c' : getBadgeClassUI(f.severity).includes('media') ? '#b45309' : '#047857',
-                            border: `1px solid ${getBadgeClassUI(f.severity).includes('alta') ? '#fca5a5' : getBadgeClassUI(f.severity).includes('media') ? '#fcd34d' : '#86efac'}`
-                          }}>{f.severity || 'Media'}</span>
-                        </td>
-                        <td style={{ padding: '16px', fontSize: '13px', color: '#475569', borderBottom: '1px solid #f1f5f9' }}>{f.recommendation || 'N/A'}</td>
-                      </tr>
-                    )) : (
-                      <tr><td colSpan="5" style={{ textAlign: 'center', padding: '40px', color: '#64748b', fontSize: '14px' }}>No se encontraron hallazgos técnicos.</td></tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <NormativeSection data={reportResult} />
-
-            <div className="page-actions" style={{ display: 'flex', gap: '12px', marginTop: '30px', justifyContent: 'flex-start' }}>
-              <button type="button" onClick={goBack} style={{ padding: '10px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', background: 'white', border: '1px solid #cbd5e1', color: '#334155' }}>
-                Volver
-              </button>
-              <button type="button" onClick={startNewAnalysis} style={{ padding: '10px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', background: 'white', border: '1px solid #cbd5e1', color: '#334155' }}>
-                Nuevo análisis
-              </button>
-            </div>
-
-          </div>
+          <ReportView
+            reportResult={reportResult}
+            sourceLabel={sourceLabel}
+            inputType={inputType}
+            onDownload={downloadPdf}
+            generatingPdf={generatingPdf}
+            onBack={goBack}
+            onNew={startNewAnalysis}
+          />
         )}
-</main>
+
+        {!loading && !reportResult && !error && (
+          <div className="loading-box">Preparando el informe...</div>
+        )}
+      </main>
     </div>
   );
 }
