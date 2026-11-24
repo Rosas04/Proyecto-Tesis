@@ -1,0 +1,1890 @@
+{
+  "A11": {
+    "playwright": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "https://sentryx-surveillance.vercel.app/",
+            "native": 90,
+            "replica": 72,
+            "time_s": 21.81
+          }
+        ],
+        "native": 90,
+        "replica": 72
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "https://sentryx-surveillance.vercel.app/",
+            "native": 90,
+            "replica": 72,
+            "time_s": 21.46
+          }
+        ],
+        "native": 90,
+        "replica": 72
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "https://sentryx-surveillance.vercel.app/",
+            "native": 90,
+            "replica": 72,
+            "time_s": 21.53
+          }
+        ],
+        "native": 90,
+        "replica": 72
+      }
+    ],
+    "selenium": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "https://sentryx-surveillance.vercel.app/",
+            "native": 90,
+            "replica": 72,
+            "time_s": 9.06
+          }
+        ],
+        "native": 90,
+        "replica": 72
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "https://sentryx-surveillance.vercel.app/",
+            "native": 90,
+            "replica": 72,
+            "time_s": 8.5
+          }
+        ],
+        "native": 90,
+        "replica": 72
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "https://sentryx-surveillance.vercel.app/",
+            "native": 90,
+            "replica": 72,
+            "time_s": 7.58
+          }
+        ],
+        "native": 90,
+        "replica": 72
+      }
+    ],
+    "selenium_load": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "https://sentryx-surveillance.vercel.app/",
+            "native": 32,
+            "replica": 16,
+            "time_s": 1.54
+          }
+        ],
+        "native": 32,
+        "replica": 16
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "https://sentryx-surveillance.vercel.app/",
+            "native": 32,
+            "replica": 16,
+            "time_s": 1.71
+          }
+        ],
+        "native": 32,
+        "replica": 16
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "https://sentryx-surveillance.vercel.app/",
+            "native": 32,
+            "replica": 16,
+            "time_s": 1.73
+          }
+        ],
+        "native": 32,
+        "replica": 16
+      }
+    ],
+    "puppeteer": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "https://sentryx-surveillance.vercel.app/",
+            "native": 90,
+            "replica": 72,
+            "time_s": 22.64
+          }
+        ],
+        "native": 90,
+        "replica": 72
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "https://sentryx-surveillance.vercel.app/",
+            "native": 90,
+            "replica": 72,
+            "time_s": 23.13
+          }
+        ],
+        "native": 90,
+        "replica": 72
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "https://sentryx-surveillance.vercel.app/",
+            "native": 90,
+            "replica": 72,
+            "time_s": 22.87
+          }
+        ],
+        "native": 90,
+        "replica": 72
+      }
+    ],
+    "jsdom": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "https://sentryx-surveillance.vercel.app/",
+            "native": 27,
+            "replica": 15,
+            "time_s": 2.19
+          }
+        ],
+        "native": 27,
+        "replica": 15
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "https://sentryx-surveillance.vercel.app/",
+            "native": 27,
+            "replica": 15,
+            "time_s": 2.78
+          }
+        ],
+        "native": 27,
+        "replica": 15
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "https://sentryx-surveillance.vercel.app/",
+            "native": 27,
+            "replica": 15,
+            "time_s": 2.17
+          }
+        ],
+        "native": 27,
+        "replica": 15
+      }
+    ],
+    "jsdom_static": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "https://sentryx-surveillance.vercel.app/",
+            "native": 27,
+            "replica": 15,
+            "time_s": 0.77
+          }
+        ],
+        "native": 27,
+        "replica": 15
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "https://sentryx-surveillance.vercel.app/",
+            "native": 27,
+            "replica": 15,
+            "time_s": 0.77
+          }
+        ],
+        "native": 27,
+        "replica": 15
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "https://sentryx-surveillance.vercel.app/",
+            "native": 27,
+            "replica": 15,
+            "time_s": 0.74
+          }
+        ],
+        "native": 27,
+        "replica": 15
+      }
+    ]
+  },
+  "A12": {
+    "playwright": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "https://resthub-frontend-zeta.vercel.app/acceso",
+            "native": 138,
+            "replica": 118,
+            "time_s": 2.29
+          }
+        ],
+        "native": 138,
+        "replica": 118
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "https://resthub-frontend-zeta.vercel.app/acceso",
+            "native": 138,
+            "replica": 118,
+            "time_s": 2.15
+          }
+        ],
+        "native": 138,
+        "replica": 118
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "https://resthub-frontend-zeta.vercel.app/acceso",
+            "native": 138,
+            "replica": 118,
+            "time_s": 2.12
+          }
+        ],
+        "native": 138,
+        "replica": 118
+      }
+    ],
+    "selenium": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "https://resthub-frontend-zeta.vercel.app/acceso",
+            "native": 138,
+            "replica": 118,
+            "time_s": 3.4
+          }
+        ],
+        "native": 138,
+        "replica": 118
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "https://resthub-frontend-zeta.vercel.app/acceso",
+            "native": 138,
+            "replica": 118,
+            "time_s": 3.5
+          }
+        ],
+        "native": 138,
+        "replica": 118
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "https://resthub-frontend-zeta.vercel.app/acceso",
+            "native": 138,
+            "replica": 118,
+            "time_s": 4.38
+          }
+        ],
+        "native": 138,
+        "replica": 118
+      }
+    ],
+    "selenium_load": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "https://resthub-frontend-zeta.vercel.app/acceso",
+            "native": 138,
+            "replica": 118,
+            "time_s": 2.14
+          }
+        ],
+        "native": 138,
+        "replica": 118
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "https://resthub-frontend-zeta.vercel.app/acceso",
+            "native": 138,
+            "replica": 118,
+            "time_s": 2.12
+          }
+        ],
+        "native": 138,
+        "replica": 118
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "https://resthub-frontend-zeta.vercel.app/acceso",
+            "native": 138,
+            "replica": 118,
+            "time_s": 2.24
+          }
+        ],
+        "native": 138,
+        "replica": 118
+      }
+    ],
+    "puppeteer": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "https://resthub-frontend-zeta.vercel.app/acceso",
+            "native": 138,
+            "replica": 118,
+            "time_s": 3.24
+          }
+        ],
+        "native": 138,
+        "replica": 118
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "https://resthub-frontend-zeta.vercel.app/acceso",
+            "native": 138,
+            "replica": 118,
+            "time_s": 3.77
+          }
+        ],
+        "native": 138,
+        "replica": 118
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "https://resthub-frontend-zeta.vercel.app/acceso",
+            "native": 138,
+            "replica": 118,
+            "time_s": 4.17
+          }
+        ],
+        "native": 138,
+        "replica": 118
+      }
+    ],
+    "jsdom": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "https://resthub-frontend-zeta.vercel.app/acceso",
+            "native": 20,
+            "replica": 10,
+            "time_s": 2.39
+          }
+        ],
+        "native": 20,
+        "replica": 10
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "https://resthub-frontend-zeta.vercel.app/acceso",
+            "native": 20,
+            "replica": 10,
+            "time_s": 2.25
+          }
+        ],
+        "native": 20,
+        "replica": 10
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "https://resthub-frontend-zeta.vercel.app/acceso",
+            "native": 20,
+            "replica": 10,
+            "time_s": 2.68
+          }
+        ],
+        "native": 20,
+        "replica": 10
+      }
+    ],
+    "jsdom_static": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "https://resthub-frontend-zeta.vercel.app/acceso",
+            "native": 20,
+            "replica": 10,
+            "time_s": 0.71
+          }
+        ],
+        "native": 20,
+        "replica": 10
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "https://resthub-frontend-zeta.vercel.app/acceso",
+            "native": 20,
+            "replica": 10,
+            "time_s": 0.73
+          }
+        ],
+        "native": 20,
+        "replica": 10
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "https://resthub-frontend-zeta.vercel.app/acceso",
+            "native": 20,
+            "replica": 10,
+            "time_s": 0.72
+          }
+        ],
+        "native": 20,
+        "replica": 10
+      }
+    ]
+  },
+  "A13": {
+    "playwright": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "https://check-scan-tesis.vercel.app/login",
+            "native": 47,
+            "replica": 46,
+            "time_s": 2.55
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/olvide",
+            "native": 31,
+            "replica": 30,
+            "time_s": 2.2
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/privacidad",
+            "native": 158,
+            "replica": 157,
+            "time_s": 2.33
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/condiciones",
+            "native": 90,
+            "replica": 89,
+            "time_s": 2.13
+          }
+        ],
+        "native": 326,
+        "replica": 322
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "https://check-scan-tesis.vercel.app/login",
+            "native": 47,
+            "replica": 46,
+            "time_s": 2.57
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/olvide",
+            "native": 31,
+            "replica": 30,
+            "time_s": 2.29
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/privacidad",
+            "native": 158,
+            "replica": 157,
+            "time_s": 2.17
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/condiciones",
+            "native": 90,
+            "replica": 89,
+            "time_s": 2.21
+          }
+        ],
+        "native": 326,
+        "replica": 322
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "https://check-scan-tesis.vercel.app/login",
+            "native": 47,
+            "replica": 46,
+            "time_s": 2.42
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/olvide",
+            "native": 31,
+            "replica": 30,
+            "time_s": 2.49
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/privacidad",
+            "native": 158,
+            "replica": 157,
+            "time_s": 2.4
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/condiciones",
+            "native": 90,
+            "replica": 89,
+            "time_s": 2.21
+          }
+        ],
+        "native": 326,
+        "replica": 322
+      }
+    ],
+    "selenium": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "https://check-scan-tesis.vercel.app/login",
+            "native": 47,
+            "replica": 46,
+            "time_s": 4.05
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/olvide",
+            "native": 31,
+            "replica": 30,
+            "time_s": 3.79
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/privacidad",
+            "native": 158,
+            "replica": 157,
+            "time_s": 3.48
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/condiciones",
+            "native": 90,
+            "replica": 89,
+            "time_s": 3.29
+          }
+        ],
+        "native": 326,
+        "replica": 322
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "https://check-scan-tesis.vercel.app/login",
+            "native": 47,
+            "replica": 46,
+            "time_s": 3.66
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/olvide",
+            "native": 31,
+            "replica": 30,
+            "time_s": 3.55
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/privacidad",
+            "native": 158,
+            "replica": 157,
+            "time_s": 3.35
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/condiciones",
+            "native": 90,
+            "replica": 89,
+            "time_s": 3.43
+          }
+        ],
+        "native": 326,
+        "replica": 322
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "https://check-scan-tesis.vercel.app/login",
+            "native": 47,
+            "replica": 46,
+            "time_s": 3.63
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/olvide",
+            "native": 31,
+            "replica": 30,
+            "time_s": 3.49
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/privacidad",
+            "native": 158,
+            "replica": 157,
+            "time_s": 3.17
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/condiciones",
+            "native": 90,
+            "replica": 89,
+            "time_s": 3.48
+          }
+        ],
+        "native": 326,
+        "replica": 322
+      }
+    ],
+    "selenium_load": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "https://check-scan-tesis.vercel.app/login",
+            "native": 47,
+            "replica": 46,
+            "time_s": 2.4
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/olvide",
+            "native": 31,
+            "replica": 30,
+            "time_s": 2.45
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/privacidad",
+            "native": 158,
+            "replica": 157,
+            "time_s": 2.21
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/condiciones",
+            "native": 90,
+            "replica": 89,
+            "time_s": 2.0
+          }
+        ],
+        "native": 326,
+        "replica": 322
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "https://check-scan-tesis.vercel.app/login",
+            "native": 47,
+            "replica": 46,
+            "time_s": 2.42
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/olvide",
+            "native": 31,
+            "replica": 30,
+            "time_s": 1.93
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/privacidad",
+            "native": 158,
+            "replica": 157,
+            "time_s": 3.94
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/condiciones",
+            "native": 90,
+            "replica": 89,
+            "time_s": 3.68
+          }
+        ],
+        "native": 326,
+        "replica": 322
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "https://check-scan-tesis.vercel.app/login",
+            "native": 47,
+            "replica": 46,
+            "time_s": 3.47
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/olvide",
+            "native": 31,
+            "replica": 30,
+            "time_s": 2.35
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/privacidad",
+            "native": 158,
+            "replica": 157,
+            "time_s": 2.8
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/condiciones",
+            "native": 90,
+            "replica": 89,
+            "time_s": 2.6
+          }
+        ],
+        "native": 326,
+        "replica": 322
+      }
+    ],
+    "puppeteer": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "https://check-scan-tesis.vercel.app/login",
+            "native": 47,
+            "replica": 46,
+            "time_s": 4.71
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/olvide",
+            "native": 31,
+            "replica": 30,
+            "time_s": 4.05
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/privacidad",
+            "native": 158,
+            "replica": 157,
+            "time_s": 4.22
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/condiciones",
+            "native": 90,
+            "replica": 89,
+            "time_s": 5.01
+          }
+        ],
+        "native": 326,
+        "replica": 322
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "https://check-scan-tesis.vercel.app/login",
+            "native": 47,
+            "replica": 46,
+            "time_s": 4.58
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/olvide",
+            "native": 31,
+            "replica": 30,
+            "time_s": 9.95
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/privacidad",
+            "native": 158,
+            "replica": 157,
+            "time_s": 4.22
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/condiciones",
+            "native": 90,
+            "replica": 89,
+            "time_s": 3.82
+          }
+        ],
+        "native": 326,
+        "replica": 322
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "https://check-scan-tesis.vercel.app/login",
+            "native": 47,
+            "replica": 46,
+            "time_s": 9.44
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/olvide",
+            "native": 31,
+            "replica": 30,
+            "time_s": 3.92
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/privacidad",
+            "native": 158,
+            "replica": 157,
+            "time_s": 3.1
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/condiciones",
+            "native": 90,
+            "replica": 89,
+            "time_s": 3.17
+          }
+        ],
+        "native": 326,
+        "replica": 322
+      }
+    ],
+    "jsdom": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "https://check-scan-tesis.vercel.app/login",
+            "native": 11,
+            "replica": 10,
+            "time_s": 2.47
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/olvide",
+            "native": 11,
+            "replica": 10,
+            "time_s": 2.21
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/privacidad",
+            "native": 11,
+            "replica": 10,
+            "time_s": 2.31
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/condiciones",
+            "native": 11,
+            "replica": 10,
+            "time_s": 3.9
+          }
+        ],
+        "native": 44,
+        "replica": 40
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "https://check-scan-tesis.vercel.app/login",
+            "native": 11,
+            "replica": 10,
+            "time_s": 3.28
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/olvide",
+            "native": 11,
+            "replica": 10,
+            "time_s": 3.45
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/privacidad",
+            "native": 11,
+            "replica": 10,
+            "time_s": 2.43
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/condiciones",
+            "native": 11,
+            "replica": 10,
+            "time_s": 2.07
+          }
+        ],
+        "native": 44,
+        "replica": 40
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "https://check-scan-tesis.vercel.app/login",
+            "native": 11,
+            "replica": 10,
+            "time_s": 2.0
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/olvide",
+            "native": 11,
+            "replica": 10,
+            "time_s": 2.08
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/privacidad",
+            "native": 11,
+            "replica": 10,
+            "time_s": 2.1
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/condiciones",
+            "native": 11,
+            "replica": 10,
+            "time_s": 2.04
+          }
+        ],
+        "native": 44,
+        "replica": 40
+      }
+    ],
+    "jsdom_static": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "https://check-scan-tesis.vercel.app/login",
+            "native": 11,
+            "replica": 10,
+            "time_s": 0.76
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/olvide",
+            "native": 11,
+            "replica": 10,
+            "time_s": 0.71
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/privacidad",
+            "native": 11,
+            "replica": 10,
+            "time_s": 0.72
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/condiciones",
+            "native": 11,
+            "replica": 10,
+            "time_s": 0.76
+          }
+        ],
+        "native": 44,
+        "replica": 40
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "https://check-scan-tesis.vercel.app/login",
+            "native": 11,
+            "replica": 10,
+            "time_s": 0.73
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/olvide",
+            "native": 11,
+            "replica": 10,
+            "time_s": 0.63
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/privacidad",
+            "native": 11,
+            "replica": 10,
+            "time_s": 0.62
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/condiciones",
+            "native": 11,
+            "replica": 10,
+            "time_s": 0.62
+          }
+        ],
+        "native": 44,
+        "replica": 40
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "https://check-scan-tesis.vercel.app/login",
+            "native": 11,
+            "replica": 10,
+            "time_s": 0.74
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/olvide",
+            "native": 11,
+            "replica": 10,
+            "time_s": 0.74
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/privacidad",
+            "native": 11,
+            "replica": 10,
+            "time_s": 0.75
+          },
+          {
+            "url": "https://check-scan-tesis.vercel.app/condiciones",
+            "native": 11,
+            "replica": 10,
+            "time_s": 0.85
+          }
+        ],
+        "native": 44,
+        "replica": 40
+      }
+    ]
+  },
+  "A14": {
+    "playwright": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8714/",
+            "native": 29,
+            "replica": 24,
+            "time_s": 1.69
+          }
+        ],
+        "native": 29,
+        "replica": 24
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8714/",
+            "native": 29,
+            "replica": 24,
+            "time_s": 1.41
+          }
+        ],
+        "native": 29,
+        "replica": 24
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8714/",
+            "native": 29,
+            "replica": 24,
+            "time_s": 1.44
+          }
+        ],
+        "native": 29,
+        "replica": 24
+      }
+    ],
+    "selenium": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8714/",
+            "native": 29,
+            "replica": 24,
+            "time_s": 3.05
+          }
+        ],
+        "native": 29,
+        "replica": 24
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8714/",
+            "native": 29,
+            "replica": 24,
+            "time_s": 3.24
+          }
+        ],
+        "native": 29,
+        "replica": 24
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8714/",
+            "native": 29,
+            "replica": 24,
+            "time_s": 2.9
+          }
+        ],
+        "native": 29,
+        "replica": 24
+      }
+    ],
+    "selenium_load": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8714/",
+            "native": 29,
+            "replica": 24,
+            "time_s": 2.01
+          }
+        ],
+        "native": 29,
+        "replica": 24
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8714/",
+            "native": 29,
+            "replica": 24,
+            "time_s": 1.38
+          }
+        ],
+        "native": 29,
+        "replica": 24
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8714/",
+            "native": 29,
+            "replica": 24,
+            "time_s": 1.31
+          }
+        ],
+        "native": 29,
+        "replica": 24
+      }
+    ],
+    "puppeteer": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8714/",
+            "native": 29,
+            "replica": 24,
+            "time_s": 2.42
+          }
+        ],
+        "native": 29,
+        "replica": 24
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8714/",
+            "native": 29,
+            "replica": 24,
+            "time_s": 2.37
+          }
+        ],
+        "native": 29,
+        "replica": 24
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8714/",
+            "native": 29,
+            "replica": 24,
+            "time_s": 2.28
+          }
+        ],
+        "native": 29,
+        "replica": 24
+      }
+    ],
+    "jsdom": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8714/",
+            "native": 15,
+            "replica": 10,
+            "time_s": 1.42
+          }
+        ],
+        "native": 15,
+        "replica": 10
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8714/",
+            "native": 15,
+            "replica": 10,
+            "time_s": 1.39
+          }
+        ],
+        "native": 15,
+        "replica": 10
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8714/",
+            "native": 15,
+            "replica": 10,
+            "time_s": 1.4
+          }
+        ],
+        "native": 15,
+        "replica": 10
+      }
+    ],
+    "jsdom_static": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8714/",
+            "native": 16,
+            "replica": 10,
+            "time_s": 0.31
+          }
+        ],
+        "native": 16,
+        "replica": 10
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8714/",
+            "native": 16,
+            "replica": 10,
+            "time_s": 0.3
+          }
+        ],
+        "native": 16,
+        "replica": 10
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8714/",
+            "native": 16,
+            "replica": 10,
+            "time_s": 0.31
+          }
+        ],
+        "native": 16,
+        "replica": 10
+      }
+    ]
+  },
+  "A15": {
+    "playwright": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8716/",
+            "native": 92,
+            "replica": 85,
+            "time_s": 2.45
+          },
+          {
+            "url": "http://127.0.0.1:8716/login",
+            "native": 33,
+            "replica": 28,
+            "time_s": 1.79
+          },
+          {
+            "url": "http://127.0.0.1:8716/register",
+            "native": 40,
+            "replica": 35,
+            "time_s": 1.83
+          },
+          {
+            "url": "http://127.0.0.1:8716/forgot",
+            "native": 25,
+            "replica": 20,
+            "time_s": 1.7
+          }
+        ],
+        "native": 190,
+        "replica": 168
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8716/",
+            "native": 92,
+            "replica": 85,
+            "time_s": 2.36
+          },
+          {
+            "url": "http://127.0.0.1:8716/login",
+            "native": 33,
+            "replica": 28,
+            "time_s": 1.81
+          },
+          {
+            "url": "http://127.0.0.1:8716/register",
+            "native": 40,
+            "replica": 35,
+            "time_s": 1.79
+          },
+          {
+            "url": "http://127.0.0.1:8716/forgot",
+            "native": 25,
+            "replica": 20,
+            "time_s": 1.68
+          }
+        ],
+        "native": 190,
+        "replica": 168
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8716/",
+            "native": 92,
+            "replica": 85,
+            "time_s": 2.41
+          },
+          {
+            "url": "http://127.0.0.1:8716/login",
+            "native": 33,
+            "replica": 28,
+            "time_s": 1.82
+          },
+          {
+            "url": "http://127.0.0.1:8716/register",
+            "native": 40,
+            "replica": 35,
+            "time_s": 1.79
+          },
+          {
+            "url": "http://127.0.0.1:8716/forgot",
+            "native": 25,
+            "replica": 20,
+            "time_s": 1.68
+          }
+        ],
+        "native": 190,
+        "replica": 168
+      }
+    ],
+    "selenium": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8716/",
+            "native": 92,
+            "replica": 85,
+            "time_s": 3.2
+          },
+          {
+            "url": "http://127.0.0.1:8716/login",
+            "native": 33,
+            "replica": 28,
+            "time_s": 2.75
+          },
+          {
+            "url": "http://127.0.0.1:8716/register",
+            "native": 40,
+            "replica": 35,
+            "time_s": 2.63
+          },
+          {
+            "url": "http://127.0.0.1:8716/forgot",
+            "native": 25,
+            "replica": 20,
+            "time_s": 2.75
+          }
+        ],
+        "native": 190,
+        "replica": 168
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8716/",
+            "native": 92,
+            "replica": 85,
+            "time_s": 3.09
+          },
+          {
+            "url": "http://127.0.0.1:8716/login",
+            "native": 33,
+            "replica": 28,
+            "time_s": 2.82
+          },
+          {
+            "url": "http://127.0.0.1:8716/register",
+            "native": 40,
+            "replica": 35,
+            "time_s": 2.85
+          },
+          {
+            "url": "http://127.0.0.1:8716/forgot",
+            "native": 25,
+            "replica": 20,
+            "time_s": 2.78
+          }
+        ],
+        "native": 190,
+        "replica": 168
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8716/",
+            "native": 92,
+            "replica": 85,
+            "time_s": 3.09
+          },
+          {
+            "url": "http://127.0.0.1:8716/login",
+            "native": 33,
+            "replica": 28,
+            "time_s": 2.7
+          },
+          {
+            "url": "http://127.0.0.1:8716/register",
+            "native": 40,
+            "replica": 35,
+            "time_s": 2.71
+          },
+          {
+            "url": "http://127.0.0.1:8716/forgot",
+            "native": 25,
+            "replica": 20,
+            "time_s": 3.06
+          }
+        ],
+        "native": 190,
+        "replica": 168
+      }
+    ],
+    "selenium_load": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8716/",
+            "native": 92,
+            "replica": 85,
+            "time_s": 2.17
+          },
+          {
+            "url": "http://127.0.0.1:8716/login",
+            "native": 33,
+            "replica": 28,
+            "time_s": 1.83
+          },
+          {
+            "url": "http://127.0.0.1:8716/register",
+            "native": 40,
+            "replica": 35,
+            "time_s": 1.76
+          },
+          {
+            "url": "http://127.0.0.1:8716/forgot",
+            "native": 25,
+            "replica": 20,
+            "time_s": 1.84
+          }
+        ],
+        "native": 190,
+        "replica": 168
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8716/",
+            "native": 92,
+            "replica": 85,
+            "time_s": 2.15
+          },
+          {
+            "url": "http://127.0.0.1:8716/login",
+            "native": 33,
+            "replica": 28,
+            "time_s": 1.89
+          },
+          {
+            "url": "http://127.0.0.1:8716/register",
+            "native": 40,
+            "replica": 35,
+            "time_s": 1.67
+          },
+          {
+            "url": "http://127.0.0.1:8716/forgot",
+            "native": 25,
+            "replica": 20,
+            "time_s": 1.7
+          }
+        ],
+        "native": 190,
+        "replica": 168
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8716/",
+            "native": 92,
+            "replica": 85,
+            "time_s": 3.22
+          },
+          {
+            "url": "http://127.0.0.1:8716/login",
+            "native": 33,
+            "replica": 28,
+            "time_s": 1.68
+          },
+          {
+            "url": "http://127.0.0.1:8716/register",
+            "native": 40,
+            "replica": 35,
+            "time_s": 1.8
+          },
+          {
+            "url": "http://127.0.0.1:8716/forgot",
+            "native": 25,
+            "replica": 20,
+            "time_s": 1.96
+          }
+        ],
+        "native": 190,
+        "replica": 168
+      }
+    ],
+    "puppeteer": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8716/",
+            "native": 92,
+            "replica": 85,
+            "time_s": 3.22
+          },
+          {
+            "url": "http://127.0.0.1:8716/login",
+            "native": 33,
+            "replica": 28,
+            "time_s": 3.21
+          },
+          {
+            "url": "http://127.0.0.1:8716/register",
+            "native": 40,
+            "replica": 35,
+            "time_s": 2.81
+          },
+          {
+            "url": "http://127.0.0.1:8716/forgot",
+            "native": 25,
+            "replica": 20,
+            "time_s": 3.75
+          }
+        ],
+        "native": 190,
+        "replica": 168
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8716/",
+            "native": 92,
+            "replica": 85,
+            "time_s": 2.96
+          },
+          {
+            "url": "http://127.0.0.1:8716/login",
+            "native": 33,
+            "replica": 28,
+            "time_s": 2.74
+          },
+          {
+            "url": "http://127.0.0.1:8716/register",
+            "native": 40,
+            "replica": 35,
+            "time_s": 3.13
+          },
+          {
+            "url": "http://127.0.0.1:8716/forgot",
+            "native": 25,
+            "replica": 20,
+            "time_s": 2.9
+          }
+        ],
+        "native": 190,
+        "replica": 168
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8716/",
+            "native": 92,
+            "replica": 85,
+            "time_s": 3.31
+          },
+          {
+            "url": "http://127.0.0.1:8716/login",
+            "native": 33,
+            "replica": 28,
+            "time_s": 2.75
+          },
+          {
+            "url": "http://127.0.0.1:8716/register",
+            "native": 40,
+            "replica": 35,
+            "time_s": 2.86
+          },
+          {
+            "url": "http://127.0.0.1:8716/forgot",
+            "native": 25,
+            "replica": 20,
+            "time_s": 2.89
+          }
+        ],
+        "native": 190,
+        "replica": 168
+      }
+    ],
+    "jsdom": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8716/",
+            "native": 14,
+            "replica": 10,
+            "time_s": 2.11
+          },
+          {
+            "url": "http://127.0.0.1:8716/login",
+            "native": 14,
+            "replica": 10,
+            "time_s": 2.17
+          },
+          {
+            "url": "http://127.0.0.1:8716/register",
+            "native": 14,
+            "replica": 10,
+            "time_s": 2.18
+          },
+          {
+            "url": "http://127.0.0.1:8716/forgot",
+            "native": 14,
+            "replica": 10,
+            "time_s": 2.18
+          }
+        ],
+        "native": 56,
+        "replica": 40
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8716/",
+            "native": 14,
+            "replica": 10,
+            "time_s": 2.14
+          },
+          {
+            "url": "http://127.0.0.1:8716/login",
+            "native": 14,
+            "replica": 10,
+            "time_s": 2.11
+          },
+          {
+            "url": "http://127.0.0.1:8716/register",
+            "native": 14,
+            "replica": 10,
+            "time_s": 2.09
+          },
+          {
+            "url": "http://127.0.0.1:8716/forgot",
+            "native": 14,
+            "replica": 10,
+            "time_s": 2.24
+          }
+        ],
+        "native": 56,
+        "replica": 40
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8716/",
+            "native": 14,
+            "replica": 10,
+            "time_s": 2.14
+          },
+          {
+            "url": "http://127.0.0.1:8716/login",
+            "native": 14,
+            "replica": 10,
+            "time_s": 2.15
+          },
+          {
+            "url": "http://127.0.0.1:8716/register",
+            "native": 14,
+            "replica": 10,
+            "time_s": 2.13
+          },
+          {
+            "url": "http://127.0.0.1:8716/forgot",
+            "native": 14,
+            "replica": 10,
+            "time_s": 2.11
+          }
+        ],
+        "native": 56,
+        "replica": 40
+      }
+    ],
+    "jsdom_static": [
+      {
+        "run": 1,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8716/",
+            "native": 15,
+            "replica": 10,
+            "time_s": 0.39
+          },
+          {
+            "url": "http://127.0.0.1:8716/login",
+            "native": 15,
+            "replica": 10,
+            "time_s": 0.43
+          },
+          {
+            "url": "http://127.0.0.1:8716/register",
+            "native": 15,
+            "replica": 10,
+            "time_s": 0.38
+          },
+          {
+            "url": "http://127.0.0.1:8716/forgot",
+            "native": 15,
+            "replica": 10,
+            "time_s": 0.36
+          }
+        ],
+        "native": 60,
+        "replica": 40
+      },
+      {
+        "run": 2,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8716/",
+            "native": 15,
+            "replica": 10,
+            "time_s": 0.37
+          },
+          {
+            "url": "http://127.0.0.1:8716/login",
+            "native": 15,
+            "replica": 10,
+            "time_s": 0.43
+          },
+          {
+            "url": "http://127.0.0.1:8716/register",
+            "native": 15,
+            "replica": 10,
+            "time_s": 0.37
+          },
+          {
+            "url": "http://127.0.0.1:8716/forgot",
+            "native": 15,
+            "replica": 10,
+            "time_s": 0.41
+          }
+        ],
+        "native": 60,
+        "replica": 40
+      },
+      {
+        "run": 3,
+        "routes": [
+          {
+            "url": "http://127.0.0.1:8716/",
+            "native": 15,
+            "replica": 10,
+            "time_s": 0.37
+          },
+          {
+            "url": "http://127.0.0.1:8716/login",
+            "native": 15,
+            "replica": 10,
+            "time_s": 0.36
+          },
+          {
+            "url": "http://127.0.0.1:8716/register",
+            "native": 15,
+            "replica": 10,
+            "time_s": 0.42
+          },
+          {
+            "url": "http://127.0.0.1:8716/forgot",
+            "native": 15,
+            "replica": 10,
+            "time_s": 0.41
+          }
+        ],
+        "native": 60,
+        "replica": 40
+      }
+    ]
+  }
+}
