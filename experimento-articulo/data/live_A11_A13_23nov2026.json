@@ -1,0 +1,308 @@
+{
+  "A11": [
+    {
+      "run": 1,
+      "routes": [
+        {
+          "url": "https://sentryx-surveillance.vercel.app/",
+          "final_url": "https://sentryx-surveillance.vercel.app/sign-in",
+          "original": 90,
+          "captured": 72,
+          "removed_by_tag": {
+            "link": 16,
+            "script": 3,
+            "style": -1
+          },
+          "time_s": 26.37
+        }
+      ],
+      "original": 90,
+      "captured": 72,
+      "time_s": 26.37,
+      "fidelity": 80.0
+    },
+    {
+      "run": 2,
+      "routes": [
+        {
+          "url": "https://sentryx-surveillance.vercel.app/",
+          "final_url": "https://sentryx-surveillance.vercel.app/sign-in",
+          "original": 90,
+          "captured": 72,
+          "removed_by_tag": {
+            "link": 16,
+            "script": 3,
+            "style": -1
+          },
+          "time_s": 21.96
+        }
+      ],
+      "original": 90,
+      "captured": 72,
+      "time_s": 21.96,
+      "fidelity": 80.0
+    },
+    {
+      "run": 3,
+      "routes": [
+        {
+          "url": "https://sentryx-surveillance.vercel.app/",
+          "final_url": "https://sentryx-surveillance.vercel.app/sign-in",
+          "original": 90,
+          "captured": 72,
+          "removed_by_tag": {
+            "link": 16,
+            "script": 3,
+            "style": -1
+          },
+          "time_s": 22.71
+        }
+      ],
+      "original": 90,
+      "captured": 72,
+      "time_s": 22.71,
+      "fidelity": 80.0
+    }
+  ],
+  "A12": [
+    {
+      "run": 1,
+      "routes": [
+        {
+          "url": "https://resthub-frontend-zeta.vercel.app/acceso",
+          "final_url": "https://resthub-frontend-zeta.vercel.app/acceso",
+          "original": 138,
+          "captured": 118,
+          "removed_by_tag": {
+            "link": 18,
+            "meta": 3,
+            "script": 1,
+            "style": -2
+          },
+          "time_s": 3.22
+        }
+      ],
+      "original": 138,
+      "captured": 118,
+      "time_s": 3.22,
+      "fidelity": 85.51
+    },
+    {
+      "run": 2,
+      "routes": [
+        {
+          "url": "https://resthub-frontend-zeta.vercel.app/acceso",
+          "final_url": "https://resthub-frontend-zeta.vercel.app/acceso",
+          "original": 138,
+          "captured": 118,
+          "removed_by_tag": {
+            "link": 18,
+            "meta": 3,
+            "script": 1,
+            "style": -2
+          },
+          "time_s": 4.83
+        }
+      ],
+      "original": 138,
+      "captured": 118,
+      "time_s": 4.83,
+      "fidelity": 85.51
+    },
+    {
+      "run": 3,
+      "routes": [
+        {
+          "url": "https://resthub-frontend-zeta.vercel.app/acceso",
+          "final_url": "https://resthub-frontend-zeta.vercel.app/acceso",
+          "original": 138,
+          "captured": 118,
+          "removed_by_tag": {
+            "link": 18,
+            "meta": 3,
+            "script": 1,
+            "style": -2
+          },
+          "time_s": 2.48
+        }
+      ],
+      "original": 138,
+      "captured": 118,
+      "time_s": 2.48,
+      "fidelity": 85.51
+    }
+  ],
+  "A13": [
+    {
+      "run": 1,
+      "routes": [
+        {
+          "url": "https://check-scan-tesis.vercel.app/login",
+          "final_url": "https://check-scan-tesis.vercel.app/login",
+          "original": 47,
+          "captured": 46,
+          "removed_by_tag": {
+            "link": 2,
+            "meta": 1,
+            "style": -2
+          },
+          "time_s": 4.1
+        },
+        {
+          "url": "https://check-scan-tesis.vercel.app/olvide",
+          "final_url": "https://check-scan-tesis.vercel.app/olvide",
+          "original": 31,
+          "captured": 30,
+          "removed_by_tag": {
+            "link": 2,
+            "meta": 1,
+            "style": -2
+          },
+          "time_s": 2.95
+        },
+        {
+          "url": "https://check-scan-tesis.vercel.app/privacidad",
+          "final_url": "https://check-scan-tesis.vercel.app/privacidad",
+          "original": 158,
+          "captured": 157,
+          "removed_by_tag": {
+            "link": 2,
+            "meta": 1,
+            "style": -2
+          },
+          "time_s": 2.56
+        },
+        {
+          "url": "https://check-scan-tesis.vercel.app/condiciones",
+          "final_url": "https://check-scan-tesis.vercel.app/condiciones",
+          "original": 90,
+          "captured": 89,
+          "removed_by_tag": {
+            "link": 2,
+            "meta": 1,
+            "style": -2
+          },
+          "time_s": 2.52
+        }
+      ],
+      "original": 326,
+      "captured": 322,
+      "time_s": 12.13,
+      "fidelity": 98.77
+    },
+    {
+      "run": 2,
+      "routes": [
+        {
+          "url": "https://check-scan-tesis.vercel.app/login",
+          "final_url": "https://check-scan-tesis.vercel.app/login",
+          "original": 47,
+          "captured": 46,
+          "removed_by_tag": {
+            "link": 2,
+            "meta": 1,
+            "style": -2
+          },
+          "time_s": 4.24
+        },
+        {
+          "url": "https://check-scan-tesis.vercel.app/olvide",
+          "final_url": "https://check-scan-tesis.vercel.app/olvide",
+          "original": 31,
+          "captured": 30,
+          "removed_by_tag": {
+            "link": 2,
+            "meta": 1,
+            "style": -2
+          },
+          "time_s": 2.7
+        },
+        {
+          "url": "https://check-scan-tesis.vercel.app/privacidad",
+          "final_url": "https://check-scan-tesis.vercel.app/privacidad",
+          "original": 158,
+          "captured": 157,
+          "removed_by_tag": {
+            "link": 2,
+            "meta": 1,
+            "style": -2
+          },
+          "time_s": 3.04
+        },
+        {
+          "url": "https://check-scan-tesis.vercel.app/condiciones",
+          "final_url": "https://check-scan-tesis.vercel.app/condiciones",
+          "original": 90,
+          "captured": 89,
+          "removed_by_tag": {
+            "link": 2,
+            "meta": 1,
+            "style": -2
+          },
+          "time_s": 2.69
+        }
+      ],
+      "original": 326,
+      "captured": 322,
+      "time_s": 12.67,
+      "fidelity": 98.77
+    },
+    {
+      "run": 3,
+      "routes": [
+        {
+          "url": "https://check-scan-tesis.vercel.app/login",
+          "final_url": "https://check-scan-tesis.vercel.app/login",
+          "original": 47,
+          "captured": 46,
+          "removed_by_tag": {
+            "link": 2,
+            "meta": 1,
+            "style": -2
+          },
+          "time_s": 4.27
+        },
+        {
+          "url": "https://check-scan-tesis.vercel.app/olvide",
+          "final_url": "https://check-scan-tesis.vercel.app/olvide",
+          "original": 31,
+          "captured": 30,
+          "removed_by_tag": {
+            "link": 2,
+            "meta": 1,
+            "style": -2
+          },
+          "time_s": 2.94
+        },
+        {
+          "url": "https://check-scan-tesis.vercel.app/privacidad",
+          "final_url": "https://check-scan-tesis.vercel.app/privacidad",
+          "original": 158,
+          "captured": 157,
+          "removed_by_tag": {
+            "link": 2,
+            "meta": 1,
+            "style": -2
+          },
+          "time_s": 2.78
+        },
+        {
+          "url": "https://check-scan-tesis.vercel.app/condiciones",
+          "final_url": "https://check-scan-tesis.vercel.app/condiciones",
+          "original": 90,
+          "captured": 89,
+          "removed_by_tag": {
+            "link": 2,
+            "meta": 1,
+            "style": -2
+          },
+          "time_s": 2.8
+        }
+      ],
+      "original": 326,
+      "captured": 322,
+      "time_s": 12.79,
+      "fidelity": 98.77
+    }
+  ]
+}

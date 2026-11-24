@@ -1,0 +1,330 @@
+{
+  "A14": [
+    {
+      "run": 1,
+      "routes": [
+        {
+          "url": "http://127.0.0.1:8714/",
+          "final_url": "http://127.0.0.1:8714/",
+          "original": 29,
+          "captured": 24,
+          "body_script_noscript": {
+            "script": 3
+          },
+          "head_elements": {
+            "meta": 2,
+            "title": 1,
+            "base": 1,
+            "link": 3,
+            "style": 1,
+            "noscript": 1
+          },
+          "time_s": 1.77
+        }
+      ],
+      "original": 29,
+      "captured": 24,
+      "time_s": 1.77,
+      "fidelity": 82.76
+    },
+    {
+      "run": 2,
+      "routes": [
+        {
+          "url": "http://127.0.0.1:8714/",
+          "final_url": "http://127.0.0.1:8714/",
+          "original": 29,
+          "captured": 24,
+          "body_script_noscript": {
+            "script": 3
+          },
+          "head_elements": {
+            "meta": 2,
+            "title": 1,
+            "base": 1,
+            "link": 3,
+            "style": 1,
+            "noscript": 1
+          },
+          "time_s": 1.48
+        }
+      ],
+      "original": 29,
+      "captured": 24,
+      "time_s": 1.48,
+      "fidelity": 82.76
+    },
+    {
+      "run": 3,
+      "routes": [
+        {
+          "url": "http://127.0.0.1:8714/",
+          "final_url": "http://127.0.0.1:8714/",
+          "original": 29,
+          "captured": 24,
+          "body_script_noscript": {
+            "script": 3
+          },
+          "head_elements": {
+            "meta": 2,
+            "title": 1,
+            "base": 1,
+            "link": 3,
+            "style": 1,
+            "noscript": 1
+          },
+          "time_s": 1.45
+        }
+      ],
+      "original": 29,
+      "captured": 24,
+      "time_s": 1.45,
+      "fidelity": 82.76
+    }
+  ],
+  "A15": [
+    {
+      "run": 1,
+      "routes": [
+        {
+          "url": "http://127.0.0.1:8716/",
+          "final_url": "http://127.0.0.1:8716/",
+          "original": 92,
+          "captured": 85,
+          "body_script_noscript": {
+            "script": 2
+          },
+          "head_elements": {
+            "meta": 2,
+            "title": 1,
+            "base": 1,
+            "link": 3,
+            "style": 4,
+            "noscript": 1
+          },
+          "time_s": 2.68
+        },
+        {
+          "url": "http://127.0.0.1:8716/login",
+          "final_url": "http://127.0.0.1:8716/login",
+          "original": 33,
+          "captured": 28,
+          "body_script_noscript": {
+            "script": 2
+          },
+          "head_elements": {
+            "meta": 2,
+            "title": 1,
+            "base": 1,
+            "link": 3,
+            "style": 2,
+            "noscript": 1
+          },
+          "time_s": 1.86
+        },
+        {
+          "url": "http://127.0.0.1:8716/register",
+          "final_url": "http://127.0.0.1:8716/register",
+          "original": 40,
+          "captured": 35,
+          "body_script_noscript": {
+            "script": 2
+          },
+          "head_elements": {
+            "meta": 2,
+            "title": 1,
+            "base": 1,
+            "link": 3,
+            "style": 2,
+            "noscript": 1
+          },
+          "time_s": 1.88
+        },
+        {
+          "url": "http://127.0.0.1:8716/forgot",
+          "final_url": "http://127.0.0.1:8716/forgot",
+          "original": 25,
+          "captured": 20,
+          "body_script_noscript": {
+            "script": 2
+          },
+          "head_elements": {
+            "meta": 2,
+            "title": 1,
+            "base": 1,
+            "link": 3,
+            "style": 2,
+            "noscript": 1
+          },
+          "time_s": 1.75
+        }
+      ],
+      "original": 190,
+      "captured": 168,
+      "time_s": 8.17,
+      "fidelity": 88.42
+    },
+    {
+      "run": 2,
+      "routes": [
+        {
+          "url": "http://127.0.0.1:8716/",
+          "final_url": "http://127.0.0.1:8716/",
+          "original": 92,
+          "captured": 85,
+          "body_script_noscript": {
+            "script": 2
+          },
+          "head_elements": {
+            "meta": 2,
+            "title": 1,
+            "base": 1,
+            "link": 3,
+            "style": 4,
+            "noscript": 1
+          },
+          "time_s": 2.44
+        },
+        {
+          "url": "http://127.0.0.1:8716/login",
+          "final_url": "http://127.0.0.1:8716/login",
+          "original": 33,
+          "captured": 28,
+          "body_script_noscript": {
+            "script": 2
+          },
+          "head_elements": {
+            "meta": 2,
+            "title": 1,
+            "base": 1,
+            "link": 3,
+            "style": 2,
+            "noscript": 1
+          },
+          "time_s": 2.08
+        },
+        {
+          "url": "http://127.0.0.1:8716/register",
+          "final_url": "http://127.0.0.1:8716/register",
+          "original": 40,
+          "captured": 35,
+          "body_script_noscript": {
+            "script": 2
+          },
+          "head_elements": {
+            "meta": 2,
+            "title": 1,
+            "base": 1,
+            "link": 3,
+            "style": 2,
+            "noscript": 1
+          },
+          "time_s": 1.83
+        },
+        {
+          "url": "http://127.0.0.1:8716/forgot",
+          "final_url": "http://127.0.0.1:8716/forgot",
+          "original": 25,
+          "captured": 20,
+          "body_script_noscript": {
+            "script": 2
+          },
+          "head_elements": {
+            "meta": 2,
+            "title": 1,
+            "base": 1,
+            "link": 3,
+            "style": 2,
+            "noscript": 1
+          },
+          "time_s": 1.72
+        }
+      ],
+      "original": 190,
+      "captured": 168,
+      "time_s": 8.07,
+      "fidelity": 88.42
+    },
+    {
+      "run": 3,
+      "routes": [
+        {
+          "url": "http://127.0.0.1:8716/",
+          "final_url": "http://127.0.0.1:8716/",
+          "original": 92,
+          "captured": 85,
+          "body_script_noscript": {
+            "script": 2
+          },
+          "head_elements": {
+            "meta": 2,
+            "title": 1,
+            "base": 1,
+            "link": 3,
+            "style": 4,
+            "noscript": 1
+          },
+          "time_s": 2.34
+        },
+        {
+          "url": "http://127.0.0.1:8716/login",
+          "final_url": "http://127.0.0.1:8716/login",
+          "original": 33,
+          "captured": 28,
+          "body_script_noscript": {
+            "script": 2
+          },
+          "head_elements": {
+            "meta": 2,
+            "title": 1,
+            "base": 1,
+            "link": 3,
+            "style": 2,
+            "noscript": 1
+          },
+          "time_s": 1.87
+        },
+        {
+          "url": "http://127.0.0.1:8716/register",
+          "final_url": "http://127.0.0.1:8716/register",
+          "original": 40,
+          "captured": 35,
+          "body_script_noscript": {
+            "script": 2
+          },
+          "head_elements": {
+            "meta": 2,
+            "title": 1,
+            "base": 1,
+            "link": 3,
+            "style": 2,
+            "noscript": 1
+          },
+          "time_s": 1.82
+        },
+        {
+          "url": "http://127.0.0.1:8716/forgot",
+          "final_url": "http://127.0.0.1:8716/forgot",
+          "original": 25,
+          "captured": 20,
+          "body_script_noscript": {
+            "script": 2
+          },
+          "head_elements": {
+            "meta": 2,
+            "title": 1,
+            "base": 1,
+            "link": 3,
+            "style": 2,
+            "noscript": 1
+          },
+          "time_s": 1.7
+        }
+      ],
+      "original": 190,
+      "captured": 168,
+      "time_s": 7.73,
+      "fidelity": 88.42
+    }
+  ]
+}
