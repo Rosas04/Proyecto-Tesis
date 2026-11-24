@@ -18,7 +18,7 @@ interface assessment: An empirical evaluation of FrontMind AI* (Universidad Priv
 
 | Archivo | Descripción |
 |---|---|
-| `FrontMind_DOM_fidelity.ipynb` | Notebook de Colab: datos, Tablas 3–6, intervalos bootstrap BCa y Hodges–Lehmann, correlaciones, Figuras 2–3 y nueva medición en vivo |
+| `FrontMind_DOM_fidelity.ipynb` | Notebook de Colab: datos, Tablas 4–7, intervalos bootstrap BCa y Hodges–Lehmann, correlaciones, Figuras 2–3 y nueva medición en vivo |
 | `FrontMind_DOM_fidelity_ejecutado_colab.ipynb` | Copia ejecutada en Google Colab el 23/11/2026 (Python 3.13, SciPy 1.16.3), con todos los resultados y la nueva medición en vivo de A11–A13 |
 | `measure_fidelity.py` | Procedimiento de medición: Chromium sin interfaz, viewport 1366 × 768, espera de red inactiva, desplazamiento completo y réplica con `HtmlReplicationAgent` de `frontmind-agents`; clasifica los nodos removidos por etiqueta |
 | `spa_server.py` | Servidor estático con *fallback* SPA para servir las compilaciones de A14 y A15 |
