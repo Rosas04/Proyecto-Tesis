@@ -130,3 +130,9 @@ def test_scope_lists_complementary_characteristics():
     names = {c["characteristic"] for c in scope["complementary"]}
     assert {"Eficiencia de desempeño", "Mantenibilidad", "Seguridad"} <= names
     assert "ISO/IEC 25040" in scope["selection_criterion"]
+
+
+def test_findings_use_iso_2023_names():
+    dims = {f["dimension"] for f in evaluate_iso_25010(HTML)["findings"]}
+    assert not dims & {"Usabilidad", "Accesibilidad", "Portabilidad"}
+    assert "Capacidad de interacción" in dims

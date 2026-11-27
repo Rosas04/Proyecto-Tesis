@@ -9,7 +9,8 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
   const findings = Array.isArray(reportResult?.findings) ? reportResult.findings : [];
   
   const globalScore = toScore(summary.global_score);
-  const totalInterfaces = summary.total_interfaces ?? 1;
+  // Interfaces capturadas en la sesión de análisis; si no se conocen, las evaluadas.
+  const totalInterfaces = reportResult?.captured_interfaces ?? summary.total_interfaces ?? 1;
   const totalFindings = summary.total_findings ?? findings.length;
 
   const severityCounts = useMemo(() => {
@@ -225,7 +226,7 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
                   <tr>
                     <td><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></td>
                     <td className="info-lbl">Fecha y hora de evaluación</td>
-                    <td className="info-val">25/09/2026 - 17:37</td>
+                    <td className="info-val">{`${pad(generatedDate.getDate())}/${pad(generatedDate.getMonth() + 1)}/${generatedDate.getFullYear()} - ${pad(generatedDate.getHours())}:${pad(generatedDate.getMinutes())}`}</td>
                   </tr>
                   <tr>
                     <td><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg></td>
