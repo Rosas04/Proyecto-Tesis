@@ -10,7 +10,24 @@ Documento generado a partir de `frontmind-agents/services/iso_framework.py` (fue
 | 2. Restricciones operativas | Cada evaluación y reporte declara herramientas, artefacto, entorno, tiempo/recursos (sección 5). |
 | 3. Atributos subjetivos | Estética, aprendizaje, inteligibilidad y satisfacción se marcan como *parcial* o *no automatizable*; no se inventan puntajes. |
 | 4. Dimensiones omitidas | Calidad de la información, fiabilidad, seguridad física y calidad en uso se declaran fuera de alcance (sección 4). |
-| 5. Inviabilidad de evaluación integral | `POST /evaluate/iso` acepta `characteristics` (subconjunto priorizado); sólo esas entran al puntaje global. |
+| 5. Inviabilidad de evaluación integral | Por defecto sólo ponderan las 4 características centrales (sección 1.1). `POST /evaluate/iso` acepta `characteristics` para otra selección. |
+
+### 1.1 Selección de características
+
+ISO/IEC 25010 no obliga a evaluar todas las características: según ISO/IEC 25040 (tareas 1.2 y 2.1) se eligen las pertinentes al producto y se justifica la elección. FrontMind audita la interfaz renderizada desde fuera, por lo que pondera las características que se observan en ella:
+
+| Característica (ISO/IEC 25010:2023) | Clave interna | Rol | Justificación | Relación con WCAG 2.2 |
+|---|---|---|---|---|
+| Adecuación funcional | `adecuacion_funcional` | Central | Estructura, controles y estados visibles de la interfaz. | 1.3.1, 2.4.6 |
+| Capacidad de interacción (antes Usabilidad) | `usabilidad` | Central | Es lo que el usuario opera. Incluye la inclusividad y la asistencia al usuario (accesibilidad). | Todos los criterios verificados |
+| Compatibilidad | `compatibilidad` | Central | Coexistencia de estilos y scripts y nombres accesibles para tecnologías de asistencia. | 4.1.2 |
+| Flexibilidad (antes Portabilidad) | `portabilidad` | Central | Adaptación a 1366, 768 y 390 px. | 1.4.10 |
+| Eficiencia de desempeño | `eficiencia_desempeno` | Complementaria | Se mide, pero depende de la red y el hardware del evaluador. | — |
+| Mantenibilidad | `mantenibilidad` | Complementaria | Requiere el código fuente; el DOM sólo da aproximaciones. | — |
+| Seguridad | `seguridad` | Complementaria | Requiere pruebas sobre el backend; el front sólo muestra patrones del cliente. | — |
+| Fiabilidad, seguridad física | — | Fuera de alcance | Ver sección 4. | — |
+
+Cálculo: la puntuación de **capacidad de interacción** es el promedio entre las reglas de operabilidad/protección contra errores y las reglas de accesibilidad WCAG (`accesibilidad`). La **nota global** es el promedio de las 4 características centrales. Las complementarias se informan en `complementary_scores` y no cambian la nota.
 
 ## 2. Escalas de severidad y decisión
 

@@ -842,3 +842,8 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
+.rv-compl {
+  color: #5f6d82;
+  font-weight: 500;
+}

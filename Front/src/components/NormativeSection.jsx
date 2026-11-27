@@ -210,6 +210,7 @@ export default function NormativeSection({ data }) {
       {groups.length > 0 && (
         <div className="normative-block">
           <h3><span className="normative-step">3</span> Cobertura del modelo de calidad</h3>
+          {scope.selection_criterion && <p className="normative-note">{scope.selection_criterion}</p>}
           <div className="normative-coverage">
             <div className="coverage-item auto">
               <span>{scope.coverage?.automatizada}</span>
@@ -257,7 +258,7 @@ export default function NormativeSection({ data }) {
       {/* 4. Características no evaluadas */}
       {outOfScope.length > 0 && (
         <div className="normative-block">
-          <h3><span className="normative-step">4</span> Características no evaluadas</h3>
+          <h3><span className="normative-step">4</span> Características no ponderadas en la nota</h3>
           <div className="normative-table-wrap">
             <table className="normative-table normative-two-cols">
               <thead>

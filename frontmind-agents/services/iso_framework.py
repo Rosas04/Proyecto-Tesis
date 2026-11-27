@@ -23,12 +23,37 @@ from typing import Any, Optional
 CHARACTERISTICS = {
     "adecuacion_funcional": "Adecuación funcional",
     "eficiencia_desempeno": "Eficiencia de desempeño",
-    "usabilidad": "Usabilidad (capacidad de interacción)",
-    "accesibilidad": "Accesibilidad (subcaracterística de usabilidad, tratada aparte)",
+    "usabilidad": "Capacidad de interacción (antes Usabilidad)",
+    "accesibilidad": "Inclusividad y asistencia al usuario (WCAG 2.2)",
     "mantenibilidad": "Mantenibilidad",
     "compatibilidad": "Compatibilidad",
     "seguridad": "Seguridad",
-    "portabilidad": "Portabilidad (flexibilidad en ISO/IEC 25010:2023)",
+    "portabilidad": "Flexibilidad (antes Portabilidad)",
+}
+
+# Selección de características (ISO/IEC 25040, tareas 1.2 y 2.1): la norma no
+# obliga a evaluar todas; se eligen las pertinentes al producto. Para una
+# interfaz web auditada desde fuera, las centrales son las observables en la
+# interfaz renderizada. Sólo estas ponderan en la nota global por defecto.
+CORE_CHARACTERISTICS = ["adecuacion_funcional", "usabilidad", "compatibilidad", "portabilidad"]
+
+SELECTION_CRITERION = (
+    "Selección según ISO/IEC 25040: se ponderan las características observables en la interfaz "
+    "renderizada (adecuación funcional, capacidad de interacción, compatibilidad y flexibilidad). "
+    "La accesibilidad WCAG forma parte de la capacidad de interacción (inclusividad y asistencia al usuario, "
+    "ISO/IEC 25010:2023)."
+)
+
+# Características medidas que se informan como indicadores complementarios
+# (sin peso en la nota) cuando no forman parte de la selección.
+COMPLEMENTARY_REASONS = {
+    "eficiencia_desempeno": "Indicador complementario, sin peso en la nota: se mide desde el front (TTFB, LCP, CLS), "
+                            "pero depende de la red y el hardware del servidor de evaluación, no del producto.",
+    "mantenibilidad": "Indicador complementario, sin peso en la nota: requiere el código fuente y su historial; "
+                      "desde el DOM renderizado sólo hay aproximaciones.",
+    "seguridad": "Indicador complementario, sin peso en la nota: requiere pruebas sobre el backend y la "
+                 "autenticación; desde el front sólo se detectan patrones inseguros del cliente.",
+    "accesibilidad": "Se informa por separado como detalle WCAG; ya está incluida en la capacidad de interacción.",
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -129,7 +154,7 @@ QUALITY_MODEL: list[dict[str, Any]] = [
     {"characteristic": "usabilidad", "sub": "Estética de la interfaz", "automation": PARTIAL,
      "method": "Inspección objetiva: uniformidad de paleta, variables CSS, longitud de párrafos.",
      "limit": "El agrado visual es subjetivo: requiere cuestionarios (p. ej. SUS) o juicio experto."},
-    {"characteristic": "accesibilidad", "sub": "Accesibilidad técnica (WCAG: perceptible, operable, comprensible, robusto)",
+    {"characteristic": "accesibilidad", "sub": "Inclusividad y asistencia al usuario (WCAG 2.2: perceptible, operable, comprensible, robusto)",
      "automation": AUTOMATED,
      "method": "Texto alternativo, etiquetas, nombres accesibles, idioma, contraste, orden de foco.",
      "limit": "Las pruebas automáticas detectan sólo una parte de los criterios WCAG; se recomienda revisión con lector de pantalla."},
@@ -173,13 +198,27 @@ OUT_OF_SCOPE = [
 
 
 def evaluation_scope(selected: list[str]) -> dict:
+    # La inclusividad (WCAG) es subcaracterística de la capacidad de interacción.
+    in_scope = set(selected) | ({"accesibilidad"} if "usabilidad" in selected else set())
+
+    def label(key: str) -> str:
+        if key == "accesibilidad" and "usabilidad" in selected:
+            return CHARACTERISTICS["usabilidad"]
+        return CHARACTERISTICS[key]
+
     items = [
-        {**item, "characteristic_label": CHARACTERISTICS[item["characteristic"]]}
+        {**item, "characteristic_label": label(item["characteristic"])}
         for item in QUALITY_MODEL
-        if item["characteristic"] in selected
+        if item["characteristic"] in in_scope
+    ]
+    complementary = [
+        {"characteristic": CHARACTERISTICS[key], "reason": reason}
+        for key, reason in COMPLEMENTARY_REASONS.items()
+        if key not in in_scope
     ]
     return {
         "selected_characteristics": [CHARACTERISTICS[c] for c in selected],
+        "selection_criterion": SELECTION_CRITERION,
         "subcharacteristics": items,
         "coverage": {
             "automatizada": sum(1 for i in items if i["automation"] == AUTOMATED),
@@ -187,7 +226,8 @@ def evaluation_scope(selected: list[str]) -> dict:
             "no_automatizable": sum(1 for i in items if i["automation"] == MANUAL),
             "total": len(items),
         },
-        "out_of_scope": OUT_OF_SCOPE,
+        "complementary": complementary,
+        "out_of_scope": complementary + OUT_OF_SCOPE,
     }
 
 
@@ -450,8 +490,8 @@ def runtime_findings(runtime: Optional[dict]) -> list[tuple[str, str, str, str, 
 
 
 def normalize_selection(characteristics: Optional[list[str]]) -> list[str]:
-    """Subconjunto priorizado de características (restricción 5). Vacío/None = todas."""
+    """Subconjunto priorizado de características (restricción 5). Vacío/None = las centrales."""
     if not characteristics:
-        return list(CHARACTERISTICS)
+        return list(CORE_CHARACTERISTICS)
     selected = [c for c in characteristics if c in CHARACTERISTICS]
-    return selected or list(CHARACTERISTICS)
+    return selected or list(CORE_CHARACTERISTICS)

@@ -533,3 +533,9 @@
 .severity-item.high { border-left-color: #f97316; }
 .severity-item.medium { border-left-color: #eab308; }
 .severity-item.low { border-left-color: #22c55e; }
+.complementary-title {
+  margin: 24px 0 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #5f6d82;
+}

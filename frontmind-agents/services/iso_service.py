@@ -182,7 +182,8 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
         return {
             "global_score": 0,
             "quality_level": "Crítico",
-            "scores": {key: 0 for key in scores},
+            "scores": {key: 0 for key in selected},
+            "complementary_scores": {key: 0 for key in scores if key not in selected},
             "total_findings": len(findings),
             "findings": findings,
             "engineering_tips": ["Proporcionar un HTML válido para iniciar la auditoría."],
@@ -711,38 +712,9 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
             {"compatibilidad": 10},
         )
 
-    # 6. FIABILIDAD
-    # 6.1 React SPA Error Boundaries
-    is_spa = any("react" in s.lower() for s in cdn_scripts) or soup.find(
-        id=["root", "app"]
-    )
-    has_error_handler = any(
-        kw in script_texts.lower()
-        for kw in ["onerror", "unhandledrejection", "errorboundary", "catch"]
-    )
-    if is_spa and not has_error_handler:
-        add_finding(
-            "Fiabilidad",
-            "Tolerancia a fallos",
-            "Alta",
-            "No se detectaron Error Boundaries ni manejadores de excepciones globales en el frontend de tipo Single Page Application (SPA).",
-            "Incorporar Error Boundaries en componentes jerárquicos clave de React para aislar y recuperar errores visuales.",
-            {"fiabilidad": 10},
-        )
-
-    # 6.2 Retry policies y timeouts en llamadas HTTP
-    if has_fetch:
-        has_timeout = "timeout" in script_texts.lower() or "abortcontroller" in script_texts.lower()
-        has_retry = "retry" in script_texts.lower()
-        if not (has_timeout or has_retry):
-            add_finding(
-                "Fiabilidad",
-                "Tolerancia a fallos",
-                "Media",
-                "Se detectaron llamadas HTTP sin políticas de reintento ni configuración de timeouts.",
-                "Configurar un tiempo límite de expiración (timeout) y reintentos automáticos para evitar llamadas colgadas por latencia de red.",
-                {"fiabilidad": 10},
-            )
+    # 6. FIABILIDAD: fuera de alcance (iso_framework.OUT_OF_SCOPE). La tolerancia a
+    # fallos no se observa en el DOM renderizado (los Error Boundaries de React no
+    # dejan rastro en el HTML), por lo que no se emiten hallazgos.
 
     # 7. SEGURIDAD FRONTEND
     # 7.1 XSS vía innerHTML o dangerouslySetInnerHTML sin DOMPurify
@@ -916,7 +888,12 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
 
     # CALCULO DE PUNTAJES FINAL POR PROMEDIO REAL
     # Sólo las características seleccionadas entran al promedio.
-    clamped_scores = {key: clamp(value) for key, value in scores.items() if key in selected}
+    all_scores = {key: clamp(value) for key, value in scores.items()}
+    # ISO/IEC 25010:2023: la accesibilidad (inclusividad y asistencia al usuario)
+    # es subcaracterística de la capacidad de interacción, no una característica aparte.
+    all_scores["usabilidad"] = round((all_scores["usabilidad"] + all_scores["accesibilidad"]) / 2)
+    clamped_scores = {key: all_scores[key] for key in selected}
+    complementary_scores = {key: value for key, value in all_scores.items() if key not in selected}
     global_score = round(sum(clamped_scores.values()) / len(clamped_scores))
 
     # Escala de severidad 0–4 en cada hallazgo
@@ -929,6 +906,7 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
         "global_score": global_score,
         "quality_level": get_level(global_score),
         "scores": clamped_scores,
+        "complementary_scores": complementary_scores,
         "total_findings": len(findings),
         "findings": findings,
         "engineering_tips": ["Optimizar el marcado HTML y refactorizar dependencias para lograr la conformidad."],

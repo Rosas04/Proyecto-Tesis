@@ -37,12 +37,12 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
   const SCORE_LABELS = {
     adecuacion_funcional: "Adecuación funcional",
     eficiencia_desempeno: "Eficiencia de desempeño",
-    usabilidad: "Usabilidad",
-    accesibilidad: "Accesibilidad",
+    usabilidad: "Capacidad de interacción",
+    accesibilidad: "Inclusividad (WCAG 2.2)",
     mantenibilidad: "Mantenibilidad",
     compatibilidad: "Compatibilidad",
     seguridad: "Seguridad",
-    portabilidad: "Portabilidad",
+    portabilidad: "Flexibilidad",
   };
   const characteristicsScores = summary.characteristics_scores || Object.fromEntries(
     Object.entries(reportResult?.scores || {})
@@ -154,7 +154,7 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
                     <p><strong>Criterio de decisión:</strong> {reportResult.quality_decision.score_10}/10 — {reportResult.quality_decision.category}. Evaluación automatizada con restricciones declaradas (herramientas, entorno Chromium y artefacto HTML); los atributos subjetivos requieren validación con usuarios o expertos.</p>
                   )}
                   <h4>Alcance de la evaluación</h4>
-                  <p>Se evaluaron las interfaces frontend del proyecto según los criterios de la norma ISO/IEC 25010, considerando ocho características de calidad.</p>
+                  <p>Se evaluaron las interfaces frontend del proyecto según los criterios de la norma ISO/IEC 25010, con la nota global sobre cuatro características centrales (adecuación funcional, capacidad de interacción, compatibilidad y flexibilidad).</p>
                 </div>
               </div>
             </div>
@@ -198,7 +198,7 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
                 Metodología y criterios de evaluación
               </h3>
               <p className="methodology-text">
-                La evaluación se realizó bajo el estándar ISO/IEC 25010, analizando el frontend del sistema en base a 8 características: adecuación funcional, eficiencia de desempeño, usabilidad, accesibilidad, mantenibilidad, compatibilidad, seguridad y portabilidad. Se aplicaron métricas automáticas y revisiones manuales, con criterios específicos para cada característica.
+                La evaluación se realizó bajo el estándar ISO/IEC 25010:2023. Según ISO/IEC 25040, la nota global pondera las cuatro características observables en la interfaz: adecuación funcional, capacidad de interacción (incluye la accesibilidad WCAG 2.2), compatibilidad y flexibilidad. Eficiencia de desempeño, mantenibilidad y seguridad se informan como indicadores complementarios, sin peso en la nota.
               </p>
             </div>
 
@@ -470,12 +470,12 @@ export const ReportDashboard = React.forwardRef(({ reportResult, sourceLabel, in
                     const shortLabels = {
                       "Adecuación funcional": "Funcional",
                       "Eficiencia de desempeño": "Eficiencia",
-                      "Usabilidad": "Usabilidad",
-                      "Accesibilidad": "Accesib.",
+                      "Capacidad de interacción": "Interacción",
+                      "Inclusividad (WCAG 2.2)": "WCAG",
                       "Mantenibilidad": "Mantenib.",
                       "Compatibilidad": "Compatib.",
                       "Seguridad": "Seguridad",
-                      "Portabilidad": "Portabil."
+                      "Flexibilidad": "Flexibil."
                     };
 
                     const pts = entries.map(([key, val], i) => {

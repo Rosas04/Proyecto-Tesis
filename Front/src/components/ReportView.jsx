@@ -4,17 +4,13 @@ import {
 } from "recharts";
 import NormativeSection from "./NormativeSection";
 import { getQualityLevel, toScore, QUALITY_LEVELS } from "../utils/qualityLevel";
+import { CORE_CHARACTERISTICS, COMPLEMENTARY_CHARACTERISTICS } from "../utils/isoCharacteristics";
 import "./ReportView.css";
 
+// Centrales: ponderan en la nota global. Complementarias: se informan sin peso.
 const CHARACTERISTICS = [
-  { key: "adecuacion_funcional", label: "Adecuación funcional", short: "Adecuación" },
-  { key: "eficiencia_desempeno", label: "Eficiencia de desempeño", short: "Eficiencia" },
-  { key: "usabilidad", label: "Usabilidad", short: "Usabilidad" },
-  { key: "accesibilidad", label: "Accesibilidad", short: "Accesibilidad" },
-  { key: "mantenibilidad", label: "Mantenibilidad", short: "Mantenibilidad" },
-  { key: "compatibilidad", label: "Compatibilidad", short: "Compatibilidad" },
-  { key: "seguridad", label: "Seguridad", short: "Seguridad" },
-  { key: "portabilidad", label: "Portabilidad", short: "Portabilidad" },
+  ...CORE_CHARACTERISTICS.map((c) => ({ ...c, core: true })),
+  ...COMPLEMENTARY_CHARACTERISTICS.map((c) => ({ ...c, core: false })),
 ];
 
 const SEVERITIES = [
@@ -111,7 +107,10 @@ export default function ReportView({
   reportResult, sourceLabel, inputType, onDownload, generatingPdf, onBack, onNew,
 }) {
   const summary = reportResult?.summary || {};
-  const scores = useMemo(() => reportResult?.scores || {}, [reportResult]);
+  const scores = useMemo(
+    () => ({ ...(reportResult?.complementary_scores || {}), ...(reportResult?.scores || {}) }),
+    [reportResult]
+  );
   const findings = useMemo(
     () => (Array.isArray(reportResult?.findings) ? reportResult.findings : []),
     [reportResult]
@@ -144,10 +143,13 @@ export default function ReportView({
   const severityTotal = Object.values(severityCounts).reduce((a, b) => a + b, 0);
 
   const charRows = useMemo(
-    () => CHARACTERISTICS.map((c) => ({ ...c, value: toScore(scores[c.key]) })),
+    () => CHARACTERISTICS
+      .map((c) => ({ ...c, value: toScore(scores[c.key]) }))
+      .filter((c) => c.core || c.value !== null),
     [scores]
   );
-  const measured = charRows.filter((c) => c.value !== null);
+  // Resumen y gráfico: sólo las características que entran en la nota.
+  const measured = charRows.filter((c) => c.core && c.value !== null);
   const sortedChars = [...measured].sort((a, b) => a.value - b.value);
   const weakest = sortedChars[0];
   const strongest = sortedChars[sortedChars.length - 1];
@@ -348,7 +350,9 @@ export default function ReportView({
           <section id="rv-caracteristicas" className="rv-section">
             <h2><span className="rv-sec-num">2</span>Resultados por característica ISO/IEC 25010</h2>
             <p className="rv-lead">
-              Puntaje de 0 a 100 de cada característica del modelo de calidad del producto. La escala de niveles es{" "}
+              Puntaje de 0 a 100 por característica. La nota global usa las cuatro características observables en la
+              interfaz (adecuación funcional, capacidad de interacción, compatibilidad y flexibilidad); las marcadas
+              como complementarias se informan sin peso en la nota. La escala de niveles es{" "}
               {QUALITY_LEVELS.map((l, i) => (
                 <span key={l.label}>
                   <b style={{ color: l.color }}>{l.label}</b> ({l.range}){i < QUALITY_LEVELS.length - 1 ? ", " : "."}
@@ -380,7 +384,7 @@ export default function ReportView({
                     const lv = getQualityLevel(c.value);
                     return (
                       <tr key={c.key}>
-                        <td>{c.label}</td>
+                        <td>{c.label}{!c.core && <small className="rv-compl"> · complementaria</small>}</td>
                         <td>
                           <div className="rv-bar">
                             <div className="rv-bar-track">
