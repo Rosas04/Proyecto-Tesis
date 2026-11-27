@@ -227,9 +227,9 @@ export default function Evaluation() {
                   <h2>{qualityLevel}</h2>
                   <p>
                     El proyecto globalmente alcanza un nivel de calidad
-                    frontend {qualityLevel.toLowerCase()}, considerando eficiencia,
-                    usabilidad, accesibilidad, mantenibilidad, compatibilidad,
-                    seguridad y portabilidad.
+                    frontend {qualityLevel.toLowerCase()}, considerando adecuación funcional,
+                    capacidad de interacción (incluye accesibilidad WCAG), compatibilidad
+                    y flexibilidad.
                   </p>
                 </div>
               </div>

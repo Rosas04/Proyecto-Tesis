@@ -1,0 +1,481 @@
+{
+  "A11": {
+    "start_url": "https://sentryx-surveillance.vercel.app/",
+    "framework": [
+      {
+        "url": "https://sentryx-surveillance.vercel.app/sign-in",
+        "total_nodes": 90,
+        "replica": 72
+      }
+    ],
+    "routes": [
+      "https://sentryx-surveillance.vercel.app/"
+    ],
+    "measurement": [
+      {
+        "url": "https://sentryx-surveillance.vercel.app/",
+        "final_url": "https://sentryx-surveillance.vercel.app/sign-in",
+        "original": 90,
+        "replica": 72,
+        "removed_by_tag": {
+          "link": 16,
+          "script": 3
+        },
+        "added_by_tag": {
+          "style": 1
+        },
+        "body_elements": 63,
+        "body_tree_identical": true,
+        "body_ids_classes_identical": true,
+        "body_text_chars": 155,
+        "body_text_identical": true
+      }
+    ],
+    "matched": [
+      {
+        "url": "https://sentryx-surveillance.vercel.app/",
+        "measurement": [
+          90,
+          72
+        ],
+        "framework": [
+          90,
+          72
+        ]
+      }
+    ]
+  },
+  "A12": {
+    "start_url": "https://resthub-frontend-zeta.vercel.app/acceso",
+    "framework": [
+      {
+        "url": "https://resthub-frontend-zeta.vercel.app/acceso",
+        "total_nodes": 138,
+        "replica": 118
+      },
+      {
+        "url": "https://resthub-frontend-zeta.vercel.app/terminos",
+        "total_nodes": 139,
+        "replica": 126
+      },
+      {
+        "url": "https://resthub-frontend-zeta.vercel.app/privacidad",
+        "total_nodes": 91,
+        "replica": 78
+      }
+    ],
+    "routes": [
+      "https://resthub-frontend-zeta.vercel.app/acceso"
+    ],
+    "measurement": [
+      {
+        "url": "https://resthub-frontend-zeta.vercel.app/acceso",
+        "final_url": "https://resthub-frontend-zeta.vercel.app/acceso",
+        "original": 138,
+        "replica": 118,
+        "removed_by_tag": {
+          "link": 18,
+          "meta": 3,
+          "script": 1
+        },
+        "added_by_tag": {
+          "style": 2
+        },
+        "body_elements": 109,
+        "body_tree_identical": true,
+        "body_ids_classes_identical": true,
+        "body_text_chars": 628,
+        "body_text_identical": true
+      }
+    ],
+    "matched": [
+      {
+        "url": "https://resthub-frontend-zeta.vercel.app/acceso",
+        "measurement": [
+          138,
+          118
+        ],
+        "framework": [
+          138,
+          118
+        ]
+      }
+    ]
+  },
+  "A13": {
+    "start_url": "https://check-scan-tesis.vercel.app/login",
+    "framework": [
+      {
+        "url": "https://check-scan-tesis.vercel.app/login",
+        "total_nodes": 47,
+        "replica": 46
+      },
+      {
+        "url": "https://check-scan-tesis.vercel.app/olvide",
+        "total_nodes": 31,
+        "replica": 30
+      },
+      {
+        "url": "https://check-scan-tesis.vercel.app/condiciones",
+        "total_nodes": 90,
+        "replica": 89
+      },
+      {
+        "url": "https://check-scan-tesis.vercel.app/",
+        "total_nodes": 80,
+        "replica": 79
+      },
+      {
+        "url": "https://check-scan-tesis.vercel.app/privacidad",
+        "total_nodes": 158,
+        "replica": 157
+      }
+    ],
+    "routes": [
+      "https://check-scan-tesis.vercel.app/login",
+      "https://check-scan-tesis.vercel.app/olvide",
+      "https://check-scan-tesis.vercel.app/privacidad",
+      "https://check-scan-tesis.vercel.app/condiciones"
+    ],
+    "measurement": [
+      {
+        "url": "https://check-scan-tesis.vercel.app/login",
+        "final_url": "https://check-scan-tesis.vercel.app/login",
+        "original": 47,
+        "replica": 46,
+        "removed_by_tag": {
+          "meta": 1,
+          "link": 2
+        },
+        "added_by_tag": {
+          "style": 2
+        },
+        "body_elements": 37,
+        "body_tree_identical": true,
+        "body_ids_classes_identical": true,
+        "body_text_chars": 291,
+        "body_text_identical": true
+      },
+      {
+        "url": "https://check-scan-tesis.vercel.app/olvide",
+        "final_url": "https://check-scan-tesis.vercel.app/olvide",
+        "original": 31,
+        "replica": 30,
+        "removed_by_tag": {
+          "meta": 1,
+          "link": 2
+        },
+        "added_by_tag": {
+          "style": 2
+        },
+        "body_elements": 21,
+        "body_tree_identical": true,
+        "body_ids_classes_identical": true,
+        "body_text_chars": 181,
+        "body_text_identical": true
+      },
+      {
+        "url": "https://check-scan-tesis.vercel.app/privacidad",
+        "final_url": "https://check-scan-tesis.vercel.app/privacidad",
+        "original": 158,
+        "replica": 157,
+        "removed_by_tag": {
+          "meta": 1,
+          "link": 2
+        },
+        "added_by_tag": {
+          "style": 2
+        },
+        "body_elements": 148,
+        "body_tree_identical": true,
+        "body_ids_classes_identical": true,
+        "body_text_chars": 6725,
+        "body_text_identical": true
+      },
+      {
+        "url": "https://check-scan-tesis.vercel.app/condiciones",
+        "final_url": "https://check-scan-tesis.vercel.app/condiciones",
+        "original": 90,
+        "replica": 89,
+        "removed_by_tag": {
+          "meta": 1,
+          "link": 2
+        },
+        "added_by_tag": {
+          "style": 2
+        },
+        "body_elements": 80,
+        "body_tree_identical": true,
+        "body_ids_classes_identical": true,
+        "body_text_chars": 2312,
+        "body_text_identical": true
+      }
+    ],
+    "matched": [
+      {
+        "url": "https://check-scan-tesis.vercel.app/login",
+        "measurement": [
+          47,
+          46
+        ],
+        "framework": [
+          47,
+          46
+        ]
+      },
+      {
+        "url": "https://check-scan-tesis.vercel.app/olvide",
+        "measurement": [
+          31,
+          30
+        ],
+        "framework": [
+          31,
+          30
+        ]
+      },
+      {
+        "url": "https://check-scan-tesis.vercel.app/privacidad",
+        "measurement": [
+          158,
+          157
+        ],
+        "framework": [
+          158,
+          157
+        ]
+      },
+      {
+        "url": "https://check-scan-tesis.vercel.app/condiciones",
+        "measurement": [
+          90,
+          89
+        ],
+        "framework": [
+          90,
+          89
+        ]
+      }
+    ]
+  },
+  "A14": {
+    "start_url": "http://127.0.0.1:8714/",
+    "framework": [
+      {
+        "url": "http://127.0.0.1:8714/",
+        "total_nodes": 29,
+        "replica": 24
+      }
+    ],
+    "routes": [
+      "http://127.0.0.1:8714/"
+    ],
+    "measurement": [
+      {
+        "url": "http://127.0.0.1:8714/",
+        "final_url": "http://127.0.0.1:8714/",
+        "original": 29,
+        "replica": 24,
+        "removed_by_tag": {
+          "base": 1,
+          "link": 2,
+          "noscript": 1,
+          "script": 2
+        },
+        "added_by_tag": {
+          "style": 1
+        },
+        "body_elements": 15,
+        "body_tree_identical": true,
+        "body_ids_classes_identical": true,
+        "body_text_chars": 38,
+        "body_text_identical": true
+      }
+    ],
+    "matched": [
+      {
+        "url": "http://127.0.0.1:8714/",
+        "measurement": [
+          29,
+          24
+        ],
+        "framework": [
+          29,
+          24
+        ]
+      }
+    ]
+  },
+  "A15": {
+    "start_url": "http://127.0.0.1:8716/",
+    "framework": [
+      {
+        "url": "http://127.0.0.1:8716/",
+        "total_nodes": 92,
+        "replica": 85
+      },
+      {
+        "url": "http://127.0.0.1:8716/login",
+        "total_nodes": 33,
+        "replica": 28
+      },
+      {
+        "url": "http://127.0.0.1:8716/forgot",
+        "total_nodes": 25,
+        "replica": 20
+      },
+      {
+        "url": "http://127.0.0.1:8716/principal",
+        "total_nodes": 15,
+        "replica": 11
+      },
+      {
+        "url": "http://127.0.0.1:8716/register",
+        "total_nodes": 40,
+        "replica": 35
+      },
+      {
+        "url": "http://127.0.0.1:8716/reporte-de-progreso",
+        "total_nodes": 15,
+        "replica": 11
+      },
+      {
+        "url": "http://127.0.0.1:8716/registro-agua",
+        "total_nodes": 15,
+        "replica": 11
+      },
+      {
+        "url": "http://127.0.0.1:8716/registro-sueno",
+        "total_nodes": 15,
+        "replica": 11
+      }
+    ],
+    "routes": [
+      "http://127.0.0.1:8716/",
+      "http://127.0.0.1:8716/login",
+      "http://127.0.0.1:8716/register",
+      "http://127.0.0.1:8716/forgot"
+    ],
+    "measurement": [
+      {
+        "url": "http://127.0.0.1:8716/",
+        "final_url": "http://127.0.0.1:8716/",
+        "original": 92,
+        "replica": 85,
+        "removed_by_tag": {
+          "base": 1,
+          "link": 2,
+          "style": 2,
+          "noscript": 1,
+          "script": 1
+        },
+        "added_by_tag": {},
+        "body_elements": 76,
+        "body_tree_identical": true,
+        "body_ids_classes_identical": true,
+        "body_text_chars": 1217,
+        "body_text_identical": true
+      },
+      {
+        "url": "http://127.0.0.1:8716/login",
+        "final_url": "http://127.0.0.1:8716/login",
+        "original": 33,
+        "replica": 28,
+        "removed_by_tag": {
+          "base": 1,
+          "link": 2,
+          "noscript": 1,
+          "script": 1
+        },
+        "added_by_tag": {},
+        "body_elements": 19,
+        "body_tree_identical": true,
+        "body_ids_classes_identical": true,
+        "body_text_chars": 94,
+        "body_text_identical": true
+      },
+      {
+        "url": "http://127.0.0.1:8716/register",
+        "final_url": "http://127.0.0.1:8716/register",
+        "original": 40,
+        "replica": 35,
+        "removed_by_tag": {
+          "base": 1,
+          "link": 2,
+          "noscript": 1,
+          "script": 1
+        },
+        "added_by_tag": {},
+        "body_elements": 26,
+        "body_tree_identical": true,
+        "body_ids_classes_identical": true,
+        "body_text_chars": 133,
+        "body_text_identical": true
+      },
+      {
+        "url": "http://127.0.0.1:8716/forgot",
+        "final_url": "http://127.0.0.1:8716/forgot",
+        "original": 25,
+        "replica": 20,
+        "removed_by_tag": {
+          "base": 1,
+          "link": 2,
+          "noscript": 1,
+          "script": 1
+        },
+        "added_by_tag": {},
+        "body_elements": 11,
+        "body_tree_identical": true,
+        "body_ids_classes_identical": true,
+        "body_text_chars": 45,
+        "body_text_identical": true
+      }
+    ],
+    "matched": [
+      {
+        "url": "http://127.0.0.1:8716/",
+        "measurement": [
+          92,
+          85
+        ],
+        "framework": [
+          92,
+          85
+        ]
+      },
+      {
+        "url": "http://127.0.0.1:8716/login",
+        "measurement": [
+          33,
+          28
+        ],
+        "framework": [
+          33,
+          28
+        ]
+      },
+      {
+        "url": "http://127.0.0.1:8716/register",
+        "measurement": [
+          40,
+          35
+        ],
+        "framework": [
+          40,
+          35
+        ]
+      },
+      {
+        "url": "http://127.0.0.1:8716/forgot",
+        "measurement": [
+          25,
+          20
+        ],
+        "framework": [
+          25,
+          20
+        ]
+      }
+    ]
+  }
+}

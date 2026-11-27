@@ -1,0 +1,9 @@
+{
+  "name": "frontmind-capture-tools-comparison",
+  "private": true,
+  "description": "Puppeteer and jsdom captures used by compare_tools.py",
+  "dependencies": {
+    "jsdom": "31.0.1",
+    "puppeteer-core": "25.18.1"
+  }
+}

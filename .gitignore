@@ -17,3 +17,14 @@ progress.txt
 
 # Datos de usuarios generados en ejecución
 data/history.json
+
+# Salidas generadas al ejecutar capturas y análisis (no se versionan)
+captures/
+resultado_*.json
+
+# Caché local del CLI de Supabase
+supabase/.temp/
+
+# Dependencias y builds
+node_modules/
+dist/

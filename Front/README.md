@@ -1,17 +1,48 @@
-# React + Vite
+# FrontMind AI — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicación de página única (SPA) en **React 19 + Vite**. Autenticación e historial con
+**Supabase**; el análisis se delega al backend (`../frontmind-agents`).
 
-Currently, two official plugins are available:
+## Ejecutar
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm install
+cp .env.example .env   # completar las variables
+npm run dev            # http://localhost:5173
+npm run build          # genera dist/
+npm run lint
+```
 
-## React Compiler
+| Variable | Descripción |
+|---|---|
+| `VITE_API_URL` | URL del backend (local: `http://127.0.0.1:8001`) |
+| `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` | Proyecto de Supabase (clave pública) |
+| `VITE_BACKEND_API_KEY` | Debe coincidir con `BACKEND_API_KEY` del backend |
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Estructura de `src/`
 
-## Expanding the ESLint configuration
+```text
+src/
+├── main.jsx, App.jsx    Punto de entrada y rutas
+├── pages/               Una vista por paso del flujo
+├── components/          Componentes reutilizables (layout, sidebar, reporte)
+├── context/             Estado global: sesión (AuthContext) y análisis en curso (AnalysisContext)
+├── services/            Acceso a datos: api.js (backend), historyService.js y storageService.js (Supabase)
+├── routes/              ProtectedRoute (exige sesión iniciada)
+├── lib/                 Cliente de Supabase
+├── utils/               Funciones puras (nivel de calidad, etiquetas, throttling de login)
+└── styles/              Estilos globales
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-"# Proyecto-Tesis" 
+## Rutas
+
+| Ruta | Vista | Paso del flujo |
+|---|---|---|
+| `/login`, `/register`, `/forgot-password`, `/reset-password` | Autenticación | — |
+| `/` | Home | Resumen y últimos análisis |
+| `/input` | Input | 1. URL, credenciales o ZIP |
+| `/capture` | Capture | 2. Interfaces capturadas |
+| `/html` | HtmlReplica | 3. Réplica HTML |
+| `/evaluation` | Evaluation | 4. Evaluación ISO/IEC 25010 |
+| `/report` | Report | 5. Reporte consolidado (PDF) |
+| `/history` | History | Análisis anteriores |

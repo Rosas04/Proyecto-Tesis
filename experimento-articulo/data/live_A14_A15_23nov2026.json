@@ -1,0 +1,261 @@
+{
+  "A14": [
+    {
+      "run": 1,
+      "routes": [
+        {
+          "url": "http://127.0.0.1:8714/",
+          "final_url": "http://127.0.0.1:8714/",
+          "original": 29,
+          "captured": 24,
+          "removed_by_tag": {
+            "base": 1,
+            "link": 2,
+            "noscript": 1,
+            "script": 2,
+            "style": -1
+          },
+          "time_s": 2.02
+        }
+      ],
+      "original": 29,
+      "captured": 24,
+      "time_s": 2.02,
+      "fidelity": 82.76
+    },
+    {
+      "run": 2,
+      "routes": [
+        {
+          "url": "http://127.0.0.1:8714/",
+          "final_url": "http://127.0.0.1:8714/",
+          "original": 29,
+          "captured": 24,
+          "removed_by_tag": {
+            "base": 1,
+            "link": 2,
+            "noscript": 1,
+            "script": 2,
+            "style": -1
+          },
+          "time_s": 7.29
+        }
+      ],
+      "original": 29,
+      "captured": 24,
+      "time_s": 7.29,
+      "fidelity": 82.76
+    },
+    {
+      "run": 3,
+      "routes": [
+        {
+          "url": "http://127.0.0.1:8714/",
+          "final_url": "http://127.0.0.1:8714/",
+          "original": 29,
+          "captured": 24,
+          "removed_by_tag": {
+            "base": 1,
+            "link": 2,
+            "noscript": 1,
+            "script": 2,
+            "style": -1
+          },
+          "time_s": 1.67
+        }
+      ],
+      "original": 29,
+      "captured": 24,
+      "time_s": 1.67,
+      "fidelity": 82.76
+    }
+  ],
+  "A15": [
+    {
+      "run": 1,
+      "routes": [
+        {
+          "url": "http://127.0.0.1:8716/",
+          "final_url": "http://127.0.0.1:8716/",
+          "original": 92,
+          "captured": 85,
+          "removed_by_tag": {
+            "base": 1,
+            "link": 2,
+            "noscript": 1,
+            "script": 1,
+            "style": 2
+          },
+          "time_s": 2.92
+        },
+        {
+          "url": "http://127.0.0.1:8716/login",
+          "final_url": "http://127.0.0.1:8716/login",
+          "original": 33,
+          "captured": 28,
+          "removed_by_tag": {
+            "base": 1,
+            "link": 2,
+            "noscript": 1,
+            "script": 1
+          },
+          "time_s": 2.17
+        },
+        {
+          "url": "http://127.0.0.1:8716/register",
+          "final_url": "http://127.0.0.1:8716/register",
+          "original": 40,
+          "captured": 35,
+          "removed_by_tag": {
+            "base": 1,
+            "link": 2,
+            "noscript": 1,
+            "script": 1
+          },
+          "time_s": 2.02
+        },
+        {
+          "url": "http://127.0.0.1:8716/forgot",
+          "final_url": "http://127.0.0.1:8716/forgot",
+          "original": 25,
+          "captured": 20,
+          "removed_by_tag": {
+            "base": 1,
+            "link": 2,
+            "noscript": 1,
+            "script": 1
+          },
+          "time_s": 1.76
+        }
+      ],
+      "original": 190,
+      "captured": 168,
+      "time_s": 8.87,
+      "fidelity": 88.42
+    },
+    {
+      "run": 2,
+      "routes": [
+        {
+          "url": "http://127.0.0.1:8716/",
+          "final_url": "http://127.0.0.1:8716/",
+          "original": 92,
+          "captured": 85,
+          "removed_by_tag": {
+            "base": 1,
+            "link": 2,
+            "noscript": 1,
+            "script": 1,
+            "style": 2
+          },
+          "time_s": 2.62
+        },
+        {
+          "url": "http://127.0.0.1:8716/login",
+          "final_url": "http://127.0.0.1:8716/login",
+          "original": 33,
+          "captured": 28,
+          "removed_by_tag": {
+            "base": 1,
+            "link": 2,
+            "noscript": 1,
+            "script": 1
+          },
+          "time_s": 2.0
+        },
+        {
+          "url": "http://127.0.0.1:8716/register",
+          "final_url": "http://127.0.0.1:8716/register",
+          "original": 40,
+          "captured": 35,
+          "removed_by_tag": {
+            "base": 1,
+            "link": 2,
+            "noscript": 1,
+            "script": 1
+          },
+          "time_s": 2.04
+        },
+        {
+          "url": "http://127.0.0.1:8716/forgot",
+          "final_url": "http://127.0.0.1:8716/forgot",
+          "original": 25,
+          "captured": 20,
+          "removed_by_tag": {
+            "base": 1,
+            "link": 2,
+            "noscript": 1,
+            "script": 1
+          },
+          "time_s": 1.8
+        }
+      ],
+      "original": 190,
+      "captured": 168,
+      "time_s": 8.46,
+      "fidelity": 88.42
+    },
+    {
+      "run": 3,
+      "routes": [
+        {
+          "url": "http://127.0.0.1:8716/",
+          "final_url": "http://127.0.0.1:8716/",
+          "original": 92,
+          "captured": 85,
+          "removed_by_tag": {
+            "base": 1,
+            "link": 2,
+            "noscript": 1,
+            "script": 1,
+            "style": 2
+          },
+          "time_s": 2.88
+        },
+        {
+          "url": "http://127.0.0.1:8716/login",
+          "final_url": "http://127.0.0.1:8716/login",
+          "original": 33,
+          "captured": 28,
+          "removed_by_tag": {
+            "base": 1,
+            "link": 2,
+            "noscript": 1,
+            "script": 1
+          },
+          "time_s": 3.3
+        },
+        {
+          "url": "http://127.0.0.1:8716/register",
+          "final_url": "http://127.0.0.1:8716/register",
+          "original": 40,
+          "captured": 35,
+          "removed_by_tag": {
+            "base": 1,
+            "link": 2,
+            "noscript": 1,
+            "script": 1
+          },
+          "time_s": 2.05
+        },
+        {
+          "url": "http://127.0.0.1:8716/forgot",
+          "final_url": "http://127.0.0.1:8716/forgot",
+          "original": 25,
+          "captured": 20,
+          "removed_by_tag": {
+            "base": 1,
+            "link": 2,
+            "noscript": 1,
+            "script": 1
+          },
+          "time_s": 3.18
+        }
+      ],
+      "original": 190,
+      "captured": 168,
+      "time_s": 11.41,
+      "fidelity": 88.42
+    }
+  ]
+}

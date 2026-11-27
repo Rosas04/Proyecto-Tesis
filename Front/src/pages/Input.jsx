@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Sidebar from "../components/Sidebar";
 import { useAnalysis } from "../context/AnalysisContext";
 import { checkBackendHealth, getCaptureProgress } from "../services/api";
@@ -69,6 +69,43 @@ export default function Input() {
 
     return () => clearInterval(interval);
   }, [loading, currentJobId]);
+
+  // Panel de flujo: altura fija, desplazamiento interno y seguimiento del último mensaje
+  const terminalBodyRef = useRef(null);
+  const stickToBottomRef = useRef(true);
+  const handleTerminalScroll = () => {
+    const el = terminalBodyRef.current;
+    if (!el) return;
+    stickToBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 24;
+  };
+  useEffect(() => {
+    const el = terminalBodyRef.current;
+    if (el && stickToBottomRef.current) el.scrollTop = el.scrollHeight;
+  }, [logs]);
+
+  const flowStats = useMemo(() => {
+    const level = (l) => (l.type || "").toUpperCase();
+    // El worker registra "Capturando [i/N] <url> (...)" por cada interfaz recorrida.
+    let captured = 0;
+    let totalRoutes = null;
+    let currentUrl = "";
+    logs.forEach((l) => {
+      const msg = l.message || "";
+      const cap = msg.match(/Capturando \[(\d+)\/(\d+)\]\s+(\S+)/);
+      if (cap) {
+        captured = Number(cap[1]);
+        totalRoutes = Number(cap[2]);
+        currentUrl = cap[3];
+        return;
+      }
+      const tot = msg.match(/Total de rutas a capturar:\s*(\d+)/);
+      if (tot) totalRoutes = Number(tot[1]);
+    });
+    const warnings = logs.filter((l) => level(l).startsWith("WARN")).length;
+    const errors = logs.filter((l) => level(l) === "ERROR").length;
+    const last = logs[logs.length - 1];
+    return { captured, totalRoutes, currentUrl, warnings, errors, total: logs.length, current: last?.message || "" };
+  }, [logs]);
 
   // Credentials state
   const [useCredentials, setUseCredentials] = useState(false);
@@ -232,7 +269,10 @@ export default function Input() {
         </div>
 
         <section className="input-grid">
+          <div className="input-left-col">
           <div className="input-card card">
+            {/* Zona del formulario: se desplaza por dentro; el botón queda fijo abajo */}
+            <div className="input-card-scroll">
             {/* ── URL panel ────────────────────────────── */}
             {activeTab === "url" && (
               <div className="input-panel">
@@ -563,6 +603,8 @@ export default function Input() {
               </div>
             )}
 
+            </div>
+
             {/* ── Error ───────────────────────── */}
             {backendDown && !error && <div className="error-box">{backendDown}</div>}
             {error && <div className="error-box">{error}</div>}
@@ -605,9 +647,8 @@ export default function Input() {
               </div>
             </div>
           </div>
-          
-          {/* Right Sidebar Info */}
-          <div className="info-sidebar">
+
+            {!(activeTab === "url" && useCredentials) && (
             <div className="info-card side-card">
               <div className="info-header">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
@@ -625,29 +666,64 @@ export default function Input() {
                 <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="16 10 11 15 8 12"></polyline></svg> Portabilidad</li>
               </ul>
             </div>
+            )}
             
-            <div className="terminal-card">
-              <div className="terminal-header">
-                <div className="terminal-title">
-                  <span className="terminal-icon">{">_"}</span>
-                  <h3>Flujo de Agente</h3>
-                </div>
-                <div className="terminal-controls">
-                  <span className="terminal-control-btn">{">_"}</span>
-                </div>
-              </div>
-              <div className="terminal-body">
-                {logs.map((log, index) => (
-                  <div key={index} className="terminal-log-line">
-                    <span className="log-date">[{log.time}]</span>{" "}
-                    <span className={`log-${log.type.toLowerCase()}`}>[{log.type}]</span>{" "}
-                    {log.message}
-                  </div>
-                ))}
-                {loading && <div className="terminal-log-line blink-cursor">_</div>}
-              </div>
-            </div>
           </div>
+
+          {/* Flujo del agente: panel principal, altura fija */}
+          <section className="terminal-card" aria-label="Flujo del agente">
+            <div className="terminal-header">
+              <div className="terminal-title">
+                <span className="terminal-icon">{">_"}</span>
+                <h3>Flujo del agente</h3>
+              </div>
+              <span className={`terminal-status ${loading ? "running" : "idle"}`}>
+                <span className="status-dot" />
+                {loading ? "En ejecución" : "En espera"}
+              </span>
+            </div>
+
+            <div className="terminal-stats">
+              <div>
+                <span>{flowStats.captured}{flowStats.totalRoutes !== null && <small> / {flowStats.totalRoutes}</small>}</span>
+                Interfaces capturadas
+              </div>
+              <div><span>{flowStats.total}</span>Eventos</div>
+              <div className={flowStats.warnings ? "warn" : ""}><span>{flowStats.warnings}</span>Advertencias</div>
+              <div className={flowStats.errors ? "err" : ""}><span>{flowStats.errors}</span>Errores</div>
+            </div>
+
+            <div className="terminal-progress" aria-hidden="true">
+              <div
+                className="terminal-progress-fill"
+                style={{ width: flowStats.totalRoutes ? `${Math.min(100, (flowStats.captured / flowStats.totalRoutes) * 100)}%` : "0%" }}
+              />
+            </div>
+
+            <div className="terminal-current" title={flowStats.currentUrl || flowStats.current}>
+              <span className="terminal-current-label">Paso actual</span>
+              <span className="terminal-current-text">
+                {flowStats.currentUrl && loading ? `Recorriendo ${flowStats.currentUrl}` : flowStats.current}
+              </span>
+            </div>
+
+            <div
+              className="terminal-body"
+              ref={terminalBodyRef}
+              onScroll={handleTerminalScroll}
+              role="log"
+              aria-live="polite"
+            >
+              {logs.map((log, index) => (
+                <div key={index} className="terminal-log-line">
+                  <span className="log-date">[{log.time}]</span>{" "}
+                  <span className={`log-${log.type.toLowerCase()}`}>[{log.type}]</span>{" "}
+                  {log.message}
+                </div>
+              ))}
+              {loading && <div className="terminal-log-line blink-cursor">_</div>}
+            </div>
+          </section>
         </section>
       </main>
     </div>

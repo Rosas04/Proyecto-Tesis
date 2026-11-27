@@ -1,0 +1,16 @@
+id,stage,system,technology,routes,original_nodes,captured_nodes,time_run1_s,time_run2_s,time_run3_s,source_of_counts
+A01,1,FrontMind AI,React (SPA),5,348,339,12.42,13.15,12.83,FrontMind AI run logs
+A02,1,GenOva,Next.js/React,3,183,179,11.05,11.58,10.97,FrontMind AI run logs
+A03,1,Taller Integrador,JavaScript/HTML,6,1780,1730,16.42,17.15,16.85,FrontMind AI run logs
+A04,1,3Drafting Design,Optimized website,1,247,247,4.20,4.50,4.80,FrontMind AI run logs
+A05,1,APAEC Lab,React,1,478,478,4.90,5.10,5.30,FrontMind AI run logs
+A06,2,PyAgent Demo V6.7,HTML/CSS/JS,1,656,654,26.86,20.01,18.42,FrontMind AI run logs
+A07,2,NovelReader,HTML/CSS/JS,1,694,693,21.13,21.64,23.16,FrontMind AI run logs
+A08,2,RadVol3D,HTML/JS,6,2546,2534,134.93,131.16,133.25,FrontMind AI run logs
+A09,2,Evaluador de Licitaciones,Flask/Jinja,1,34,29,31.28,19.20,20.31,FrontMind AI run logs
+A10,2,TechFix.AI,React 18 + Vite,6,1208,1172,62.65,60.68,62.27,FrontMind AI run logs
+A11,3,Sentryx Surveillance,SPA (Vercel),1,90,72,11.94,12.93,8.78,measure_fidelity.py (16 Nov 2026)
+A12,3,RestHub,SPA (Vercel),1,138,118,2.61,2.33,3.06,measure_fidelity.py (16 Nov 2026)
+A13,3,CheckScan,SPA (Vercel),4,326,322,10.87,12.12,10.52,measure_fidelity.py (16 Nov 2026)
+A14,4,I Love Travel,Angular 16 + Tailwind CSS,1,29,24,1.77,1.48,1.45,measure_fidelity.py (23 Nov 2026; local build)
+A15,4,OptiLife,Angular 18 + Angular Material,4,190,168,8.17,8.07,7.73,measure_fidelity.py (23 Nov 2026; local build)

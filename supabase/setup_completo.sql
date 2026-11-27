@@ -144,3 +144,9 @@ begin
       check (global_score is null or (global_score >= 0 and global_score <= 100)) not valid;
   end if;
 end $$;
+
+-- URL completa analizada (null en proyectos ZIP). Se muestra en el Historial.
+alter table public.analysis_runs add column if not exists source_url text;
+
+-- Puntajes por característica ISO/IEC 25010 del análisis (para el PDF del Historial).
+alter table public.analysis_runs add column if not exists scores jsonb;

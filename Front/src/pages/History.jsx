@@ -4,7 +4,7 @@ import { jsPDF } from "jspdf";
 import Sidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
 import { useAnalysis } from "../context/AnalysisContext";
-import { fetchUserRuns, fetchRunFindings } from "../historyService";
+import { fetchUserRuns, fetchRunFindings } from "../services/historyService";
 import { storageService } from "../services/storageService";
 import html2canvas from "html2canvas";
 import { ReportDashboard } from "../components/ReportDashboard";
@@ -180,7 +180,7 @@ export default function History() {
          }
       });
       const mockReportResult = {
-        generated_at: new Date(run.created_at).toLocaleString("es-ES"),
+        generated_at: run.created_at,
         summary: {
           global_score: run.global_score,
           quality_level: run.quality_level,
@@ -188,7 +188,7 @@ export default function History() {
           total_interfaces: 1,
           severity_summary: severitySummary
         },
-        scores: {},
+        scores: run.scores || {},
         findings: runFindings,
         main_recommendations: recommendations
       };
@@ -389,9 +389,16 @@ export default function History() {
                           </td>
                           <td className="project-name-cell">
                             <strong>{run.projects?.project_name || "Proyecto Principal"}</strong>
-                            <a href="#" className="url-link" onClick={e => e.preventDefault()}>
-                              <LinkIcon /> {run.url || "https://example.com"}
-                            </a>
+                            {(run.source_url || (run.projects?.project_name && !/\.zip$/i.test(run.projects.project_name))) && (
+                              <a
+                                href={run.source_url || `https://${run.projects.project_name}`}
+                                className="url-link"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <LinkIcon /> {run.source_url || `https://${run.projects.project_name}`}
+                              </a>
+                            )}
                           </td>
                           <td className="date-cell">
                             {formatDateTime(run.created_at)}
