@@ -12,6 +12,13 @@ from services.iso_framework import (
 )
 
 
+DIMENSION_LABELS_2023 = {
+    "Usabilidad": "Capacidad de interacción",
+    "Accesibilidad": "Capacidad de interacción",
+    "Portabilidad": "Flexibilidad",
+}
+
+
 def clamp(value):
     return max(0, min(100, value))
 
@@ -895,6 +902,11 @@ def evaluate_iso_25010(html: str, runtime_metrics: dict | None = None, character
     clamped_scores = {key: all_scores[key] for key in selected}
     complementary_scores = {key: value for key, value in all_scores.items() if key not in selected}
     global_score = round(sum(clamped_scores.values()) / len(clamped_scores))
+
+    # Nomenclatura ISO/IEC 25010:2023 en los hallazgos: la accesibilidad es
+    # parte de la capacidad de interacción y la portabilidad pasó a flexibilidad.
+    for finding in findings:
+        finding["dimension"] = DIMENSION_LABELS_2023.get(finding["dimension"], finding["dimension"])
 
     # Escala de severidad 0–4 en cada hallazgo
     for finding in findings:

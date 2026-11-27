@@ -74,6 +74,8 @@ export default function Report() {
       setError("");
 
       const result = await generateReport(evaluation);
+      const captured = storageService.getCaptureResult()?.interfaces?.length;
+      if (result && captured) result.captured_interfaces = captured;
 
       setReportResult(result);
       localStorage.setItem("technicalReport", JSON.stringify(result));

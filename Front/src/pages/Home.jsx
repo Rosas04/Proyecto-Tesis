@@ -8,18 +8,10 @@ import {
 } from "recharts";
 import "./Home.css";
 import { getQualityLevel, toScore } from "../utils/qualityLevel";
+import { CORE_CHARACTERISTICS } from "../utils/isoCharacteristics";
 
-// Características ISO/IEC 25010 que persiste cada análisis (analysis_runs.scores).
-const ISO_CHARACTERISTICS = {
-  adecuacion_funcional: "Adecuación funcional",
-  eficiencia_desempeno: "Eficiencia de desempeño",
-  usabilidad: "Usabilidad",
-  accesibilidad: "Accesibilidad",
-  mantenibilidad: "Mantenibilidad",
-  compatibilidad: "Compatibilidad",
-  seguridad: "Seguridad",
-  portabilidad: "Portabilidad",
-};
+// Características centrales ISO/IEC 25010 que ponderan en la nota (analysis_runs.scores).
+const ISO_CHARACTERISTICS = Object.fromEntries(CORE_CHARACTERISTICS.map((c) => [c.key, c.label]));
 
 const SEVERITY_ORDER = ["Crítica", "Alta", "Media", "Baja"];
 
