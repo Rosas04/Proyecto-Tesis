@@ -213,6 +213,12 @@ export default function Input() {
   }, [loading, activeTab]);
 
   const handleStart = () => {
+    // Con inicio de sesión activado, sin usuario o contraseña el login falla y
+    // sólo se capturan páginas públicas: se bloquea antes de lanzar el análisis.
+    if (activeTab === "url" && useCredentials && (!usernameValue.trim() || !passwordValue)) {
+      setError("Ingrese el usuario y la contraseña, o desactive «¿Requiere inicio de sesión?».");
+      return;
+    }
     const credentials = useCredentials ? {
       mode: "form",
       login_url: loginUrl.trim() || url.trim(),
